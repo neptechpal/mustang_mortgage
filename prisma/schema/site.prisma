@@ -1,0 +1,18 @@
+// Public website module ("site"): Contact Form 7 replicas, the contact-page
+// lead form and the footer newsletter sign-up all store one row here.
+
+model FormSubmission {
+  id         Int      @id @default(autoincrement())
+  formKey    String   // "cf7:1767", "cf7:2651", "mmf:3012", "newsletter"
+  formTitle  String   @default("")
+  name       String   @default("") // best-effort submitter name (list view)
+  email      String   @default("") // best-effort submitter email (list view)
+  data       Json     @default("{}") // { fieldName: string | string[] }
+  files      Json     @default("[]") // [{ field, fileId, name, size, mimeType, kind: "upload" | "signature" }]
+  meta       Json     @default("{}") // { ip, userAgent, url, mail: { mail1, mail2 } }
+  status     String   @default("new") // new | read
+  createdAt  DateTime @default(now())
+
+  @@index([formKey, createdAt])
+  @@index([createdAt])
+}

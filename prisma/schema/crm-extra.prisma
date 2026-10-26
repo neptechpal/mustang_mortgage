@@ -1,0 +1,158 @@
+// Mustang Mini CRM — advanced modules (owned by the crm-extra module).
+// Cases are referenced by plain `caseId Int` columns (no relation) per ARCHITECTURE.md.
+
+// Case email trail (_mm_email_log): outgoing sends + messages pulled by the
+// 10-minute Zoho sync. `zohoId` de-duplicates synced messages.
+model CaseEmail {
+  id             Int      @id @default(autoincrement())
+  caseId         Int
+  zohoId         String?  @unique  // Zoho messageId
+  conversationId String   @default("")
+  folderId       String   @default("")
+  rfcId          String   @default("")
+  direction      String   @default("out") // in | out
+  source         String   @default("zoho") // zoho | smtp | sync
+  fromAddr       String   @default("")
+  toAddrs        String   @default("")
+  ccAddrs        String   @default("")
+  bccAddrs       String   @default("")
+  subject        String   @default("")
+  html           String   @default("")
+  attachments    Json     @default("[]") // [{name,size,type}]
+  status         String   @default("sent") // sent | failed
+  error          String   @default("")
+  sentBy         String   @default("")
+  sentAt         DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@index([caseId, sentAt])
+  @@index([conversationId])
+}
+
+// Threading indexes: kind = rfc | msg | conv | contact  →  caseId
+model ZohoIndex {
+  kind      String
+  key       String
+  caseId    Int
+  updatedAt DateTime @default(now())
+
+  @@id([kind, key])
+  @@index([kind, updatedAt])
+}
+
+// Notes & Reminders (_mmcrm_notes_rems). type = Note | Reminder.
+model CaseReminder {
+  id         Int       @id @default(autoincrement())
+  caseId     Int
+  type       String    @default("Reminder") // Note | Reminder
+  title      String    @default("")
+  note       String    @default("")
+  priority   String    @default("Normal")   // Low | Normal | High
+  email      String    @default("")         // optional recipient for the reminder email
+  dueAt      DateTime?
+  repeatDays Int       @default(0)
+  done       Boolean   @default(false)
+  doneBy     String    @default("")
+  doneAt     DateTime?
+  auto       Boolean   @default(false)      // created by automation
+  lastSentAt DateTime?                      // last reminder email sent
+  createdBy  String    @default("")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([caseId])
+  @@index([done, dueAt])
+}
+
+// Broker notes (_mmcrm_broker_notes per case, caseId = 0 → general notes)
+model BrokerNote {
+  id        Int      @id @default(autoincrement())
+  caseId    Int      @default(0)
+  title     String   @default("")
+  body      String
+  author    String   @default("")
+  authorId  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([caseId, createdAt])
+}
+
+// Learning Vault (mmcrm_learning_items)
+model LearningItem {
+  id        Int      @id @default(autoincrement())
+  title     String
+  url       String   @default("")
+  summary   String   @default("")
+  tags      String   @default("")
+  pinned    Boolean  @default(false)
+  author    String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Signals per-case state (_mmcrm_last_allup, _mmcrm_last_pending_alert_ts)
+model CaseSignalState {
+  caseId           Int       @id
+  lastAllUp        DateTime?
+  lastPendingAlert DateTime?
+}
+
+// Borrowing capacity saved runs (global mmcrm_borrow_history max 150 +
+// per-case _mmcrm_borrow_hist max 10).
+model BorrowCalc {
+  id        String   @id // 8-char random
+  caseId    Int      @default(0)
+  userId    Int      @default(0)
+  label     String   @default("")
+  maxLoan   Float    @default(0)
+  summary   String   @default("")
+  data      Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([caseId, createdAt])
+  @@index([createdAt])
+}
+
+// Flex entry state per case (_mmcrm_flex_text + overrides + done sections)
+model FlexState {
+  caseId    Int      @id
+  overrides Json     @default("{}") // fieldId -> monthly value string
+  done      Json     @default("{}") // sectionId -> true
+  texts     Json     @default("{}") // textbox id -> text
+  updatedAt DateTime @updatedAt
+}
+
+// Marketing contacts (mmcrm_contacts)
+model MktContact {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  firstName String   @default("")
+  lastName  String   @default("")
+  fullName  String   @default("")
+  source    String   @default("manual") // case | manual
+  status    String   @default("Active") // Active | Trashed | Unsubscribed
+  audience  String   @default("")
+  birthday  String   @default("")       // YYYY-MM-DD or ""
+  caseId    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([caseId])
+  @@index([status])
+  @@index([source])
+  @@index([audience])
+  @@index([birthday])
+}
+
+// Marketing event log (mmcrm_mkt_log): contact.add/update/trash, email.send/test/birthday…
+model MktLog {
+  id      Int      @id @default(autoincrement())
+  ts      DateTime @default(now())
+  userId  Int      @default(0)
+  type    String
+  note    String   @default("")
+  payload Json     @default("{}")
+
+  @@index([ts])
+}

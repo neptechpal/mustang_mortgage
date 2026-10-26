@@ -1,0 +1,75 @@
+// Shared foundation models. Each feature module owns its own *.prisma file in
+// this folder (multi-file schema). Do not put module models here.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN      // WP administrator — full CRM access
+  STAFF      // broker staff — CRM access (WP edit_posts)
+  MEMBER     // registered site user (WP subscriber / Ultimate Member)
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  wpId         Int?      @unique
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  displayName  String    @default("")
+  firstName    String    @default("")
+  lastName     String    @default("")
+  role         Role      @default(MEMBER)
+  status       String    @default("approved") // approved | pending | rejected | inactive
+  profile      Json      @default("{}")       // extra Ultimate Member profile fields
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  resetTokens  PasswordReset[]
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+// Generic key/value settings store (replacement for wp_options).
+// Keys are namespaced by module, e.g. "crm.options", "mkt.bday", "ssa.settings".
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// Private file registry. Files live under STORAGE_DIR and are only served
+// through authorised routes (never from /public).
+model StoredFile {
+  id           String   @id @default(cuid())
+  path         String   @unique // relative to STORAGE_DIR
+  originalName String
+  mimeType     String
+  size         Int
+  owner        String   @default("") // free-form owner tag, e.g. "case:12", "cf7:34"
+  createdAt    DateTime @default(now())
+}
+
+// Outgoing mail log (all modules send through src/lib/mail.ts).
+model MailLog {
+  id        Int      @id @default(autoincrement())
+  to        String
+  subject   String
+  status    String   // sent | failed | skipped
+  error     String   @default("")
+  context   String   @default("")
+  createdAt DateTime @default(now())
+}

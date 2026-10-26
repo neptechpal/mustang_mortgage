@@ -1,0 +1,67 @@
+/*
+ * Public site base layer. Loaded before elementor.css (the original WordPress
+ * stylesheets). Tailwind's preflight (in globals.css, @layer base) resets a few
+ * browser defaults the WordPress theme relied on; restore them for the public
+ * site with zero specificity so every Elementor rule still wins.
+ */
+:where(.mm-site) {
+  overflow-x: hidden; /* custom CSS 1732: body { overflow-x: hidden } */
+  width: 100%;
+  background: #fff;
+  color: #333333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  line-height: 1.5;
+}
+:where(.mm-site) :where(img, svg, video, canvas, iframe, object) {
+  display: inline;
+  vertical-align: baseline;
+}
+:where(.mm-site) :where(svg) {
+  vertical-align: middle;
+}
+:where(.mm-site) :where(ul) {
+  list-style: disc;
+  padding-left: 40px;
+}
+:where(.mm-site) :where(ol) {
+  list-style: decimal;
+  padding-left: 40px;
+}
+:where(.mm-site) :where(h1) {
+  font-size: 2.5rem;
+}
+:where(.mm-site) :where(h4) {
+  font-size: 1.5rem;
+}
+:where(.mm-site) :where(h5) {
+  font-size: 1.25rem;
+}
+:where(.mm-site) :where(h6) {
+  font-size: 1rem;
+}
+:where(.mm-site) :where(b, strong) {
+  font-weight: bolder;
+}
+:where(.mm-site) :where(button, input, select, textarea) {
+  font: inherit;
+}
+:where(.mm-site) :where(input:not([type="checkbox"], [type="radio"]), select, textarea) {
+  border-style: solid;
+}
+:where(.mm-site) :where(fieldset) {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* CF7 form placeholders inside Elementor markup */
+.mm-cf7-slot {
+  display: contents;
+}
+
+/* Elementor hides elements with entrance animations until JS reveals them */
+@media (prefers-reduced-motion: reduce) {
+  .mm-site .elementor-invisible {
+    visibility: visible;
+  }
+}

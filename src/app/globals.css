@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* Design tokens. The public site uses its own scoped Elementor CSS
+   (src/modules/site/styles); these tokens drive the staff admin UI. */
+@theme {
+  --font-admin: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Mustang gold (site CTA #BA7200, hover #7E4F05) */
+  --color-brand-50: #fcf7ee;
+  --color-brand-100: #f8ebd3;
+  --color-brand-200: #f0d3a2;
+  --color-brand-300: #e5b467;
+  --color-brand-400: #d6923a;
+  --color-brand-500: #ba7200;
+  --color-brand-600: #a06200;
+  --color-brand-700: #7e4f05;
+  --color-brand-800: #5f3b06;
+  --color-brand-900: #3f2805;
+
+  /* Sidebar ink */
+  --color-ink-950: #070c17;
+  --color-ink-900: #0b1220;
+  --color-ink-800: #111a2e;
+  --color-ink-700: #1b2740;
+  --color-ink-600: #2a3856;
+
+  --color-canvas: #f5f6f8;
+}
+
+body {
+  background: #ffffff;
+  color: #171717;
+}
+
+/* Base look for admin form controls/tables that have no utility classes.
+   Lives in the base layer so any Tailwind utility on an element wins. */
+@layer base {
+  .admin-ui {
+    font-family: var(--font-admin);
+    color: var(--color-slate-800);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Only unclassed controls: anything with its own classes (kit inputs,
+     client-facing FormRunner preview) keeps its own styling. */
+  .admin-ui :where(input:not([class]):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]), select:not([class]), textarea:not([class])) {
+    border: 1px solid var(--color-slate-300);
+    border-radius: 0.5rem;
+    background: #fff;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    color: var(--color-slate-900);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .admin-ui :where(input:not([class]), select:not([class]), textarea:not([class])):focus {
+    outline: none;
+    border-color: var(--color-brand-500);
+    box-shadow: 0 0 0 3px rgb(186 114 0 / 0.15);
+  }
+  .admin-ui :where(input[type="checkbox"], input[type="radio"]) {
+    accent-color: var(--color-brand-600);
+    width: 1rem;
+    height: 1rem;
+  }
+  .admin-ui :where(input[type="file"]) {
+    font-size: 0.8125rem;
+  }
+  .admin-ui :where(input[type="file"])::file-selector-button {
+    margin-right: 0.75rem;
+    border: 1px solid var(--color-slate-300);
+    border-radius: 0.5rem;
+    background: #fff;
+    padding: 0.35rem 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .admin-ui :where(table) {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .admin-ui :where(th) {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-slate-500);
+  }
+  .admin-ui :where(a) {
+    text-underline-offset: 2px;
+  }
+  .admin-ui :where(h1, h2, h3, h4) {
+    color: var(--color-slate-900);
+    letter-spacing: -0.01em;
+  }
+  .admin-ui :where(hr) {
+    border-color: var(--color-slate-200);
+  }
+  .admin-ui ::selection {
+    background: var(--color-brand-200);
+  }
+}
+
+@keyframes admin-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.admin-fade-in {
+  animation: admin-fade-in 0.25s ease-out both;
+}

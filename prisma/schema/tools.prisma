@@ -1,0 +1,76 @@
+// Tools module — calculators + appointment booking (Simply Schedule Appointments replica).
+// Global booking settings (timezone, admin email, notification templates, styles) live in
+// Setting key "tools.ssa" (see src/modules/tools/appointments/settings.ts).
+
+// SSA appointment type (DHi_ssa_appointment_types).
+model AppointmentType {
+  id                  Int       @id @default(autoincrement())
+  wpId                Int?      @unique
+  slug                String    @unique
+  title               String
+  description         String    @default("")
+  instructions        String    @default("")
+  durationMin         Int       @default(60)
+  bufferBeforeMin     Int       @default(0)
+  bufferAfterMin      Int       @default(0)
+  minNoticeMin        Int       @default(1440)   // min_booking_notice (minutes)
+  maxNoticeMin        Int       @default(525600) // max_booking_notice (minutes)
+  incrementMin        Int       @default(30)     // availability_increment
+  capacity            Int       @default(1)
+  maxPerDay           Int       @default(0)      // max_event_count (0 = unlimited)
+  availabilityType    String    @default("available_blocks") // available_blocks | start_times
+  availability        Json      @default("{}")   // { Monday: [{start:"08:00", end:"11:00"}], ... }
+  availabilityStart   DateTime?                  // optional bookable window
+  availabilityEnd     DateTime?
+  customerFields      Json      @default("[]")   // [{field, display, required, icon}]
+  customFields        Json      @default("[]")   // custom_customer_information
+  notifyAdmin         Boolean   @default(true)
+  notifyCustomer      Boolean   @default(true)
+  webMeetingUrl       String    @default("")
+  location            String    @default("")
+  status              String    @default("publish") // publish | draft | delete
+  displayOrder        Int       @default(0)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  appointments        Appointment[]
+}
+
+// SSA appointment (DHi_ssa_appointments).
+model Appointment {
+  id                  Int       @id @default(autoincrement())
+  wpId                Int?      @unique
+  appointmentTypeId   Int
+  appointmentType     AppointmentType @relation(fields: [appointmentTypeId], references: [id], onDelete: Restrict)
+  startAt             DateTime
+  endAt               DateTime
+  status              String    @default("booked") // booked | canceled
+  customerName        String    @default("")
+  customerEmail       String    @default("")
+  customerPhone       String    @default("")
+  customerInfo        Json      @default("{}")     // all submitted booking fields
+  customerTimezone    String    @default("Australia/Sydney")
+  userId              Int?                         // logged-in member who booked (plain column)
+  token               String    @unique            // public edit/cancel token
+  rescheduledFromId   Int?
+  rescheduledToId     Int?
+  cancelNote          String    @default("")
+  canceledBy          String    @default("")       // customer | staff name
+  canceledAt          DateTime?
+  staffNotes          String    @default("")
+  source              String    @default("web")    // web | admin | import
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([startAt])
+  @@index([status, startAt])
+  @@index([customerEmail])
+}
+
+// Blackout dates (SSA "blackout_dates" feature) — whole days in the business timezone.
+model AppointmentBlackout {
+  id        Int      @id @default(autoincrement())
+  startDate String   // YYYY-MM-DD (inclusive, business timezone)
+  endDate   String   // YYYY-MM-DD (inclusive)
+  note      String   @default("")
+  createdAt DateTime @default(now())
+}

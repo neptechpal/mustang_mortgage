@@ -1,0 +1,174 @@
+// Mustang Mini CRM — core (owned by the crm-core module).
+// Other CRM modules reference cases by plain `caseId Int` columns.
+
+model Case {
+  id              Int       @id @default(autoincrement())
+  wpId            Int?      @unique
+  title           String
+  status          String    @default("active")  // active | archive | completed | unsuccessful
+  stage           String    @default("new")     // new | awaiting-docs | submitted | pre-approved | full-approval | settlement
+  chaseBucket     String?                       // likely-return | worth-trying | keep-following-up | maybe-later | low-chance
+  legacyName      String    @default("")
+  legacyEmail     String    @default("")
+  app1Name        String    @default("")
+  app1Email       String    @default("")
+  app1Mobile      String    @default("")
+  app1Dob         String    @default("")
+  app2Name        String    @default("")
+  app2Email       String    @default("")
+  app2Mobile      String    @default("")
+  app2Dob         String    @default("")
+  portalToken     String    @unique
+  portalClosed    Boolean   @default(false)
+  showFactfind    Boolean   @default(true)
+  showDocuments   Boolean   @default(true)
+  ffDraft         Json      @default("{}")      // classic fact-find answers (field key -> value)
+  ffDone          Boolean   @default(false)
+  ffDoneAt        DateTime?
+  ffSentAt        DateTime?
+  ffSignatureTs   String    @default("")
+  originFormId    Int?
+  loanType        String    @default("")
+  loanAmount      Float?
+  commPct         Float?
+  commMmPct       Float?
+  initDone        Boolean   @default(false)
+  docsDoneAt      DateTime?
+  lastChaseAt     DateTime?
+  chaseCount      Int       @default(0)
+  chaseExhausted  Boolean   @default(false)
+  chasePaused     Boolean   @default(false)
+  meta            Json      @default("{}")      // any remaining legacy post meta
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  documents       CaseDocument[]
+  activity        CaseActivity[]
+}
+
+// Document checklist row (_mm_items).
+model CaseDocument {
+  id        Int      @id @default(autoincrement())
+  caseId    Int
+  case      Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  label     String
+  status    String   @default("Pending") // Pending | Received | Accepted | Rejected
+  note      String   @default("")
+  files     Json     @default("[]")      // [{fileId, name, uploadedAt}] (StoredFile ids) or legacy URLs
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Signals / activity feed (_mmcrm_activity). Written by any module via
+// src/modules/crm/activity.ts logActivity().
+model CaseActivity {
+  id         Int      @id @default(autoincrement())
+  caseId     Int
+  case       Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  type       String
+  detail     String   @default("")
+  by         String   @default("")
+  dismissed  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// crm-core additions
+// ---------------------------------------------------------------------------
+
+// Case timeline (_mm_ff_activity): portal opens, drafts, submissions, form
+// sends, reminders, portal open/close. Shown in the case "Activity" tab.
+model CaseEvent {
+  id        Int      @id @default(autoincrement())
+  caseId    Int
+  type      String
+  detail    String   @default("")
+  by        String   @default("")   // client | admin | system
+  extra     Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+// Portal Q&A thread (_mm_ff_msgs).
+model CaseMessage {
+  id        Int      @id @default(autoincrement())
+  caseId    Int
+  by        String                   // client | admin
+  text      String
+  name      String   @default("")
+  userId    Int?
+  createdAt DateTime @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+// Fact Find submission history (_mm_ff_submissions): one row per submit,
+// with the HTML snapshot stored privately (StoredFile id).
+model FactFindSubmission {
+  id         Int      @id @default(autoincrement())
+  caseId     Int
+  data       Json     @default("{}")
+  ip         String   @default("")
+  ua         String   @default("")
+  htmlFileId String?
+  pdfFileId  String?
+  legacyHtmlUrl String @default("")
+  legacyPdfUrl  String @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([caseId, createdAt])
+}
+
+// Schema-driven forms (mm_form + _mmf_schema).
+model CrmForm {
+  id        Int      @id @default(autoincrement())
+  wpId      Int?     @unique
+  title     String
+  status    String   @default("publish") // publish | draft | trash
+  schema    Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Per-case form assignment state (_mmf_forms[form_id]).
+model CaseForm {
+  id          Int       @id @default(autoincrement())
+  caseId      Int
+  formId      Int
+  sentAt      DateTime?
+  openedAt    DateTime?
+  submittedAt DateTime?
+  removed     Boolean   @default(false)
+  draft       Json      @default("{}")
+  history     Json      @default("[]")   // last 8 submissions [{ts,data,ip}]
+  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now())
+
+  @@unique([caseId, formId])
+}
+
+// Email templates (mm_template). Title doubles as the template name;
+// subject = mm_subject meta (falls back to title in the composer).
+model EmailTemplate {
+  id        Int      @id @default(autoincrement())
+  wpId      Int?     @unique
+  title     String
+  subject   String   @default("")
+  body      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Legacy CF7 "MM Fact Find" captures (fact_find CPT, wpcode 2771) shown on
+// the Fact Find History page.
+model FactFindEntry {
+  id        Int      @id @default(autoincrement())
+  wpId      Int?     @unique
+  title     String
+  data      Json     @default("{}")   // field key -> value (arrays preserved)
+  files     Json     @default("[]")   // [{fileId,name}] or legacy URLs
+  createdAt DateTime @default(now())
+}
