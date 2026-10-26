@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { ResetRequestForm, SetPasswordForm } from "@/modules/members/components/AuthForms";
 import { lookupResetToken } from "@/modules/members/service";
-import { redirect } from "next/navigation";
 import "@/modules/members/components/um.css";
+import { AuthShell } from "@/modules/web/account/AuthShell";
+import { buildMetadata } from "@/modules/web/seo";
 
-export const metadata: Metadata = { title: "Password Reset", robots: { index: false } };
+export const metadata = buildMetadata({ title: "Reset your password", description: "Reset the password for your Mustang Mortgage client account.", path: "/password-reset", noindex: true });
 export const dynamic = "force-dynamic";
 
 function Message({ text }: { text: string }) {
@@ -27,14 +28,18 @@ export default async function PasswordResetPage({ searchParams }: { searchParams
   const key = typeof sp.key === "string" ? sp.key : "";
 
   let content: React.ReactNode;
+  let title = "Reset your password";
   if (key) {
     const found = await lookupResetToken(key);
     if (!found.ok) redirect(`/password-reset?updated=${found.reason}`);
     content = <SetPasswordForm rpKey={key} />;
+    title = "Choose a new password";
   } else if (updated === "checkemail") {
     content = <Message text="If an account matching the provided details exists, we will send a password reset link. Please check your inbox." />;
+    title = "Check your email";
   } else if (updated === "password_changed") {
     content = <Message text="You have successfully changed password." />;
+    title = "Password changed";
   } else if (updated === "expiredkey") {
     content = <ResetRequestForm notice="Your password reset link has expired. Please request a new link below." />;
   } else if (updated === "invalidkey") {
@@ -42,5 +47,11 @@ export default async function PasswordResetPage({ searchParams }: { searchParams
   } else {
     content = <ResetRequestForm />;
   }
-  return <div className="um-page">{content}</div>;
+  return (
+    <div className="um-page">
+      <AuthShell title={title} lede="We email a reset link to the address on your account. It expires after a short time, so use it soon." aside="none">
+        {content}
+      </AuthShell>
+    </div>
+  );
 }

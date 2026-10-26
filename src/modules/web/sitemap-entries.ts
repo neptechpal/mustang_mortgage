@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { PATHS } from "./config";
+import { suburbSitemapEntries } from "./suburbs/sitemap";
+import { dutySitemapEntries } from "./duty/sitemap";
 
 /**
  * Sitemap registry. src/app/sitemap.ts flattens every source below.
@@ -38,6 +40,29 @@ export const STATIC_ENTRIES: SitemapEntry[] = [
   { path: PATHS.hardship, lastModified: BUILT, changeFrequency: "yearly", priority: 0.3, indexable: false },
   { path: PATHS.terms, lastModified: BUILT, changeFrequency: "yearly", priority: 0.2, indexable: false },
   { path: PATHS.importantInfo, lastModified: BUILT, changeFrequency: "yearly", priority: 0.3, indexable: false },
+  // Home-loan service pages (src/modules/web/content/home-loans).
+  { path: PATHS.homeLoans, lastModified: BUILT, changeFrequency: "monthly", priority: 0.9 },
+  { path: PATHS.homeLoansFirstHomeBuyers, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
+  { path: PATHS.refinancing, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
+  { path: PATHS.investmentLoans, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
+  { path: PATHS.constructionLoans, lastModified: BUILT, changeFrequency: "monthly", priority: 0.7 },
+  { path: PATHS.debtConsolidation, lastModified: BUILT, changeFrequency: "monthly", priority: 0.7 },
+  { path: PATHS.selfEmployed, lastModified: BUILT, changeFrequency: "monthly", priority: 0.7 },
+  { path: PATHS.fixedVsVariable, lastModified: BUILT, changeFrequency: "monthly", priority: 0.6 },
+  { path: PATHS.carLoans, lastModified: BUILT, changeFrequency: "yearly", priority: 0.4 },
+  // Calculators (src/modules/web/calculators) and the stamp duty hub. State duty pages are programmatic (below).
+  { path: PATHS.calculators, lastModified: BUILT, changeFrequency: "monthly", priority: 0.7 },
+  { path: PATHS.borrowingPower, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
+  { path: PATHS.repayments, lastModified: BUILT, changeFrequency: "monthly", priority: 0.7 },
+  { path: PATHS.refinanceCalculator, lastModified: BUILT, changeFrequency: "monthly", priority: 0.6 },
+  { path: PATHS.nprConverter, lastModified: BUILT, changeFrequency: "yearly", priority: 0.6 },
+  { path: PATHS.stampDuty, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
 ];
 
 export const SITEMAP_SOURCES: SitemapSource[] = [() => STATIC_ENTRIES];
+
+// Suburb guides + /mortgage-broker hubs (reviewed suburb pages only).
+SITEMAP_SOURCES.push(suburbSitemapEntries);
+
+// State stamp duty calculators /stamp-duty/<state> (reviewed "duty:<state>" pages only).
+SITEMAP_SOURCES.push(dutySitemapEntries);

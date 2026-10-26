@@ -1,0 +1,458 @@
+/*
+ * Client-facing schema forms (FormRunner, .mmf) and the secure portal, restyled to the public-site tokens.
+ * VISUAL ONLY: FormRunner's markup and Tailwind classes are untouched; these rules apply only inside the public
+ * chrome (.web), so the admin form builder preview keeps its own look.
+ * Deliberately NOT in a cascade layer: unlayered rules beat Tailwind utilities (layer `utilities`), and
+ * !important is used only where FormRunner sets inline styles (accent colour).
+ */
+
+.web .mmf {
+  --acc: var(--mw-gold-600) !important;
+  color: var(--mw-text);
+  font-family: var(--mw-sans);
+}
+.web .mmf h2 {
+  font-family: var(--mw-serif);
+  font-size: clamp(1.625rem, 1.3rem + 1.2vw, 2.125rem);
+  font-weight: 360;
+  font-variation-settings: "SOFT" 50;
+  line-height: 1.15;
+  color: var(--mw-ink);
+}
+.web .mmf h2 + div {
+  font-size: 1rem;
+  color: var(--mw-text-2);
+}
+.web .mmf [aria-live="polite"] {
+  color: var(--mw-text-3);
+  font-size: 0.8125rem;
+}
+.web .mmf form > section {
+  background: var(--mw-surface);
+  border: 1px solid var(--mw-line);
+  border-radius: var(--mw-radius);
+  padding: clamp(18px, 3vw, 32px);
+  margin-bottom: 20px;
+  box-shadow: none;
+}
+.web .mmf form > section.border-l-4 {
+  border-left-width: 3px;
+}
+.web .mmf form > section.border-l-indigo-500 {
+  border-left-color: var(--mw-ink);
+}
+.web .mmf form > section.border-l-amber-500 {
+  border-left-color: var(--mw-gold-500);
+}
+.web .mmf form > section > h3 {
+  font-family: var(--mw-serif);
+  font-size: 1.375rem;
+  font-weight: 380;
+  font-variation-settings: "SOFT" 50;
+  color: var(--mw-ink);
+  margin-bottom: 6px;
+}
+.web .mmf form > section > p {
+  font-size: 0.9375rem;
+  color: var(--mw-text-3);
+}
+.web .mmf form > section > .grid {
+  gap: 18px 20px;
+}
+.web .mmf label.block {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--mw-text);
+  margin-bottom: 7px;
+}
+.web .mmf label.block i {
+  color: var(--mw-danger);
+}
+
+/* Text inputs, selects, textareas */
+.web .mmf input:not([type="radio"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]),
+.web .mmf select,
+.web .mmf textarea {
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 1px solid var(--mw-line-strong);
+  border-radius: var(--mw-radius-sm);
+  background-color: var(--mw-surface);
+  color: var(--mw-text);
+  font: 400 1rem/1.4 var(--mw-sans);
+  box-shadow: none;
+}
+.web .mmf textarea {
+  min-height: 120px;
+}
+.web .mmf select {
+  appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6155' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.web .mmf input:not([type="radio"]):not([type="checkbox"]):focus,
+.web .mmf select:focus,
+.web .mmf textarea:focus {
+  outline: none;
+  border-color: var(--mw-gold-500);
+  box-shadow: 0 0 0 3px rgb(186 114 0 / 0.18);
+}
+/* Currency: the wrapper carries the border, the inner input none */
+.web .mmf div:has(> span + input) {
+  min-height: 48px;
+  border: 1px solid var(--mw-line-strong);
+  border-radius: var(--mw-radius-sm);
+  background: var(--mw-surface);
+}
+.web .mmf div:has(> span + input):focus-within {
+  border-color: var(--mw-gold-500);
+  box-shadow: 0 0 0 3px rgb(186 114 0 / 0.18);
+}
+.web .mmf div:has(> span + input) > span {
+  color: var(--mw-text-3);
+  padding-left: 14px;
+}
+.web .mmf div:has(> span + input) > input {
+  border: 0 !important;
+  box-shadow: none !important;
+  min-height: 46px;
+  padding-left: 6px;
+  font-variant-numeric: tabular-nums;
+}
+/* Error state (FormRunner adds Tailwind's red border classes on the field wrapper) */
+.web .mmf [class*="border-red-400"] input,
+.web .mmf [class*="border-red-400"] select,
+.web .mmf [class*="border-red-400"] textarea {
+  border-color: var(--mw-danger);
+}
+.web .mmf .text-red-600 {
+  color: var(--mw-danger);
+}
+.web .mmf .text-slate-500 {
+  color: var(--mw-text-3);
+}
+
+/* Radio / checkbox options as chips */
+.web .mmf label.cursor-pointer {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--mw-line-strong);
+  border-radius: var(--mw-radius-sm);
+  background: var(--mw-surface);
+  font-size: 0.9375rem;
+  color: var(--mw-text);
+}
+.web .mmf label.cursor-pointer:has(input:checked) {
+  border-color: var(--mw-ink);
+  background: var(--mw-sand);
+}
+.web .mmf input[type="radio"],
+.web .mmf input[type="checkbox"] {
+  accent-color: var(--mw-ink);
+  width: 18px;
+  height: 18px;
+}
+
+/* Info blocks */
+.web .mmf [data-key].bg-slate-50 {
+  background: var(--mw-sand);
+  border-radius: var(--mw-radius-sm);
+  color: var(--mw-text-2);
+  padding: 14px 16px;
+}
+
+/* Repeater rows */
+.web .mmf .rounded-xl.border.bg-slate-50\/60 {
+  background: var(--mw-paper);
+  border-color: var(--mw-line);
+  border-radius: var(--mw-radius-sm);
+}
+.web .mmf .border-dashed {
+  min-height: 42px;
+  border-color: var(--mw-line-strong);
+  border-radius: var(--mw-radius-sm);
+  font-weight: 600;
+  color: var(--mw-ink);
+}
+
+/* Wizard */
+.web .mmf form > div.h-1\.5 {
+  height: 4px;
+  background: var(--mw-line);
+}
+.web .mmf form > div.h-1\.5 > div {
+  background: var(--mw-gold-500) !important;
+}
+.web .mmf form > ol button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border-color: var(--mw-line-strong);
+  background: var(--mw-surface);
+  font-size: 0.8125rem;
+  color: var(--mw-text-2);
+}
+.web .mmf form > ol button[class*="bg-[var(--acc)]"] {
+  background: var(--mw-ink);
+  border-color: var(--mw-ink);
+  color: var(--mw-on-ink);
+}
+.web .mmf form > ol button[class*="bg-emerald-50"] {
+  background: var(--mw-success-tint);
+  border-color: transparent;
+  color: var(--mw-success);
+}
+
+/* Error summary */
+.web .mmf [role="alert"] {
+  border: 0;
+  border-left: 3px solid var(--mw-danger);
+  border-radius: var(--mw-radius-sm);
+  background: var(--mw-danger-tint);
+  color: var(--mw-danger);
+  padding: 14px 16px;
+}
+
+/* Action buttons */
+.web .mmf form > div:last-child > button {
+  min-height: 48px;
+  padding: 10px 20px;
+  border-radius: var(--mw-radius-sm);
+  font: 600 1rem/1.2 var(--mw-sans);
+  border: 1px solid var(--mw-ink);
+  background: transparent;
+  color: var(--mw-ink);
+}
+.web .mmf form > div:last-child > button:hover {
+  background: var(--mw-ink);
+  color: var(--mw-on-ink);
+}
+.web .mmf form > div:last-child > button[style],
+.web .mmf form > div:last-child > button[type="submit"] {
+  background: var(--mw-gold-600) !important;
+  border-color: var(--mw-gold-600);
+  color: #fff;
+}
+.web .mmf form > div:last-child > button[style]:hover,
+.web .mmf form > div:last-child > button[type="submit"]:hover {
+  background: var(--mw-gold-700) !important;
+  border-color: var(--mw-gold-700);
+}
+
+/* Done state (rendered without the .mmf wrapper, so it is targeted through .mw-formwrap) */
+.web .mw-formwrap > div.rounded-2xl {
+  border-color: var(--mw-line);
+  border-radius: var(--mw-radius);
+  box-shadow: var(--mw-shadow);
+}
+.web .mw-formwrap > div.rounded-2xl > div[style] {
+  background: var(--mw-success) !important;
+}
+.web .mw-formwrap > div.rounded-2xl > h3 {
+  font-family: var(--mw-serif);
+  font-size: 1.5rem;
+  font-weight: 360;
+  color: var(--mw-ink);
+}
+
+/* ------------------------------------------------------------------ */
+/* Secure portal (src/modules/crm/components/Portal.tsx)               */
+/* ------------------------------------------------------------------ */
+.web .mw-portal {
+  max-width: 1000px;
+}
+.web .mw-portal__hero {
+  background: var(--mw-surface);
+  border: 1px solid var(--mw-line);
+  border-radius: var(--mw-radius);
+  padding: clamp(20px, 3vw, 32px);
+  box-shadow: var(--mw-shadow);
+}
+.web .mw-portal__hero h2 {
+  font-family: var(--mw-serif);
+  font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+  font-weight: 340;
+  font-variation-settings: "SOFT" 50;
+  line-height: 1.12;
+  color: var(--mw-ink);
+  margin: 0;
+}
+.web .mw-portal__hero p {
+  margin: 10px 0 0;
+  font-size: 1.0625rem;
+  color: var(--mw-text-2);
+}
+.web .mw-portal__hero p strong {
+  color: var(--mw-ink);
+}
+.web .mw-portal__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.web .mw-portal__tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 8px 16px;
+  border: 1px solid var(--mw-line-strong);
+  border-radius: var(--mw-radius-sm);
+  background: var(--mw-surface);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--mw-text-2);
+  text-decoration: none;
+}
+.web .mw-portal__tab:hover {
+  border-color: var(--mw-ink);
+  color: var(--mw-ink);
+}
+.web .mw-portal__tab[aria-current="page"] {
+  background: var(--mw-ink);
+  border-color: var(--mw-ink);
+  color: var(--mw-on-ink);
+}
+.web .mw-portal__panel {
+  margin-top: 20px;
+}
+.web .mw-portal__card {
+  margin-top: 20px;
+  background: var(--mw-surface);
+  border: 1px solid var(--mw-line);
+  border-radius: var(--mw-radius);
+  padding: clamp(18px, 3vw, 28px);
+}
+.web .mw-portal__card h3 {
+  font-family: var(--mw-serif);
+  font-size: 1.375rem;
+  font-weight: 380;
+  color: var(--mw-ink);
+  margin: 0 0 6px;
+}
+.web .mw-portal__tip {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--mw-gold-500);
+  border-radius: var(--mw-radius-sm);
+  background: var(--mw-surface);
+  font-size: 0.9375rem;
+}
+.web .mw-portal__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+.web .mw-portal__chip--Pending {
+  background: var(--mw-gold-tint);
+  color: var(--mw-gold-700);
+}
+.web .mw-portal__chip--Received {
+  background: var(--mw-sand);
+  color: var(--mw-ink);
+  border-color: var(--mw-line-strong);
+}
+.web .mw-portal__chip--Accepted {
+  background: var(--mw-success-tint);
+  color: var(--mw-success);
+}
+.web .mw-portal__chip--Rejected {
+  background: var(--mw-danger-tint);
+  color: var(--mw-danger);
+}
+.web .mw-portal__chip--progress {
+  background: var(--mw-surface);
+  border-color: var(--mw-line-strong);
+  color: var(--mw-text-2);
+}
+.web .mw-portal__table {
+  overflow: hidden;
+  border: 1px solid var(--mw-line);
+  border-radius: var(--mw-radius);
+  background: var(--mw-surface);
+}
+.web .mw-portal__table thead tr {
+  background: var(--mw-paper);
+}
+.web .mw-portal__table th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mw-text-3);
+  padding: 12px 16px;
+}
+.web .mw-portal__table td {
+  padding: 12px 16px;
+  color: var(--mw-text-2);
+}
+.web .mw-portal__table tbody tr {
+  border-bottom: 1px solid var(--mw-line);
+}
+.web .mw-portal__table td strong {
+  color: var(--mw-ink);
+}
+/* DocUploader inside the portal */
+.web .mw-portal__table [role="button"] {
+  border-color: var(--mw-line-strong) !important;
+  border-radius: var(--mw-radius-sm) !important;
+  background: var(--mw-paper) !important;
+  color: var(--mw-text-2);
+}
+.web .mw-portal__table [role="button"]:hover,
+.web .mw-portal__table [role="button"]:focus-visible {
+  border-color: var(--mw-gold-500) !important;
+}
+.web .mw-portal__table button {
+  border-radius: var(--mw-radius-sm);
+}
+.web .mw-portal__table button[class*="bg-[#987633]"],
+.web .mw-portal__table button[class*="bg-\[\#987633\]"] {
+  background: var(--mw-gold-600);
+}
+.web .mw-portal__msgs {
+  margin-top: 28px;
+}
+.web .mw-portal__msgs h3 {
+  font-family: var(--mw-serif);
+  font-size: 1.5rem;
+  font-weight: 360;
+  color: var(--mw-ink);
+  margin: 0 0 10px;
+}
+.web .mw-portal__thread {
+  border: 1px solid var(--mw-line);
+  border-radius: var(--mw-radius);
+  background: var(--mw-surface);
+  padding: 14px;
+}
+.web .mw-portal__bubble {
+  max-width: 75%;
+  white-space: pre-line;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.9375rem;
+}
+.web .mw-portal__bubble--admin {
+  background: var(--mw-ink);
+  color: var(--mw-on-ink);
+  border-top-right-radius: 4px;
+}
+.web .mw-portal__bubble--client {
+  background: var(--mw-sand);
+  color: var(--mw-text);
+  border-top-left-radius: 4px;
+}
+
+/* Fact find extras (Cf7Extras children) */
+.web .mmf input[type="file"] {
+  font: inherit;
+  font-size: 0.9375rem;
+}

@@ -1,0 +1,110 @@
+/* Client account pages (AuthShell) and app wrappers (portal, booking, forms) in the public-site design. */
+@layer components {
+  .mw-acct {
+    padding-top: clamp(32px, 5vw, 72px);
+  }
+  .mw-acct__grid {
+    display: grid;
+    gap: 36px;
+    align-items: start;
+  }
+  @media (min-width: 960px) {
+    .mw-acct__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+      gap: 72px;
+    }
+  }
+  .mw-acct__copy > * + * {
+    margin-top: 18px;
+  }
+  .mw-acct__copy .mw-h1 {
+    max-width: 16ch;
+  }
+  .mw-acct__points {
+    list-style: none;
+    margin: 32px 0 0 !important;
+    padding: 0;
+    border-top: 1px solid var(--mw-line);
+    max-width: 520px;
+  }
+  .mw-acct__points li {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--mw-line);
+  }
+  .mw-acct__points svg {
+    color: var(--mw-gold-600);
+    margin-top: 2px;
+  }
+  .mw-acct__points strong {
+    display: block;
+    font-weight: 600;
+    color: var(--mw-text);
+  }
+  .mw-acct__points span {
+    display: block;
+    font-size: 0.9375rem;
+    color: var(--mw-text-2);
+  }
+  .mw-acct__card {
+    background: var(--mw-surface);
+    border: 1px solid var(--mw-line);
+    border-radius: var(--mw-radius);
+    box-shadow: var(--mw-shadow);
+    padding: clamp(22px, 3.4vw, 36px);
+    min-width: 0;
+  }
+  .mw-acct__card .um {
+    max-width: none;
+  }
+  .mw-acct__card > .um:first-child .um-field:first-child,
+  .mw-acct__card .um-row .um-field:first-child {
+    padding-top: 0;
+  }
+  .mw-acct__note {
+    margin: 22px 0 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--mw-line);
+    color: var(--mw-text-3);
+  }
+
+  /* App pages (account, members, profile, portal, forms) under a compact page header */
+  .mw-apphead {
+    padding-top: clamp(24px, 4vw, 44px);
+    padding-bottom: clamp(24px, 4vw, 40px);
+    border-bottom: 1px solid var(--mw-line);
+  }
+  .mw-apphead .mw-crumbs {
+    margin-bottom: clamp(20px, 3vw, 36px);
+  }
+  .mw-apphead__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 32px;
+  }
+  .mw-apphead__row > div > * + * {
+    margin-top: 12px;
+  }
+  .mw-apphead .mw-h1 {
+    font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  }
+  .mw-appbody {
+    padding-top: clamp(28px, 4vw, 56px);
+    padding-bottom: clamp(56px, 8vw, 104px);
+  }
+  .mw-appbody .um {
+    margin-left: 0;
+  }
+  .mw-appnote {
+    margin: 24px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-size: 0.875rem;
+    color: var(--mw-text-3);
+  }
+}

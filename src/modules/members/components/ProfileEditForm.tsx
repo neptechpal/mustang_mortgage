@@ -9,7 +9,7 @@ import type { FormState } from "../auth-actions";
 
 function Save() {
   const { pending } = useFormStatus();
-  return <input type="submit" className="um-button" value="Update Profile" disabled={pending} />;
+  return <input type="submit" className="um-button" value="Update profile" disabled={pending} />;
 }
 
 export function ProfileEditForm({
@@ -35,7 +35,7 @@ export function ProfileEditForm({
       <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
         <Avatar src={preview} name={name} size={120} />
         <div style={{ flex: 1, minWidth: 220 }}>
-          <UmField name="profile_photo" label="Profile Photo" error={fe.profile_photo}>
+          <UmField name="profile_photo" label="Profile photo" error={fe.profile_photo}>
             <input
               type="file"
               name="profile_photo"
@@ -62,7 +62,7 @@ export function ProfileEditForm({
           maxLength={maxChars}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
-          placeholder="Tell us a bit about yourself..."
+          placeholder="A few lines about yourself"
         />
       </UmField>
       <div className="um-col-alt">

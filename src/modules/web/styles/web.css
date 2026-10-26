@@ -1851,6 +1851,14 @@
       display: none;
     }
   }
+  /* Compact band for narrow columns (e.g. inside ArticleLayout): no seal, single column. */
+  .mw-ctaband--compact {
+    grid-template-columns: minmax(0, 1fr);
+    padding: clamp(24px, 3vw, 36px);
+  }
+  .mw-ctaband--compact .mw-ctaband__seal {
+    display: none;
+  }
   .mw-ctaband--ink {
     background: var(--mw-ink);
     border-color: var(--mw-ink);
@@ -2390,19 +2398,19 @@
     color: var(--mw-gold-700);
     text-decoration-color: currentColor;
   }
-  .mw-prose ul,
-  .mw-prose ol {
+  .mw-prose ul:not([class]),
+  .mw-prose ol:not([class]) {
     padding-left: 1.3em;
   }
-  .mw-prose ul {
+  .mw-prose ul:not([class]) {
     list-style: none;
     padding-left: 0;
   }
-  .mw-prose ul > li {
+  .mw-prose ul:not([class]) > li {
     position: relative;
     padding-left: 1.4em;
   }
-  .mw-prose ul > li::before {
+  .mw-prose ul:not([class]) > li::before {
     content: "";
     position: absolute;
     left: 0.15em;
@@ -2411,14 +2419,14 @@
     height: 1px;
     background: var(--mw-gold-500);
   }
-  .mw-prose ol {
+  .mw-prose ol:not([class]) {
     list-style: decimal;
   }
-  .mw-prose ol > li::marker {
+  .mw-prose ol:not([class]) > li::marker {
     color: var(--mw-gold-600);
     font-family: var(--mw-serif);
   }
-  .mw-prose li + li {
+  .mw-prose :is(ul, ol):not([class]) > li + li {
     margin-top: 0.45em;
   }
   .mw-prose blockquote {

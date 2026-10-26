@@ -8,7 +8,8 @@ import { cx } from "../ui/cx";
 
 /**
  * Closing call to action (before the footer). Defaults: book a consultation + call Sulav.
- * Rendered as its own section; set `bare` to drop the section wrapper (e.g. inside an article).
+ * Rendered as its own section; set `bare` to drop the section wrapper (e.g. inside an article)
+ * and `compact` for narrow columns (hides the seal).
  */
 export function CtaBand({
   title = "Book a 60-minute consultation with Sulav",
@@ -17,6 +18,7 @@ export function CtaBand({
   showPhone = true,
   tone = "white",
   bare,
+  compact,
   headingLevel = 2,
 }: {
   title?: React.ReactNode;
@@ -25,10 +27,11 @@ export function CtaBand({
   showPhone?: boolean;
   tone?: "white" | "ink";
   bare?: boolean;
+  compact?: boolean;
   headingLevel?: 2 | 3;
 }) {
   const band = (
-    <div className={cx("mw-ctaband", tone === "ink" && "mw-ctaband--ink mw-tone-ink")}>
+    <div className={cx("mw-ctaband", compact && "mw-ctaband--compact", tone === "ink" && "mw-ctaband--ink mw-tone-ink")}>
       <div className="mw-ctaband__body">
         <Heading level={headingLevel} size="h2">
           {title}

@@ -1,11 +1,14 @@
-import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession, isStaff } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { AccountTabs } from "@/modules/members/components/AccountTabs";
 import { avatarUrl, displayNameOf, getProfile, profileUrl } from "@/modules/members/profile";
+import { AppBody, AppHead } from "@/modules/web/account/AppHead";
+import { LinkButton } from "@/modules/web/components/ui/Button";
+import { PATHS } from "@/modules/web/config";
+import { buildMetadata } from "@/modules/web/seo";
 
-export const metadata: Metadata = { title: "Account", robots: { index: false } };
+export const metadata = buildMetadata({ title: "Your account", description: "Manage your Mustang Mortgage client account.", path: "/account", noindex: true });
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage({ params }: { params: Promise<{ tab?: string[] }> }) {
@@ -17,6 +20,17 @@ export default async function AccountPage({ params }: { params: Promise<{ tab?: 
   const p = getProfile(user);
   return (
     <div className="um-page">
+      <AppHead
+        eyebrow="Client account"
+        title={`Hello, ${user.firstName || displayNameOf(user)}`}
+        lede="Update your details, password and privacy settings. Documents and forms for your loan are in the secure portal."
+        actions={
+          <LinkButton href={PATHS.portal} variant="secondary" arrow>
+            Secure portal
+          </LinkButton>
+        }
+      />
+      <AppBody>
       <AccountTabs
         initialTab={tab?.[0]}
         d={{
@@ -33,6 +47,7 @@ export default async function AccountPage({ params }: { params: Promise<{ tab?: 
           canDelete: !isStaff(user.role),
         }}
       />
+      </AppBody>
     </div>
   );
 }

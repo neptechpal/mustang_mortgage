@@ -124,14 +124,16 @@ export type BorrowInputs = {
   dutyAllow: number;
 };
 
-export function compute(S: BorrowAssumptions, i: BorrowInputs, prodOverride?: number) {
+/** `taxFn` defaults to the original 2024-25 tax(); the public calculator passes the current scale (src/modules/calc/borrowing.ts). */
+export function compute(S: BorrowAssumptions, i: BorrowInputs, prodOverride?: number, taxFn: (inc: number) => number = tax) {
   const prod = prodOverride != null ? prodOverride : i.prodRate;
   const assess = Math.max(prod + i.buffer, i.floorRate);
   const bs = (S.bonus_shade_pct || 80) / 100;
   const g1 = i.a1Gross + i.a1Other * bs,
     g2 = i.a2Gross + i.a2Other * bs,
     gross = g1 + g2;
-  const netAnnual = netOf(g1) + netOf(g2);
+  const net = (g: number) => Math.max(0, g - taxFn(g));
+  const netAnnual = net(g1) + net(g2);
   const rentPm = (i.rentPw * 52 * ((S.rent_shade_pct || 80) / 100)) / 12;
   const netPm = netAnnual / 12 + rentPm;
   const hem = +((S as unknown as Record<string, number>)["hem_" + i.household] ?? 0) || 0;

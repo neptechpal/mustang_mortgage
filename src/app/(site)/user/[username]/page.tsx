@@ -7,6 +7,8 @@ import { Avatar } from "@/modules/members/components/fields";
 import { ProfileEditForm } from "@/modules/members/components/ProfileEditForm";
 import { avatarUrl, displayNameOf, getProfile, profileUrl } from "@/modules/members/profile";
 import { getMembersSettings } from "@/modules/members/settings";
+import { AppBody } from "@/modules/web/account/AppHead";
+import { Breadcrumbs } from "@/modules/web/components/content/Breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -58,13 +60,17 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
 
   return (
     <div className="um-page">
+      <AppBody>
+      <div style={{ marginBottom: 28 }}>
+        <Breadcrumbs items={[{ name: "Members", path: "/members" }, { name: isPrivate ? "Profile" : name, path: profileUrl(user.username) }]} jsonLd={false} />
+      </div>
       <div className="um um-profile">
         {isPrivate ? (
-          <div className="um-profile-body" style={{ borderTop: "1px solid #eee" }}>
+          <div className="um-profile-body um-profile-body--solo">
             <div className="um-profile-note">This user has chosen to keep their profile private.</div>
           </div>
         ) : editing ? (
-          <div className="um-profile-body" style={{ borderTop: "1px solid #eee" }}>
+          <div className="um-profile-body um-profile-body--solo">
             <ProfileEditForm
               description={p.description ?? ""}
               avatar={avatarUrl(user)}
@@ -86,7 +92,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                 <div className="um-profile-edit-btn">
                   {own ? (
                     <Link href={`${profileUrl(user.username)}?um_action=edit`} className="um-button um-alt" style={{ padding: "10px 18px" }}>
-                      Edit Profile
+                      Edit profile
                     </Link>
                   ) : (
                     <Link href={`/admin/users/${user.id}`} className="um-button um-alt" style={{ padding: "10px 18px" }}>
@@ -106,7 +112,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
                 <div className="um-profile-bio">{p.description}</div>
               ) : own ? (
                 <div className="um-profile-note">
-                  Your profile is looking a little empty. Why not <Link href={`${profileUrl(user.username)}?um_action=edit`}>add</Link> some information!
+                  Your profile is empty. <Link href={`${profileUrl(user.username)}?um_action=edit`}>Add a short bio</Link> if you like.
                 </div>
               ) : (
                 <div className="um-profile-note">This user has not added any information to their profile yet.</div>
@@ -115,6 +121,7 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           </>
         )}
       </div>
+      </AppBody>
     </div>
   );
 }

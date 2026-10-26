@@ -289,3 +289,7 @@ Service / visa page: `ArticleLayout` with `summary` (direct answer) → eligibil
 
 Calculator page: `PageIntro` → calculator → result card CTA (`LinkButton` to `PATHS.book`) → assumptions →
 `Disclaimer variant="calculator"` → `webAppJsonLd`.
+
+### Notes
+- Prose list styles only apply to plain lists (`ul`/`ol` without a class); component lists keep their own styling.
+- `CtaBand compact` hides the seal for narrow columns (inside `ArticleLayout`).

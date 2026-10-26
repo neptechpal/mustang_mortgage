@@ -32,6 +32,8 @@ export const PATHS = {
   constructionLoans: "/home-loans/construction-loans",
   debtConsolidation: "/home-loans/debt-consolidation",
   fixedVsVariable: "/home-loans/fixed-vs-variable",
+  homeLoansFirstHomeBuyers: "/home-loans/first-home-buyers",
+  selfEmployed: "/home-loans/self-employed",
   carLoans: "/car-loans",
 
   visaHomeLoans: "/visa-home-loans",
@@ -48,6 +50,7 @@ export const PATHS = {
   calculators: "/calculators",
   borrowingPower: "/calculators/borrowing-power",
   repayments: "/calculators/repayments",
+  refinanceCalculator: "/calculators/refinance",
   stampDuty: "/stamp-duty",
   stampDutyNsw: "/stamp-duty/nsw",
   nprConverter: "/calculators/npr-aud-converter",
@@ -242,6 +245,7 @@ export const NAV: NavGroup[] = [
       { label: "Investment loans", href: PATHS.investmentLoans, description: "Buying a property to rent out" },
       { label: "Construction loans", href: PATHS.constructionLoans, description: "Building a home, paid in stages" },
       { label: "Debt consolidation", href: PATHS.debtConsolidation, description: "Rolling other debts into your home loan" },
+      { label: "Self-employed", href: PATHS.selfEmployed, description: "ABN, company and sole-trader income" },
       { label: "Fixed or variable", href: PATHS.fixedVsVariable, description: "How each rate type works, and splitting" },
     ],
   },
@@ -265,6 +269,7 @@ export const NAV: NavGroup[] = [
     items: [
       { label: "Borrowing power", href: PATHS.borrowingPower, description: "An estimate of what lenders may lend you" },
       { label: "Repayments", href: PATHS.repayments, description: "Weekly, fortnightly and monthly repayments" },
+      { label: "Refinance savings", href: PATHS.refinanceCalculator, description: "Compare your loan with a new one, costs included" },
       { label: "Stamp duty", href: PATHS.stampDuty, description: "Transfer duty by state, with first home concessions" },
       { label: "NPR and AUD converter", href: PATHS.nprConverter, description: "Lakh and crore to Australian dollars" },
     ],
@@ -315,6 +320,7 @@ export const FOOTER_GROUPS: { title: string; links: NavLink[] }[] = [
     links: [
       { label: "Borrowing power", href: PATHS.borrowingPower },
       { label: "Repayments", href: PATHS.repayments },
+      { label: "Refinance savings", href: PATHS.refinanceCalculator },
       { label: "Stamp duty", href: PATHS.stampDuty },
       { label: "NPR and AUD converter", href: PATHS.nprConverter },
       { label: "Book a consultation", href: PATHS.book },

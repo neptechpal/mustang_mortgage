@@ -31,7 +31,7 @@ export function LoginForm({ redirectTo, notice, warning }: { redirectTo?: string
           {state.error && <Notice kind="err">{state.error}</Notice>}
           <div className="um-row _um_row_1">
             <div className="um-col-1">
-              <UmField name="username" label="Username or E-mail" value={state.values?.username} error={fe.username} autoComplete="username" />
+              <UmField name="username" label="Username or email" value={state.values?.username} error={fe.username} autoComplete="username" />
               <UmField name="user_password" label="Password" type="password" error={fe.user_password} />
             </div>
           </div>
@@ -49,7 +49,7 @@ export function LoginForm({ redirectTo, notice, warning }: { redirectTo?: string
             <div className="um-clear" />
             <div style={{ height: 20 }} />
             <div className="um-left um-half">
-              <Submit label="Login" />
+              <Submit label="Log in" />
             </div>
             <div className="um-right um-half">
               <Link href="/register" className="um-button um-alt">
@@ -90,15 +90,15 @@ export function RegisterForm() {
           <div className="um-row _um_row_1">
             <div className="um-col-1">
               <UmField name="user_login" label="Username" value={v.user_login} error={fe.user_login} />
-              <UmField name="first_name" label="First Name" value={v.first_name} error={fe.first_name} />
-              <UmField name="last_name" label="Last Name" value={v.last_name} error={fe.last_name} />
-              <UmField name="user_email" label="E-mail Address" value={v.user_email} error={fe.user_email} />
+              <UmField name="first_name" label="First name" value={v.first_name} error={fe.first_name} />
+              <UmField name="last_name" label="Last name" value={v.last_name} error={fe.last_name} />
+              <UmField name="user_email" label="Email address" value={v.user_email} error={fe.user_email} />
               <UmField name="user_password" label="Password" type="password" error={fe.user_password} autoComplete="new-password" />
               <UmField
                 name="confirm_user_password"
-                label="Confirm Password"
+                label="Confirm password"
                 type="password"
-                placeholder="Confirm Password"
+                placeholder="Confirm password"
                 error={fe.confirm_user_password}
                 autoComplete="new-password"
               />
@@ -111,7 +111,7 @@ export function RegisterForm() {
             </div>
             <div className="um-right um-half">
               <Link href="/login" className="um-button um-alt">
-                Login
+                Log in
               </Link>
             </div>
             <div className="um-clear" />
@@ -139,7 +139,7 @@ export function ResetRequestForm({ notice }: { notice?: string }) {
           </div>
           <UmField
             name="username_b"
-            label="Username or Email"
+            label="Username or email"
             placeholder="Enter your username or email"
             value={state.values?.username_b}
             error={fe.username_b}
@@ -167,12 +167,12 @@ export function SetPasswordForm({ rpKey }: { rpKey: string }) {
         <form action={action} noValidate>
           {state.error && <Notice kind="err">{state.error}</Notice>}
           <input type="hidden" name="rp_key" value={rpKey} />
-          <UmField name="user_password" label="New Password" type="password" error={fe.user_password} autoComplete="new-password" />
+          <UmField name="user_password" label="New password" type="password" error={fe.user_password} autoComplete="new-password" />
           <UmField
             name="confirm_user_password"
-            label="Confirm Password"
+            label="Confirm password"
             type="password"
-            placeholder="Confirm Password"
+            placeholder="Confirm password"
             error={fe.confirm_user_password}
             autoComplete="new-password"
           />

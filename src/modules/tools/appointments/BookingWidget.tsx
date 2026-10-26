@@ -1,5 +1,6 @@
 "use client";
 
+import "@/modules/web/styles/booking.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PublicType } from "./types";
 
@@ -284,52 +285,48 @@ export default function BookingWidget({
     }
   }
 
-  const style = { "--ssa-accent": accent } as React.CSSProperties;
-  const btnAccent = "bg-[var(--ssa-accent)] text-white hover:brightness-95 disabled:opacity-50";
   const endIso = slot && type ? new Date(new Date(slot).getTime() + type.durationMin * 60000).toISOString() : "";
 
+  // Visual design: public-site tokens (src/modules/web/styles/booking.css, classes mw-bk-*). `accent` is kept for
+  // API compatibility with the admin settings but the site palette is used.
+  void accent;
   return (
-    <div className="ssa-booking mx-auto w-full max-w-[900px] text-[#303030]" style={{ ...style, fontFamily: "Roboto, Arial, sans-serif" }}>
-      <div className="rounded-md bg-white shadow-[0_1px_3px_rgba(0,0,0,.12),0_1px_2px_rgba(0,0,0,.24)]">
+    <div className="mw-bk">
+      <div className="mw-bk__card">
         {/* Header */}
         {type && step !== "type" && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 px-5 py-4">
+          <div className="mw-bk__head">
             <div>
-              <div className="text-lg font-medium">{type.title}</div>
-              <div className="text-sm text-black/60">{type.durationMin} minutes</div>
+              <div className="mw-bk__title">{type.title}</div>
+              <div className="mw-bk__meta">{type.durationMin} minutes</div>
             </div>
             {types.length > 1 && !reschedule && step !== "done" && (
-              <button type="button" className="text-sm font-medium text-[var(--ssa-accent)] hover:underline" onClick={() => setStep("type")}>
+              <button type="button" className="mw-bk__textbtn" onClick={() => setStep("type")}>
                 Change appointment type
               </button>
             )}
           </div>
         )}
 
-        <div className="p-4 sm:p-6">
+        <div className="mw-bk__body">
           {error && (
-            <div role="alert" className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div role="alert" className="mw-bk__error">
               {error}
             </div>
           )}
 
           {step === "type" && (
             <div>
-              <h2 className="mb-4 text-xl font-medium">Select an appointment type</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <h2 className="mw-bk__h2">Select an appointment type</h2>
+              <div className="mw-bk__types">
                 {types.map((t) => (
-                  <button
-                    key={t.slug}
-                    type="button"
-                    onClick={() => chooseType(t)}
-                    className="rounded-md border-l-4 border-[var(--ssa-accent)] bg-white p-4 text-left shadow-[0_1px_3px_rgba(0,0,0,.15)] transition hover:shadow-md"
-                  >
-                    <div className="font-medium">{t.title}</div>
-                    <div className="text-sm text-black/60">{t.durationMin} minutes</div>
-                    {t.description && <div className="mt-1 text-sm text-black/70">{t.description}</div>}
+                  <button key={t.slug} type="button" onClick={() => chooseType(t)} className="mw-bk__type">
+                    <span className="mw-bk__type-title">{t.title}</span>
+                    <span className="mw-bk__meta">{t.durationMin} minutes</span>
+                    {t.description && <span className="mw-bk__type-desc">{t.description}</span>}
                   </button>
                 ))}
-                {!types.length && <p className="text-black/60">No appointment types are available right now.</p>}
+                {!types.length && <p className="mw-bk__muted">No appointment types are available right now.</p>}
               </div>
             </div>
           )}
@@ -337,15 +334,15 @@ export default function BookingWidget({
           {step === "time" && type && (
             <div>
               {reschedule && (
-                <p className="mb-4 rounded bg-[#faf6ee] px-4 py-3 text-sm">
+                <p className="mw-bk__note">
                   Currently booked for <b>{fmtLong(reschedule.currentStart, tz)}</b> at <b>{fmtTime(reschedule.currentStart, tz)}</b>. Pick a new time below.
                 </p>
               )}
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-xl font-medium">Select a date</h2>
-                <label className="flex items-center gap-2 text-sm text-black/70">
+              <div className="mw-bk__bar">
+                <h2 className="mw-bk__h2">Select a date</h2>
+                <label className="mw-bk__tz">
                   <span>Time zone</span>
-                  <select value={tz} onChange={(e) => setTz(e.target.value)} className="rounded border border-black/20 bg-white px-2 py-1 text-sm">
+                  <select value={tz} onChange={(e) => setTz(e.target.value)} className="mw-select">
                     {tzOptions.map((z) => (
                       <option key={z} value={z}>
                         {z.replace(/_/g, " ")}
@@ -355,79 +352,56 @@ export default function BookingWidget({
                 </label>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="mw-bk__week">
                 <button
                   type="button"
                   aria-label="Previous week"
                   disabled={!weekStart || weekStart <= firstOfWeek(today) || loading}
                   onClick={() => loadWeek(addDays(weekStart, -7))}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xl hover:bg-black/5 disabled:opacity-30"
+                  className="mw-bk__nav"
                 >
                   ‹
                 </button>
-                <div className="grid flex-1 grid-cols-7 gap-1">
+                <div className="mw-bk__days">
                   {weekDays.map((d) => {
                     const l = dayLabel(d);
                     const has = !!byDay[d]?.length;
                     const active = d === day;
                     return (
-                      <button
-                        key={d}
-                        type="button"
-                        disabled={!has}
-                        onClick={() => setDay(d)}
-                        className={`flex flex-col items-center rounded-md px-1 py-2 text-xs transition sm:text-sm ${
-                          active ? "bg-[var(--ssa-accent)] text-white" : has ? "hover:bg-black/5" : "cursor-not-allowed opacity-35"
-                        }`}
-                      >
-                        <span className="uppercase">{l.dow}</span>
-                        <span className="text-lg font-medium leading-tight">{l.day}</span>
-                        <span>{l.month}</span>
+                      <button key={d} type="button" disabled={!has} onClick={() => setDay(d)} aria-pressed={active} className={`mw-bk__day${active ? " is-active" : ""}`}>
+                        <span className="mw-bk__dow">{l.dow}</span>
+                        <span className="mw-bk__dnum">{l.day}</span>
+                        <span className="mw-bk__mon">{l.month}</span>
                       </button>
                     );
                   })}
                 </div>
-                <button
-                  type="button"
-                  aria-label="Next week"
-                  disabled={!weekStart || loading}
-                  onClick={() => loadWeek(addDays(weekStart, 7))}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xl hover:bg-black/5 disabled:opacity-30"
-                >
+                <button type="button" aria-label="Next week" disabled={!weekStart || loading} onClick={() => loadWeek(addDays(weekStart, 7))} className="mw-bk__nav">
                   ›
                 </button>
               </div>
 
-              <div className="mt-5 min-h-[160px]">
+              <div className="mw-bk__slots">
                 {loading ? (
-                  <p className="py-10 text-center text-black/60">Loading available times…</p>
+                  <p className="mw-bk__empty">Loading available times…</p>
                 ) : !day ? (
-                  <p className="py-10 text-center text-black/60">No available times this week. Try the next week.</p>
+                  <p className="mw-bk__empty">No available times this week. Try the next week.</p>
                 ) : (
                   <>
-                    <h3 className="mb-3 font-medium">{fmtLong(byDay[day][0], tz)}</h3>
-                    <div className="grid gap-4 sm:grid-cols-3">
+                    <h3 className="mw-bk__h3">{fmtLong(byDay[day][0], tz)}</h3>
+                    <div className="mw-bk__cols">
                       {(Object.keys(columns) as (keyof typeof columns)[]).map((col) => (
                         <div key={col}>
-                          <div className="mb-2 border-b border-black/10 pb-1 text-sm font-medium uppercase tracking-wide text-black/60">{col}</div>
-                          <div className="flex flex-col gap-2">
+                          <div className="mw-bk__colhead">{col}</div>
+                          <div className="mw-bk__collist">
                             {columns[col].length ? (
                               columns[col].map((s) => (
-                                <button
-                                  key={s}
-                                  type="button"
-                                  onClick={() => pickSlot(s)}
-                                  className={`rounded border px-3 py-2 text-sm font-medium transition ${
-                                    slot === s
-                                      ? "border-[var(--ssa-accent)] bg-[var(--ssa-accent)] text-white"
-                                      : "border-[var(--ssa-accent)] text-[var(--ssa-accent)] hover:bg-[var(--ssa-accent)] hover:text-white"
-                                  }`}
-                                >
+                                <button key={s} type="button" onClick={() => pickSlot(s)} aria-pressed={slot === s} className={`mw-bk__slot${slot === s ? " is-active" : ""}`}>
                                   {fmtTime(s, tz)}
                                 </button>
                               ))
                             ) : (
-                              <span className="text-sm text-black/40">—</span>
+                              <span className="mw-bk__muted">–</span>
                             )}
                           </div>
                         </div>
@@ -438,12 +412,12 @@ export default function BookingWidget({
               </div>
 
               {reschedule && slot && (
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-black/10 pt-4">
-                  <span className="text-sm">
+                <div className="mw-bk__confirm">
+                  <span>
                     New time: <b>{fmtLong(slot, tz)}</b> at <b>{fmtTime(slot, tz)}</b>
                   </span>
-                  <button type="button" disabled={submitting} onClick={submitReschedule} className={`rounded px-5 py-2.5 font-medium ${btnAccent}`}>
-                    {submitting ? "Rescheduling…" : "Confirm new time"}
+                  <button type="button" disabled={submitting} onClick={submitReschedule} className="mw-btn mw-btn--primary">
+                    <span>{submitting ? "Rescheduling…" : "Confirm new time"}</span>
                   </button>
                 </div>
               )}
@@ -452,17 +426,16 @@ export default function BookingWidget({
 
           {step === "details" && type && slot && (
             <form onSubmit={submitBooking} noValidate>
-              <div className="mb-5 flex flex-wrap items-center justify-between gap-2 rounded bg-[#faf6ee] px-4 py-3 text-sm">
+              <div className="mw-bk__note mw-bk__note--row">
                 <span>
-                  <b>{fmtLong(slot, tz)}</b>, {fmtTime(slot, tz)} – {fmtTime(endIso, tz)}{" "}
-                  <span className="text-black/50">({tz.replace(/_/g, " ")})</span>
+                  <b>{fmtLong(slot, tz)}</b>, {fmtTime(slot, tz)} – {fmtTime(endIso, tz)} <span className="mw-bk__muted">({tz.replace(/_/g, " ")})</span>
                 </span>
-                <button type="button" className="font-medium text-[var(--ssa-accent)] hover:underline" onClick={() => setStep("time")}>
+                <button type="button" className="mw-bk__textbtn" onClick={() => setStep("time")}>
                   Change time
                 </button>
               </div>
-              <h2 className="mb-4 text-xl font-medium">Enter your details</h2>
-              <div className="grid gap-4">
+              <h2 className="mw-bk__h2">Enter your details</h2>
+              <div className="mw-bk__fields">
                 {type.fields.map((f) => {
                   const id = `ssa-${f.field.toLowerCase().replace(/\W+/g, "-")}`;
                   const err = fieldErrors[f.field];
@@ -472,34 +445,30 @@ export default function BookingWidget({
                     required: f.required,
                     value: values[f.field] ?? "",
                     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setValues((v) => ({ ...v, [f.field]: e.target.value })),
-                    className: `w-full rounded border bg-white px-3 py-2.5 outline-none focus:border-[var(--ssa-accent)] focus:ring-1 focus:ring-[var(--ssa-accent)] ${
-                      err ? "border-red-500" : "border-black/25"
-                    }`,
+                    className: f.field === "Notes" || f.type === "textarea" ? "mw-textarea" : "mw-input",
+                    "aria-invalid": err ? ("true" as const) : undefined,
                   };
                   return (
-                    <div key={f.field} className="flex gap-3">
-                      <Icon name={f.icon} className="mt-8 h-5 w-5 shrink-0 text-black/50" />
-                      <div className="flex-1">
-                        <label htmlFor={id} className="mb-1 block text-sm text-black/70">
-                          {f.field}
-                          {f.required ? " *" : ""}
-                        </label>
-                        {f.field === "Notes" || f.type === "textarea" ? (
-                          <textarea rows={4} {...common} />
-                        ) : (
-                          <input
-                            type={f.field === "Email" ? "email" : f.field === "Phone" ? "tel" : "text"}
-                            autoComplete={
-                              { Name: "name", Email: "email", Phone: "tel", Address: "street-address", City: "address-level2", State: "address-level1", Zip: "postal-code" }[
-                                f.field
-                              ] ?? "off"
-                            }
-                            list={f.field === "State" ? "ssa-au-states" : undefined}
-                            {...common}
-                          />
-                        )}
-                        {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
-                      </div>
+                    <div key={f.field} className={`mw-field${f.field === "Notes" || f.type === "textarea" ? " mw-bk__wide" : ""}`}>
+                      <label htmlFor={id} className="mw-label">
+                        <Icon name={f.icon} className="mw-bk__ficon" />
+                        {f.field}
+                        {f.required ? <span aria-hidden="true"> *</span> : <span className="mw-label__opt">optional</span>}
+                      </label>
+                      {f.field === "Notes" || f.type === "textarea" ? (
+                        <textarea rows={4} {...common} />
+                      ) : (
+                        <input
+                          type={f.field === "Email" ? "email" : f.field === "Phone" ? "tel" : "text"}
+                          autoComplete={
+                            { Name: "name", Email: "email", Phone: "tel", Address: "street-address", City: "address-level2", State: "address-level1", Zip: "postal-code" }[f.field] ??
+                            "off"
+                          }
+                          list={f.field === "State" ? "ssa-au-states" : undefined}
+                          {...common}
+                        />
+                      )}
+                      {err && <p className="mw-field__error">{err}</p>}
                     </div>
                   );
                 })}
@@ -508,58 +477,53 @@ export default function BookingWidget({
                     <option key={s} value={s} />
                   ))}
                 </datalist>
-                <input
-                  type="text"
-                  name="website"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                  className="hidden"
-                  aria-hidden="true"
-                />
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} className="hidden" aria-hidden="true" />
               </div>
-              <div className="mt-6 flex justify-end gap-3">
-                <button type="button" onClick={() => setStep("time")} className="rounded px-4 py-2.5 font-medium text-[var(--ssa-accent)] hover:bg-black/5">
-                  Back
+              <div className="mw-bk__actions">
+                <button type="button" onClick={() => setStep("time")} className="mw-btn mw-btn--quiet">
+                  <span>Back</span>
                 </button>
-                <button type="submit" disabled={submitting} className={`rounded px-6 py-2.5 font-medium ${btnAccent}`}>
-                  {submitting ? "Booking…" : "Confirm booking"}
+                <button type="submit" disabled={submitting} className="mw-btn mw-btn--primary">
+                  <span>{submitting ? "Booking…" : "Confirm booking"}</span>
                 </button>
               </div>
             </form>
           )}
 
           {step === "done" && done && type && (
-            <div className="py-4 text-center">
-              <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-[var(--ssa-accent)] text-3xl text-white">✓</div>
-              <h2 className="text-2xl font-medium">You&apos;re all set!</h2>
-              <p className="mt-1 text-black/70">A confirmation has been sent to {values.Email || "your email"}.</p>
-              <div className="mx-auto mt-5 max-w-md rounded border border-black/10 p-4 text-left">
-                <div className="font-medium">{type.title}</div>
-                <div className="text-sm">
+            <div className="mw-bk__done">
+              <div className="mw-bk__tick" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </div>
+              <h2 className="mw-bk__h2">Your consultation is booked</h2>
+              <p className="mw-bk__muted">A confirmation has been sent to {values.Email || "your email"}.</p>
+              <div className="mw-bk__summary">
+                <div className="mw-bk__type-title">{type.title}</div>
+                <div>
                   {fmtLong(done.start, tz)}, {fmtTime(done.start, tz)} – {fmtTime(done.end, tz)}
                 </div>
-                <div className="text-xs text-black/50">{tz.replace(/_/g, " ")}</div>
-                {type.instructions && <p className="mt-3 whitespace-pre-line text-sm text-black/70">{type.instructions}</p>}
+                <div className="mw-bk__meta">{tz.replace(/_/g, " ")}</div>
+                {type.instructions && <p className="mw-bk__instructions">{type.instructions}</p>}
               </div>
-              <div className="mt-5 flex flex-wrap justify-center gap-3">
-                <a href={`/api/appointments/${done.token}/ics`} className={`rounded px-4 py-2 text-sm font-medium ${btnAccent}`}>
-                  Add to calendar (.ics)
+              <div className="mw-bk__actions mw-bk__actions--center">
+                <a href={`/api/appointments/${done.token}/ics`} className="mw-btn mw-btn--primary mw-btn--sm">
+                  <span>Add to calendar (.ics)</span>
                 </a>
                 <a
                   target="_blank"
                   rel="noopener"
-                  className="rounded border border-[var(--ssa-accent)] px-4 py-2 text-sm font-medium text-[var(--ssa-accent)]"
+                  className="mw-btn mw-btn--secondary mw-btn--sm"
                   href={`https://calendar.google.com/calendar/render?${new URLSearchParams({
                     action: "TEMPLATE",
                     text: `${type.title} (${companyName})`,
                     dates: `${done.start.replace(/[-:]/g, "").replace(/\.\d{3}/, "")}/${done.end.replace(/[-:]/g, "").replace(/\.\d{3}/, "")}`,
                   })}`}
                 >
-                  Google Calendar
+                  <span>Google Calendar</span>
                 </a>
-                <a href={`/book-appointment/manage/${done.token}`} className="rounded px-4 py-2 text-sm font-medium text-[var(--ssa-accent)] hover:underline">
+                <a href={`/book-appointment/manage/${done.token}`} className="mw-bk__textbtn">
                   Change or cancel
                 </a>
               </div>

@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
 import BookingWidget from "@/modules/tools/appointments/BookingWidget";
@@ -6,10 +5,12 @@ import ManageActions from "@/modules/tools/appointments/ManageActions";
 import { getSsaSettings } from "@/modules/tools/appointments/settings";
 import { toPublicType } from "@/modules/tools/appointments/types";
 import { formatWpDateTime, tzAbbr } from "@/modules/tools/tz";
-import PageShell from "@/modules/tools/PageShell";
+import { AppBody, AppHead } from "@/modules/web/account/AppHead";
+import { buildMetadata } from "@/modules/web/seo";
+import "@/modules/web/styles/booking.css";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Your Appointment", robots: { index: false } };
+export const metadata = buildMetadata({ title: "Your appointment", description: "View, reschedule or cancel your Mustang Mortgage appointment.", path: "/book-appointment", noindex: true });
 
 export default async function ManageAppointmentPage({
   params,
@@ -33,60 +34,68 @@ export default async function ManageAppointmentPage({
 
   if (q.reschedule && upcoming) {
     return (
-      <PageShell>
-        <BookingWidget
-          types={[toPublicType(appt.appointmentType)]}
-          accent={accent}
-          businessTz={s.timezone}
-          startOfWeek={s.startOfWeek}
-          companyName={s.companyName}
-          reschedule={{ token, typeSlug: appt.appointmentType.slug, currentStart: appt.startAt.toISOString() }}
-        />
-      </PageShell>
+      <>
+        <AppHead eyebrow="Your appointment" title="Choose a new time" lede={`Currently ${when}.`} />
+        <AppBody>
+          <BookingWidget
+            types={[toPublicType(appt.appointmentType)]}
+            accent={accent}
+            businessTz={s.timezone}
+            startOfWeek={s.startOfWeek}
+            companyName={s.companyName}
+            reschedule={{ token, typeSlug: appt.appointmentType.slug, currentStart: appt.startAt.toISOString() }}
+          />
+        </AppBody>
+      </>
     );
   }
 
   return (
-    <PageShell>
-      <div className="mx-auto max-w-[640px] rounded-md bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,.12),0_1px_2px_rgba(0,0,0,.24)]" style={{ fontFamily: "Roboto, Arial, sans-serif" }}>
-        {q.rescheduled && appt.status === "booked" && (
-          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            Your appointment has been rescheduled. A new confirmation email is on its way.
-          </div>
-        )}
-        <h1 className="text-2xl font-medium text-[#303030]">{appt.appointmentType.title}</h1>
-        <p className="mt-1 text-black/70">{when}</p>
-        <p className="text-sm text-black/50">{appt.appointmentType.durationMin} minutes · with {s.companyName}</p>
+    <>
+      <AppHead eyebrow="Your appointment" title={appt.appointmentType.title} lede={`${when} · ${appt.appointmentType.durationMin} minutes with ${s.companyName}`} />
+      <AppBody>
+        <div className="mw-bk" style={{ maxWidth: 680 }}>
+          <div className="mw-bk__card">
+            <div className="mw-bk__body">
+              {q.rescheduled && appt.status === "booked" && <div className="mw-bk__success">Your appointment has been rescheduled. A new confirmation email is on its way.</div>}
 
-        {appt.status === "canceled" ? (
-          <div className="mt-5 rounded border border-black/10 bg-black/[.03] px-4 py-3 text-sm">
-            {next ? (
-              <>
-                This appointment was rescheduled.{" "}
-                <a className="font-medium underline" style={{ color: accent }} href={`/book-appointment/manage/${next.token}`}>
-                  View the new appointment
-                </a>
-                .
-              </>
-            ) : (
-              <>
-                This appointment has been canceled.{" "}
-                <a className="font-medium underline" style={{ color: accent }} href={`/book-appointment?type=${appt.appointmentType.slug}`}>
-                  Book a new time
-                </a>
-                .
-              </>
-            )}
+              {appt.status === "canceled" ? (
+                <div className="mw-bk__status" style={{ marginTop: 0 }}>
+                  {next ? (
+                    <>
+                      This appointment was rescheduled.{" "}
+                      <a className="mw-link" href={`/book-appointment/manage/${next.token}`}>
+                        View the new appointment
+                      </a>
+                      .
+                    </>
+                  ) : (
+                    <>
+                      This appointment has been canceled.{" "}
+                      <a className="mw-link" href={`/book-appointment?type=${appt.appointmentType.slug}`}>
+                        Book a new time
+                      </a>
+                      .
+                    </>
+                  )}
+                </div>
+              ) : !upcoming ? (
+                <p className="mw-bk__muted" style={{ margin: 0 }}>
+                  This appointment has already taken place.
+                </p>
+              ) : (
+                <>
+                  <p className="mw-bk__type-title" style={{ margin: 0 }}>
+                    {when}
+                  </p>
+                  {appt.appointmentType.instructions && <p className="mw-bk__instructions">{appt.appointmentType.instructions}</p>}
+                  <ManageActions token={token} accent={accent} />
+                </>
+              )}
+            </div>
           </div>
-        ) : !upcoming ? (
-          <p className="mt-5 text-sm text-black/60">This appointment has already taken place.</p>
-        ) : (
-          <>
-            {appt.appointmentType.instructions && <p className="mt-4 whitespace-pre-line text-sm text-black/70">{appt.appointmentType.instructions}</p>}
-            <ManageActions token={token} accent={accent} />
-          </>
-        )}
-      </div>
-    </PageShell>
+        </div>
+      </AppBody>
+    </>
   );
 }

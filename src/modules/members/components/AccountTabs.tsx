@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
+import { KeyRound, ShieldCheck, Trash2, UserRound, type LucideIcon } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { Avatar, Notice, UmField, UmSelect } from "./fields";
 import {
@@ -29,11 +30,11 @@ export type AccountData = {
   canDelete: boolean;
 };
 
-const TABS: { id: Tab; title: string; icon: string }[] = [
-  { id: "general", title: "Account", icon: "👤" },
-  { id: "password", title: "Change Password", icon: "✱" },
-  { id: "privacy", title: "Privacy", icon: "🔒" },
-  { id: "delete", title: "Delete Account", icon: "🗑" },
+const TABS: { id: Tab; title: string; icon: LucideIcon }[] = [
+  { id: "general", title: "Account", icon: UserRound },
+  { id: "password", title: "Change password", icon: KeyRound },
+  { id: "privacy", title: "Privacy", icon: ShieldCheck },
+  { id: "delete", title: "Delete account", icon: Trash2 },
 ];
 
 const DELETE_TEXT =
@@ -67,10 +68,10 @@ function GeneralTab({ d }: { d: AccountData }) {
     <form action={action} noValidate>
       <Feedback state={state} />
       <UmField name="user_login" label="Username" value={d.username} readOnly />
-      <UmField name="first_name" label="First Name" value={v.first_name} error={fe.first_name} />
-      <UmField name="last_name" label="Last Name" value={v.last_name} error={fe.last_name} />
-      <UmField name="user_email" label="E-mail Address" value={v.user_email} error={fe.user_email} />
-      <Submit label="Update Account" />
+      <UmField name="first_name" label="First name" value={v.first_name} error={fe.first_name} />
+      <UmField name="last_name" label="Last name" value={v.last_name} error={fe.last_name} />
+      <UmField name="user_email" label="Email address" value={v.user_email} error={fe.user_email} />
+      <Submit label="Update account" />
     </form>
   );
 }
@@ -81,10 +82,10 @@ function PasswordTab() {
   return (
     <form action={action} noValidate>
       <Feedback state={state} />
-      <UmField name="current_user_password" label="Current Password" type="password" error={fe.current_user_password} />
-      <UmField name="user_password" label="New Password" type="password" error={fe.user_password} autoComplete="new-password" />
-      <UmField name="confirm_user_password" label="Confirm Password" type="password" error={fe.confirm_user_password} autoComplete="new-password" />
-      <Submit label="Update Password" />
+      <UmField name="current_user_password" label="Current password" type="password" error={fe.current_user_password} />
+      <UmField name="user_password" label="New password" type="password" error={fe.user_password} autoComplete="new-password" />
+      <UmField name="confirm_user_password" label="Confirm password" type="password" error={fe.confirm_user_password} autoComplete="new-password" />
+      <Submit label="Update password" />
     </form>
   );
 }
@@ -97,7 +98,7 @@ function PrivacyTab({ d }: { d: AccountData }) {
     <>
       <form action={action}>
         <Feedback state={state} />
-        <UmSelect name="profile_privacy" label="Profile Privacy" options={["Everyone", "Only me"]} value={v.profile_privacy} help="Who can see your public profile?" />
+        <UmSelect name="profile_privacy" label="Profile privacy" options={["Everyone", "Only me"]} value={v.profile_privacy} help="Who can see your public profile?" />
         <UmSelect
           name="profile_noindex"
           label="Avoid indexing my profile by search engines"
@@ -110,9 +111,9 @@ function PrivacyTab({ d }: { d: AccountData }) {
           label="Hide my profile from directory"
           options={["No", "Yes"]}
           value={v.hide_in_members}
-          help="Here you can hide yourself from appearing in public directory"
+          help="Hide yourself from the public member directory."
         />
-        <Submit label="Update Privacy" />
+        <Submit label="Update privacy" />
       </form>
 
       <div className="um-field um-field-export_data" style={{ marginTop: 30 }}>
@@ -130,7 +131,7 @@ function PrivacyTab({ d }: { d: AccountData }) {
 
       <div className="um-field um-field-export_data" style={{ marginTop: 30 }}>
         <div className="um-field-label">
-          <label>Erase of your data</label>
+          <label>Erase your data</label>
           <div className="um-field-help">You can request erasing of the data that we have about you.</div>
         </div>
         <form action={eraseAction}>
@@ -162,7 +163,7 @@ function DeleteTab() {
       <Feedback state={state} />
       <div className="um-account-tab-text">{DELETE_TEXT}</div>
       <UmField name="single_user_password" label="Password" type="password" error={state.fieldErrors?.single_user_password} />
-      <Submit label="Delete Account" />
+      <Submit label="Delete account" />
     </form>
   );
 }
@@ -184,24 +185,24 @@ export function AccountTabs({ d, initialTab }: { d: AccountData; initialTab?: st
           <div className="um-account-side">
             <div className="um-account-meta">
               <Link href={d.profileLink}>
-                <Avatar src={d.avatar} name={d.displayName} size={120} />
+                <Avatar src={d.avatar} name={d.displayName} size={56} />
               </Link>
+              <div>
               <div className="um-account-name">
-                <Link href={d.profileLink} style={{ color: "#444" }}>
+                <Link href={d.profileLink}>
                   {d.displayName}
                 </Link>
               </div>
               <div className="um-account-profile-link">
                 <Link href={d.profileLink}>View profile</Link>
               </div>
+              </div>
             </div>
             <ul>
               {tabs.map((t) => (
                 <li key={t.id}>
                   <button type="button" className={`um-account-link${t.id === tab ? " current" : ""}`} onClick={() => setTab(t.id)}>
-                    <span aria-hidden="true" style={{ width: 18, textAlign: "center" }}>
-                      {t.icon}
-                    </span>
+                    <t.icon size={18} strokeWidth={1.5} aria-hidden="true" />
                     <span>{t.title}</span>
                   </button>
                 </li>
@@ -210,7 +211,7 @@ export function AccountTabs({ d, initialTab }: { d: AccountData; initialTab?: st
           </div>
           <div className="um-account-main">
             <div className="um-account-heading">
-              <span aria-hidden="true">{current.icon}</span>
+              <current.icon size={22} strokeWidth={1.5} aria-hidden="true" />
               {current.title}
             </div>
             {tab === "general" && <GeneralTab d={d} />}

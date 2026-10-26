@@ -43,3 +43,4 @@ storage/
 !.env.example
 scratch/
 .next-check/
+scripts/out/

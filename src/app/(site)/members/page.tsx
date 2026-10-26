@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
@@ -7,8 +6,10 @@ import { getSession, isStaff } from "@/lib/session";
 import { Avatar, Notice } from "@/modules/members/components/fields";
 import { avatarUrl, displayNameOf, getProfile, profileUrl } from "@/modules/members/profile";
 import { getMembersSettings } from "@/modules/members/settings";
+import { AppBody, AppHead } from "@/modules/web/account/AppHead";
+import { buildMetadata } from "@/modules/web/seo";
 
-export const metadata: Metadata = { title: "Members" };
+export const metadata = buildMetadata({ title: "Members", description: "Mustang Mortgage member directory.", path: "/members", noindex: true });
 export const dynamic = "force-dynamic";
 
 // UM member directory (um_directory 17): grid view, newest registered first,
@@ -23,9 +24,12 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
   if (!d.enabled) {
     return (
       <div className="um-page">
-        <div className="um um-directory">
-          <Notice kind="warning">The member directory is not available.</Notice>
-        </div>
+        <AppHead title="Members" />
+        <AppBody>
+          <div className="um um-directory">
+            <Notice kind="warning">The member directory is not available.</Notice>
+          </div>
+        </AppBody>
       </div>
     );
   }
@@ -66,6 +70,8 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="um-page">
+      <AppHead eyebrow="Directory" title="Members" />
+      <AppBody>
       <div className="um um-directory">
         {d.search && (
           <form className="um-directory-search" method="get" action="/members">
@@ -117,6 +123,7 @@ export default async function MembersPage({ searchParams }: { searchParams: Prom
           </nav>
         )}
       </div>
+      </AppBody>
     </div>
   );
 }

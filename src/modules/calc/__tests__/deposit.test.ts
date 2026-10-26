@@ -4,8 +4,9 @@ import assert from "node:assert/strict";
 import { calcDeposit } from "../deposit";
 import { depositSchemeCheck, FIVE_PERCENT_DEPOSIT_SCHEME, HELP_TO_BUY, FIRB } from "../rules/federal";
 import { auditFreshness, isStale } from "../freshness";
-import { estimateBorrowingPower } from "../borrowing";
-import { BORROW_DEFAULTS, compute, type BorrowInputs } from "../../tools/serviceability/math";
+import { estimateBorrowingPower, estimatePurchasePrice, incomeTax, TAX_2024_25, TAX_2026_27 } from "../borrowing";
+import { calcStampDuty } from "../stampDuty";
+import { BORROW_DEFAULTS, compute, tax, type BorrowInputs } from "../../tools/serviceability/math";
 
 test("5/10/20% deposit rows, LVR and LMI indicator at $800,000", () => {
   const r = calcDeposit({ price: 800_000 });
@@ -53,9 +54,9 @@ test("Freshness: 90-day rule", () => {
   assert.deepEqual(auditFreshness({ a: { verifiedAt: "2026-10-26", verified: true }, b: { verifiedAt: "2026-01-01", verified: true } }, now).map((x) => x.path), ["b"]);
 });
 
-test("Borrowing wrapper reproduces the original compute() exactly and requires a user rate", () => {
+test("Borrowing wrapper reproduces the original compute() exactly (with the legacy 2024-25 scale) and requires a user rate", () => {
   assert.throws(() => estimateBorrowingPower({ applicant1Gross: 100_000, household: "single", productRatePct: 0 }));
-  const r = estimateBorrowingPower({ applicant1Gross: 120_000, household: "couple", applicant2Gross: 80_000, livingExpensesMonthly: 3_000, creditCardLimits: 10_000, productRatePct: 6.2 });
+  const r = estimateBorrowingPower({ applicant1Gross: 120_000, household: "couple", applicant2Gross: 80_000, livingExpensesMonthly: 3_000, creditCardLimits: 10_000, productRatePct: 6.2 }, {}, TAX_2024_25);
   const raw: BorrowInputs = {
     a1Name: "", a2Name: "", a1Gross: 120_000, a1Other: 0, a2Gross: 80_000, a2Other: 0, rentPw: 0, household: "couple", dependants: 0,
     livingPm: 3_000, ccLimit: 10_000, otherPm: 0, helpPm: 0, otherCommit: 0, propLoans: 0, useHem: true, prodRate: 6.2,
@@ -66,4 +67,33 @@ test("Borrowing wrapper reproduces the original compute() exactly and requires a
   assert.equal(r.maxLoan, c.maxLoan);
   assert.equal(r.assess, 9.2);
   assert.ok(r.maxLoan > 0);
+});
+
+test("Income tax 2026-27 resident scale (Income Tax Rates Act Sch 7 as amended by Act No. 28, 2025) + 2% Medicare", () => {
+  // Bracket bases from the marginal rates: $45,000 → 26,800 × 15% = $4,020; $135,000 → $31,020; $190,000 → $51,370.
+  assert.equal(incomeTax(18_200), 18_200 * 0.02);
+  assert.equal(Math.round(incomeTax(45_000) - 900), 4_020);
+  assert.equal(Math.round(incomeTax(135_000) - 2_700), 31_020);
+  assert.equal(Math.round(incomeTax(190_000) - 3_800), 51_370);
+  assert.equal(Math.round(incomeTax(100_000)), 4_020 + 16_500 + 2_000);
+  // The legacy scale still equals the original tax() function.
+  for (const g of [0, 18_200, 30_000, 45_000, 90_000, 135_000, 150_000, 190_000, 250_000]) assert.ok(Math.abs(incomeTax(g, TAX_2024_25) - tax(g)) < 1e-6);
+  assert.equal(TAX_2026_27.incomeYear, "2026-27");
+});
+
+test("Borrowing: 2026-27 tax gives a little more net income than 2024-25, so a slightly higher max loan", () => {
+  const input = { applicant1Gross: 95_000, household: "single" as const, livingExpensesMonthly: 2_000, productRatePct: 6 };
+  const now = estimateBorrowingPower(input);
+  const old = estimateBorrowingPower(input, {}, TAX_2024_25);
+  // 1 percentage point on the $18,200–$45,000 band = $268 a year more take-home.
+  assert.ok(Math.abs(now.netAnnual - old.netAnnual - 268) < 1e-6);
+  assert.ok(now.maxLoan > old.maxLoan);
+});
+
+test("Purchase price after NSW duty and fees is self-consistent", () => {
+  const r = estimatePurchasePrice({ maxLoan: 600_000, deposit: 120_000, targetLvr: 0.8, state: "NSW", firstHomeBuyer: false });
+  const duty = calcStampDuty({ state: "NSW", price: r.price, propertyType: "established", firstHomeBuyer: false, ownerOccupier: true, foreignPurchaser: false }).totalGovtCosts;
+  assert.ok(Math.abs(r.govtCosts - duty) < 0.01);
+  assert.ok(r.loan <= 600_000 + 1);
+  assert.ok(r.lvrPct <= 80 + 0.01);
 });
