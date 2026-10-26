@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import SiteChrome from "@/modules/site/components/SiteChrome";
+import { WebChrome } from "@/modules/web/components/layout/WebChrome";
+import { ORIGIN, robotsFor } from "@/modules/web/seo";
 
 const ICON = "/wp-content/uploads/2024/06/cropped-Copy-of-Financial-Advisor-Logo-in-Dark-Light-Blue-White-Clean-Minimalist-Style-";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(ORIGIN),
+  // Default for pages that don't call buildMetadata(): noindex unless SEO_INDEXING=on.
+  robots: robotsFor(),
   icons: {
     icon: [
       { url: `${ICON}-32x32.png`, sizes: "32x32" },
@@ -13,7 +17,7 @@ export const metadata: Metadata = {
   },
 };
 
-/** Public website: header (template 183), footer (173), floating contact button, Elementor kit styles. */
+/** Public website chrome (src/modules/web). The old Elementor chrome is no longer loaded. */
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
-  return <SiteChrome>{children}</SiteChrome>;
+  return <WebChrome>{children}</WebChrome>;
 }

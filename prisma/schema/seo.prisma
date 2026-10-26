@@ -1,0 +1,17 @@
+// Broker sign-off for programmatic / YMYL pages. A page is indexable (and in
+// the sitemap) only when reviewed = true — see src/modules/web/review.ts.
+
+model SeoReview {
+  key        String    @id               // e.g. "suburb:nsw/auburn-2144", "visa:subclass-491", "fhb:nsw", "duty:nsw", "community:nepali-sydney"
+  kind       String                       // suburb | visa | fhb | duty | community | lender | guide
+  path       String    @default("")       // public path, slash-less
+  reviewed   Boolean   @default(false)
+  reviewedBy String    @default("")
+  reviewedAt DateTime?
+  brokerNote String    @default("")       // human-written local/expert note shown on the page
+  notes      String    @default("")       // internal review notes
+  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime  @default(now())
+
+  @@index([kind])
+}

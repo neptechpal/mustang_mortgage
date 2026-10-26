@@ -33,6 +33,9 @@ export async function handleLeadSubmission(fd: FormData, ctx: { ip: string; user
 
   const map: Record<string, string> = {};
   for (const f of LEAD_FIELDS) if (f.map) map[f.map] = String(values[f.key] ?? "");
+  // Public-site attribution (hidden field from src/modules/web EnquiryForm).
+  const sourcePage = String(fd.get("source_page") ?? "").trim().slice(0, 200);
+  const baseMeta = { ip: ctx.ip, userAgent: ctx.userAgent, url: ctx.url, ...(sourcePage ? { sourcePage } : {}) };
 
   const sub = await prisma.formSubmission.create({
     data: {
@@ -41,7 +44,7 @@ export async function handleLeadSubmission(fd: FormData, ctx: { ip: string; user
       name: String(values.full_name),
       email: String(values.email),
       data: { ...values, _map: map },
-      meta: { ip: ctx.ip, userAgent: ctx.userAgent, url: ctx.url },
+      meta: baseMeta,
     },
   });
 
@@ -49,7 +52,7 @@ export async function handleLeadSubmission(fd: FormData, ctx: { ip: string; user
   if (crmForm) {
     const res = await saveFormAnswers({ formId: crmForm.id, caseId: null, raw: values, mode: "submit", silent: true, ip: ctx.ip }).catch(() => null);
     if (res?.ok) {
-      await prisma.formSubmission.update({ where: { id: sub.id }, data: { meta: { ip: ctx.ip, userAgent: ctx.userAgent, url: ctx.url, crmForm: crmForm.id } } });
+      await prisma.formSubmission.update({ where: { id: sub.id }, data: { meta: { ...baseMeta, crmForm: crmForm.id } } });
       return { success: true, data: { submissionId: sub.id } };
     }
   }
@@ -70,7 +73,7 @@ export async function handleLeadSubmission(fd: FormData, ctx: { ip: string; user
       `<p style="font-family:Arial,sans-serif;font-size:13px"><a href="${info.url}/admin/submissions/${sub.id}">View in admin</a></p>`,
     context: `mmf:${LEAD_FORM.id}:${sub.id}`,
   });
-  await prisma.formSubmission.update({ where: { id: sub.id }, data: { meta: { ip: ctx.ip, userAgent: ctx.userAgent, url: ctx.url, mail: { notify: mail } } } });
+  await prisma.formSubmission.update({ where: { id: sub.id }, data: { meta: { ...baseMeta, mail: { notify: mail } } } });
   return { success: true, data: { submissionId: sub.id } };
 }
 
