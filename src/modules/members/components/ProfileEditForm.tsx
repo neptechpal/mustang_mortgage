@@ -32,9 +32,9 @@ export function ProfileEditForm({
   return (
     <form action={action}>
       {state.error && <Notice kind="err">{state.error}</Notice>}
-      <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+      <div className="um-profile-photo-editor">
         <Avatar src={preview} name={name} size={120} />
-        <div style={{ flex: 1, minWidth: 220 }}>
+        <div className="um-profile-photo-fields">
           <UmField name="profile_photo" label="Profile photo" error={fe.profile_photo}>
             <input
               type="file"
@@ -48,7 +48,7 @@ export function ProfileEditForm({
             />
           </UmField>
           {avatar && (
-            <label className="um-field-checkbox" style={{ marginTop: 10 }}>
+            <label className="um-field-checkbox um-profile-remove-photo">
               <input type="checkbox" name="remove_photo" value="1" /> Remove photo
             </label>
           )}

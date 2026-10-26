@@ -1,0 +1,158 @@
+/* Self-contained client form styles. Public tokens are inherited in .web;
+   the same token values and fonts also work in the staff builder preview. */
+@layer components {
+  .mmf {
+    --form-ink: var(--mw-ink, #1b1712);
+    --form-paper: var(--mw-paper, #faf6ef);
+    --form-sand: var(--mw-sand, #f3ece0);
+    --form-surface: var(--mw-surface, #fff);
+    --form-text: var(--mw-text-2, #4a4238);
+    --form-muted: var(--mw-text-3, #6b6155);
+    --form-line: var(--mw-line, #e6dccd);
+    --form-border: var(--mw-line-strong, #cfc3b1);
+    --form-focus: var(--mw-gold-500, #ba7200);
+    --form-accent: var(--mw-gold-600, #9a5e00);
+    --form-hover: var(--mw-gold-700, #7e4f05);
+    --form-danger: var(--mw-danger, #9b2c1c);
+    --form-danger-tint: var(--mw-danger-tint, #fbece8);
+    --form-success: var(--mw-success, #2f6b3a);
+    --form-success-tint: var(--mw-success-tint, #e9f2e9);
+    --form-radius: var(--mw-radius, 12px);
+    --form-radius-sm: var(--mw-radius-sm, 10px);
+    --form-serif: var(--font-fraunces), Georgia, serif;
+    --form-sans: var(--font-plex), var(--font-plex-deva), sans-serif;
+    min-width: 0;
+    color: var(--form-text);
+    font: 400 1rem/1.6 var(--form-sans);
+    overflow-wrap: anywhere;
+  }
+  .mmf :focus-visible {
+    outline: 2px solid var(--form-focus);
+    outline-offset: 3px;
+  }
+  .mmf__head { margin-bottom: 28px; }
+  .mmf__title {
+    margin: 0;
+    color: var(--form-ink);
+    font: 380 clamp(1.5rem, 1.2rem + 1vw, 2rem)/1.25 var(--form-serif);
+  }
+  .mmf__intro { margin-top: 10px; white-space: pre-line; }
+  .mmf h1.mmf__title { max-width: 24ch; font-size: clamp(2.25rem, 1.5rem + 2vw, 3rem); }
+  .mmf__saved { margin-top: 8px; color: var(--form-muted); font-size: 0.875rem; }
+  .mmf__saved:empty { display: none; }
+  .mmf__section {
+    margin-bottom: 24px;
+    padding: clamp(20px, 3vw, 32px);
+    border: 1px solid var(--form-line);
+    border-radius: var(--form-radius);
+    background: var(--form-surface);
+  }
+  .mmf__section--a1 { border-top: 3px solid var(--form-focus); }
+  .mmf__section--a2 { border-top: 3px solid var(--form-ink); }
+  .mmf__section-title {
+    margin: 0 0 20px;
+    color: var(--form-ink);
+    font: 380 1.5rem/1.25 var(--form-serif);
+  }
+  .mmf__description { margin: -8px 0 20px; color: var(--form-muted); font-size: 0.9375rem; }
+  .mmf__grid { display: grid; gap: 24px; }
+  .mmf__grid > * { min-width: 0; }
+  .mmf__label { display: block; margin-bottom: 8px; color: var(--form-ink); font-size: 0.9375rem; font-weight: 600; }
+  .mmf__required { margin-left: 4px; color: var(--form-danger); font-style: normal; }
+  .mmf .mmf__input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 50px;
+    padding: 12px 14px;
+    border: 1px solid var(--form-border);
+    border-radius: var(--form-radius-sm);
+    background: var(--form-surface);
+    color: var(--form-ink);
+    font: 400 1rem/1.5 var(--form-sans);
+    color-scheme: light;
+  }
+  .mmf__input::placeholder { color: var(--form-muted); opacity: 1; }
+  .mmf__input:hover { border-color: var(--form-muted); }
+  .mmf .mmf__input:focus { border-color: var(--form-focus); outline: 2px solid var(--form-focus); outline-offset: 2px; }
+  .mmf textarea.mmf__input { min-height: 132px; resize: vertical; }
+  .mmf .mmf__signature { font-family: var(--form-serif); font-size: 1.25rem; font-style: italic; }
+  .mmf__currency { position: relative; }
+  .mmf__currency-symbol { position: absolute; top: 13px; left: 14px; color: var(--form-muted); }
+  .mmf .mmf__currency .mmf__input { padding-left: 32px; }
+  .mmf__choices { display: flex; flex-wrap: wrap; gap: 10px; }
+  .mmf__choice {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1px solid var(--form-border);
+    border-radius: var(--form-radius-sm);
+    color: var(--form-ink);
+    font-size: 0.9375rem;
+    cursor: pointer;
+  }
+  .mmf__choice:hover { border-color: var(--form-ink); }
+  .mmf__choice.is-selected { border-color: var(--form-ink); background: var(--form-paper); }
+  .mmf__choice input { width: 20px; height: 20px; flex: none; accent-color: var(--form-ink); }
+  .mmf__help { margin-top: 8px; color: var(--form-muted); font-size: 0.875rem; }
+  .mmf__error { margin-top: 8px; color: var(--form-danger); font-size: 0.875rem; }
+  .mmf .mmf__field--invalid :is(.mmf__input, .mmf__choice) { border-color: var(--form-danger); }
+  .mmf__info { padding: 16px 20px; border-radius: var(--form-radius-sm); background: var(--form-paper); font-size: 0.9375rem; }
+  .mmf__info-copy { margin-top: 8px; }
+  .mmf__info-copy p + p { margin-top: 8px; }
+  .mmf__rows { display: grid; gap: 16px; margin-top: 12px; }
+  .mmf__repeat { padding: 16px; border: 1px solid var(--form-line); border-radius: var(--form-radius-sm); background: var(--form-paper); }
+  .mmf__repeat-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 0.875rem; font-weight: 600; }
+  .mmf__remove { display: inline-grid; place-items: center; width: 44px; height: 44px; color: var(--form-danger); font-size: 1.5rem; cursor: pointer; }
+  .mmf__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 20px;
+    border: 1px solid var(--form-ink);
+    border-radius: var(--form-radius-sm);
+    background: var(--form-surface);
+    color: var(--form-ink);
+    font: 600 1rem/1.35 var(--form-sans);
+    cursor: pointer;
+  }
+  .mmf__button:hover { background: var(--form-paper); }
+  .mmf__button--primary { border-color: var(--form-accent); background: var(--form-accent); color: var(--form-surface); }
+  .mmf__button--primary:hover { border-color: var(--form-hover); background: var(--form-hover); }
+  .mmf__button:disabled { opacity: 0.6; cursor: default; }
+  .mmf__add { margin-top: 16px; border-style: dashed; }
+  .mmf__progress { height: 4px; overflow: hidden; border-radius: var(--form-radius-sm); background: var(--form-line); }
+  .mmf__progress-bar { height: 100%; background: var(--form-focus); }
+  .mmf__steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 28px; padding: 0; list-style: none; }
+  .mmf__step { display: flex; align-items: baseline; gap: 8px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--form-border); border-radius: var(--form-radius-sm); background: var(--form-surface); color: var(--form-text); font: 500 0.875rem/1.5 var(--form-sans); text-align: left; cursor: pointer; }
+  .mmf__step:hover { border-color: var(--form-ink); }
+  .mmf__step.is-previous { background: var(--form-sand); }
+  .mmf__step.is-current { border-color: var(--form-ink); background: var(--form-ink); color: var(--form-paper); }
+  .mmf__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 8px; }
+  .mmf__errors { margin-bottom: 24px; padding: 16px 20px; border-left: 3px solid var(--form-danger); border-radius: var(--form-radius-sm); background: var(--form-danger-tint); color: var(--form-danger); }
+  .mmf__success { padding: 32px; border: 1px solid var(--form-line); border-radius: var(--form-radius); background: var(--form-surface); }
+  .mmf__success-mark { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 20px; border-radius: 50%; background: var(--form-success-tint); color: var(--form-success); font-size: 1.5rem; }
+  .mmf__honeypot { position: absolute; left: -9999px; height: 0; overflow: hidden; }
+  .mmf__link { color: var(--form-accent); text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+  .mmf__link:hover { color: var(--form-hover); }
+  .mmf__attachments { margin: 16px 0 24px; padding: 0; list-style: none; }
+  .mmf__attachments li + li { margin-top: 8px; }
+  .mmf__dropzone { padding: 24px 16px; border: 1px dashed var(--form-border); border-radius: var(--form-radius-sm); background: var(--form-paper); }
+  .mmf__file-list { margin-top: 16px; padding: 0; list-style: none; }
+  .mmf__file { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--form-line); }
+  .mmf__canvas { display: block; width: 100%; max-width: 600px; touch-action: none; border: 1px solid var(--form-border); border-radius: var(--form-radius-sm); }
+  .mmf__clear { min-height: 44px; }
+  @media (min-width: 640px) {
+    .mmf__grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .mmf__full { grid-column: span 6; }
+    .mmf__half { grid-column: span 3; }
+    .mmf__third { grid-column: span 2; }
+  }
+  @media (max-width: 479px) {
+    .mmf__actions .mmf__button { flex: 1 1 auto; }
+    .mmf__actions > span { display: none; }
+  }
+}

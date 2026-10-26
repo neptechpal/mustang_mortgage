@@ -1,6 +1,8 @@
 "use client";
 // Client runtime for schema forms (port of forms-front.js).
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { webFontVars } from "@/modules/web/fonts";
+import "./form-runner.css";
 import { evalCond, type Field, type Schema, type Values } from "../forms/engine";
 
 export type RunnerCfg = {
@@ -15,8 +17,8 @@ export type RunnerCfg = {
   successMessage?: string;
 };
 
-const W: Record<string, string> = { full: "sm:col-span-6", half: "sm:col-span-3", third: "sm:col-span-2" };
-const inputCls = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-[var(--acc)] focus:outline-none focus:ring-2 focus:ring-[var(--acc)]/20";
+const W: Record<string, string> = { full: "mmf__full", half: "mmf__half", third: "mmf__third" };
+const inputCls = "mmf__input";
 
 function initialValues(s: Schema, v: Values): Values {
   const out: Values = { ...v };
@@ -216,23 +218,31 @@ export default function FormRunner({ schema, values: init, cfg, children }: { sc
     }
   }
 
+  const Title = cfg.isPublic ? "h1" : "h2";
+  const SectionTitle = cfg.isPublic ? "h2" : "h3";
+
   if (done) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full text-2xl text-white" style={{ background: st.accent }}>✓</div>
-        <h3 className="text-lg font-semibold">{cfg.successMessage || st.success_msg}</h3>
+      <div className={`mmf mmf__success ${webFontVars}`} role="status">
+        <div className="mmf__success-mark" aria-hidden="true">✓</div>
+        <Title className="mmf__title">{cfg.successMessage || st.success_msg}</Title>
       </div>
     );
   }
 
   const renderInput = (f: Field, value: unknown, onChange: (v: unknown) => void, id: string) => {
     const v = Array.isArray(value) ? "" : String(value ?? "");
+    const a11y = {
+      "aria-required": !!f.required || undefined,
+      "aria-invalid": !!errs[f.key] || undefined,
+      "aria-describedby": [f.help ? `${id}_help` : "", errs[f.key] ? `${id}_error` : ""].filter(Boolean).join(" ") || undefined,
+    };
     switch (f.type) {
       case "textarea":
-        return <textarea id={id} rows={4} className={inputCls} placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />;
+        return <textarea id={id} {...a11y} rows={4} className={inputCls} placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />;
       case "select":
         return (
-          <select id={id} className={inputCls} value={v} onChange={(e) => onChange(e.target.value)}>
+          <select id={id} {...a11y} className={inputCls} value={v} onChange={(e) => onChange(e.target.value)}>
             <option value="">Select…</option>
             {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
           </select>
@@ -241,9 +251,9 @@ export default function FormRunner({ schema, values: init, cfg, children }: { sc
       case "yesno": {
         const opts = f.type === "yesno" ? ["Yes", "No"] : f.options;
         return (
-          <div className="flex flex-wrap gap-2" role="radiogroup">
+          <div className="mmf__choices" role="radiogroup" aria-labelledby={`${id}_label`} {...a11y}>
             {opts.map((o) => (
-              <label key={o} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${v === o ? "border-[var(--acc)] bg-[var(--acc)]/5" : "border-slate-300"}`}>
+              <label key={o} className={`mmf__choice${v === o ? " is-selected" : ""}`}>
                 <input type="radio" name={id} value={o} checked={v === o} onChange={() => onChange(o)} /> <span>{o}</span>
               </label>
             ))}
@@ -253,9 +263,9 @@ export default function FormRunner({ schema, values: init, cfg, children }: { sc
       case "checkbox": {
         const sel = Array.isArray(value) ? (value as string[]) : [];
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className="mmf__choices" role="group" aria-labelledby={`${id}_label`} aria-describedby={a11y["aria-describedby"]}>
             {f.options.map((o) => (
-              <label key={o} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${sel.includes(o) ? "border-[var(--acc)] bg-[var(--acc)]/5" : "border-slate-300"}`}>
+              <label key={o} className={`mmf__choice${sel.includes(o) ? " is-selected" : ""}`}>
                 <input type="checkbox" checked={sel.includes(o)} onChange={(e) => onChange(e.target.checked ? [...sel, o] : sel.filter((x) => x !== o))} /> <span>{o}</span>
               </label>
             ))}
@@ -264,18 +274,18 @@ export default function FormRunner({ schema, values: init, cfg, children }: { sc
       }
       case "currency":
         return (
-          <div className="flex items-center rounded-lg border border-slate-300 bg-white focus-within:border-[var(--acc)]">
-            <span className="pl-3 text-slate-500">$</span>
-            <input id={id} type="text" inputMode="decimal" autoComplete="off" className="w-full rounded-lg px-2 py-2 text-sm focus:outline-none" placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />
+          <div className="mmf__currency">
+            <span className="mmf__currency-symbol">$</span>
+            <input id={id} {...a11y} type="text" inputMode="decimal" autoComplete="off" className={inputCls} placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />
           </div>
         );
       case "number":
-        return <input id={id} type="number" step="any" inputMode="decimal" min={f.min === "" ? undefined : f.min} max={f.max === "" ? undefined : f.max} className={inputCls} placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />;
+        return <input id={id} {...a11y} type="number" step="any" inputMode="decimal" min={f.min === "" ? undefined : f.min} max={f.max === "" ? undefined : f.max} className={inputCls} placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />;
       case "signature":
-        return <input id={id} type="text" autoComplete="off" className={`${inputCls} font-[cursive] text-xl italic`} placeholder="Type your full name to sign" value={v} onChange={(e) => onChange(e.target.value)} />;
+        return <input id={id} {...a11y} type="text" autoComplete="off" className={`${inputCls} mmf__signature`} placeholder="Type your full name to sign" value={v} onChange={(e) => onChange(e.target.value)} />;
       default: {
         const t = ["email", "tel", "date"].includes(f.type) ? f.type : "text";
-        return <input id={id} type={t} className={inputCls} placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />;
+        return <input id={id} {...a11y} type={t} className={inputCls} placeholder={f.placeholder} value={v} onChange={(e) => onChange(e.target.value)} />;
       }
     }
   };
@@ -284,42 +294,42 @@ export default function FormRunner({ schema, values: init, cfg, children }: { sc
     if (!vis.fields.has(f.key)) return null;
     if (f.type === "info") {
       return (
-        <div key={f.key} data-key={f.key} className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700 sm:col-span-6">
+        <div key={f.key} data-key={f.key} className="mmf__info mmf__full">
           {f.label && <strong className="block">{f.label}</strong>}
-          {f.content && <div className="mt-1 [&_p]:mb-2" dangerouslySetInnerHTML={{ __html: f.content }} />}
+          {f.content && <div className="mmf__info-copy" dangerouslySetInnerHTML={{ __html: f.content }} />}
         </div>
       );
     }
     const id = `mmf_${cfg.formId}_${f.key}`;
     const err = errs[f.key];
     const label = (
-      <label htmlFor={["radio", "yesno", "checkbox", "repeater"].includes(f.type) ? undefined : id} className="mb-1 block text-sm font-medium text-slate-700">
+      <label htmlFor={["radio", "yesno", "checkbox", "repeater"].includes(f.type) ? undefined : id} id={`${id}_label`} className="mmf__label">
         {f.label || f.key}
-        {f.required ? <i className="ml-0.5 not-italic text-red-600">*</i> : null}
+        {f.required ? <i className="mmf__required" aria-hidden="true">*</i> : null}
       </label>
     );
     if (f.type === "repeater") {
       const rows = (Array.isArray(vals[f.key]) ? vals[f.key] : []) as Record<string, string>[];
       const max = f.max_rows || 10;
       return (
-        <div key={f.key} data-key={f.key} className="sm:col-span-6">
+        <div key={f.key} data-key={f.key} className="mmf__full">
           {label}
-          {f.help && <div className="mb-2 text-xs text-slate-500">{f.help}</div>}
-          <div className="space-y-3">
+          {f.help && <div id={`${id}_help`} className="mmf__help">{f.help}</div>}
+          <div className="mmf__rows">
             {rows.map((row, i) => (
-              <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-                <div className="mb-2 flex items-center justify-between text-xs font-semibold text-slate-500">
+              <div key={i} className="mmf__repeat">
+                <div className="mmf__repeat-head">
                   <span>Item {i + 1}</span>
-                  <button type="button" aria-label="Remove" className="text-lg leading-none text-slate-400 hover:text-red-600" onClick={() => set(f.key, rows.filter((_, j) => j !== i))}>×</button>
+                  <button type="button" aria-label={`Remove item ${i + 1}`} className="mmf__remove" onClick={() => set(f.key, rows.filter((_, j) => j !== i))}>×</button>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-6">
+                <div className="mmf__grid">
                   {(f.fields || []).map((sf) => {
                     const bad = err && sf.required && !String(row[sf.key] ?? "").trim();
                     return (
-                      <div key={sf.key} className={sf.width === "third" ? "sm:col-span-2" : "sm:col-span-3"}>
-                        <label className="mb-1 block text-xs font-medium text-slate-600">{sf.label || sf.key}{sf.required ? <i className="ml-0.5 not-italic text-red-600">*</i> : null}</label>
+                      <div key={sf.key} className={sf.width === "third" ? W.third : W.half}>
+                        <label id={`${id}_${i}_${sf.key}_label`} htmlFor={["radio", "yesno", "checkbox"].includes(sf.type) ? undefined : `${id}_${i}_${sf.key}`} className="mmf__label">{sf.label || sf.key}{sf.required ? <i className="mmf__required" aria-hidden="true">*</i> : null}</label>
                         {renderInput(sf, row[sf.key] ?? "", (nv) => set(f.key, rows.map((r, j) => (j === i ? { ...r, [sf.key]: String(nv) } : r))), `${id}_${i}_${sf.key}`)}
-                        {bad && <div className="mt-1 text-xs text-red-600">Required</div>}
+                        {bad && <div className="mmf__error">Required</div>}
                       </div>
                     );
                   })}
@@ -327,55 +337,55 @@ export default function FormRunner({ schema, values: init, cfg, children }: { sc
               </div>
             ))}
           </div>
-          <button type="button" disabled={rows.length >= max} className="mt-2 rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:border-[var(--acc)] disabled:opacity-50" onClick={() => set(f.key, [...rows, {}])}>
+          <button type="button" disabled={rows.length >= max} className="mmf__button mmf__add" onClick={() => set(f.key, [...rows, {}])}>
             + {f.add_label || "Add another"}
           </button>
-          {err && <div className="mt-1 text-xs text-red-600">{err}</div>}
+          {err && <div id={`${id}_error`} className="mmf__error">{err}</div>}
         </div>
       );
     }
     const sigTs = f.type === "signature" ? String(vals[f.key + "__ts"] ?? "") : "";
     return (
-      <div key={f.key} data-key={f.key} className={`${W[f.width] || W.full} ${err ? "[&_input]:border-red-400 [&_select]:border-red-400 [&_textarea]:border-red-400" : ""}`}>
+      <div key={f.key} data-key={f.key} className={`${W[f.width] || W.full}${err ? " mmf__field--invalid" : ""}`}>
         {label}
         {renderInput(f, vals[f.key], (nv) => {
           set(f.key, nv);
           if (f.type === "signature") setVals((p) => ({ ...p, [f.key]: nv, [f.key + "__ts"]: String(nv).trim() ? new Date().toLocaleString("en-AU", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : "" }));
         }, id)}
-        {f.type === "signature" && sigTs && <div className="mt-1 text-xs text-slate-500">Signed {sigTs}</div>}
-        {f.help && <div className="mt-1 text-xs text-slate-500">{f.help}</div>}
-        {err && <div className="mt-1 text-xs text-red-600">{err}</div>}
+        {f.type === "signature" && sigTs && <div className="mmf__help">Signed {sigTs}</div>}
+        {f.help && <div id={`${id}_help`} className="mmf__help">{f.help}</div>}
+        {err && <div id={`${id}_error`} className="mmf__error">{err}</div>}
       </div>
     );
   };
 
-  const tone = (t: string) => (t === "a1" ? "border-l-4 border-l-indigo-500" : t === "a2" ? "border-l-4 border-l-amber-500" : "");
+  const tone = (t: string) => (t === "a1" ? "mmf__section--a1" : t === "a2" ? "mmf__section--a2" : "");
 
   return (
-    <div ref={rootRef} className="mmf" style={{ ["--acc" as string]: st.accent }}>
+    <div ref={rootRef} className={`mmf ${webFontVars}`}>
       <form ref={formRef} onSubmit={submit} noValidate autoComplete="on" onKeyDown={(e) => {
         if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") { e.preventDefault(); if (wizard && !last) next(); }
       }}>
         {cfg.isPublic && (
-          <div aria-hidden="true" className="absolute -left-[9999px] h-0 overflow-hidden">
+          <div aria-hidden="true" className="mmf__honeypot">
             <label>Leave blank<input type="text" tabIndex={-1} autoComplete="off" value={hp} onChange={(e) => setHp(e.target.value)} /></label>
           </div>
         )}
-        <div className="mb-4">
-          {cfg.title && <h2 className="text-xl font-bold text-slate-900">{cfg.title}</h2>}
-          {st.intro && <div className="mt-1 text-sm text-slate-600 whitespace-pre-line">{st.intro.replace(/<[^>]*>/g, "")}</div>}
-          <div className="mt-1 h-4 text-xs text-slate-500" aria-live="polite">{saved}</div>
+        <div className="mmf__head">
+          {cfg.title && <Title className="mmf__title">{cfg.title}</Title>}
+          {st.intro && <div className="mmf__intro">{st.intro.replace(/<[^>]*>/g, "")}</div>}
+          <div className="mmf__saved" aria-live="polite">{saved}</div>
         </div>
         {wizard && (
           <>
-            <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full transition-all" style={{ width: `${Math.round(((pos + 1) / Math.max(visibleSteps.length, 1)) * 100)}%`, background: st.accent }} />
+            <div className="mmf__progress">
+              <div className="mmf__progress-bar" style={{ width: `${Math.round(((pos + 1) / Math.max(visibleSteps.length, 1)) * 100)}%` }} />
             </div>
-            <ol className="mb-5 flex gap-2 overflow-x-auto pb-1">
+            <ol className="mmf__steps" aria-label="Form steps">
               {schema.sections.map((s, i) =>
                 vis.secs.has(i) ? (
                   <li key={s.id}>
-                    <button type="button" className={`flex items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1 text-xs ${i === curStep ? "border-[var(--acc)] bg-[var(--acc)] text-white" : i < curStep ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-200 bg-white text-slate-600"}`}
+                    <button type="button" className={`mmf__step${i === curStep ? " is-current" : i < curStep ? " is-previous" : ""}`} aria-current={i === curStep ? "step" : undefined}
                       onClick={() => {
                         if (i > curStep) {
                           const bad = visibleSteps.filter((k) => k >= curStep && k < i).some((k) => Object.keys(validateStep(k)).length);
@@ -396,26 +406,26 @@ export default function FormRunner({ schema, values: init, cfg, children }: { sc
           if (!vis.secs.has(i)) return null;
           if (wizard && i !== curStep) return null;
           return (
-            <section key={s.id} className={`mb-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 ${tone(s.tone)}`}>
-              {s.title && <h3 className="mb-1 text-base font-semibold text-slate-900">{s.title}</h3>}
-              {s.description && <p className="mb-3 text-sm text-slate-500">{s.description}</p>}
-              <div className="grid gap-4 sm:grid-cols-6">{s.fields.map(renderField)}</div>
+            <section key={s.id} className={`mmf__section ${tone(s.tone)}`}>
+              {s.title && <SectionTitle className="mmf__section-title">{s.title}</SectionTitle>}
+              {s.description && <p className="mmf__description">{s.description}</p>}
+              <div className="mmf__grid">{s.fields.map(renderField)}</div>
             </section>
           );
         })}
         {children}
         {summary.length > 0 && (
-          <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          <div role="alert" className="mmf__errors">
             <strong>Please fix the following:</strong>
             <ul className="ml-5 list-disc">{summary.slice(0, 8).map((m, i) => <li key={i}>{m}</li>)}</ul>
           </div>
         )}
-        <div className="flex flex-wrap items-center gap-2">
-          {wizard && pos > 0 && <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm" onClick={() => go(visibleSteps[pos - 1])}>← Back</button>}
+        <div className="mmf__actions">
+          {wizard && pos > 0 && <button type="button" className="mmf__button" onClick={() => go(visibleSteps[pos - 1])}>← Back</button>}
           <span className="flex-1" />
-          {!cfg.preview && !cfg.isPublic && <button type="button" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm" onClick={saveDraft}>Save draft</button>}
-          {!last && <button type="button" className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ background: st.accent }} onClick={next}>Next →</button>}
-          {last && <button type="submit" disabled={busy} className="rounded-lg px-5 py-2 text-sm font-semibold text-white disabled:opacity-60" style={{ background: st.accent }}>{busy ? "Submitting…" : st.submit_label}</button>}
+          {!cfg.preview && !cfg.isPublic && <button type="button" className="mmf__button" onClick={saveDraft}>Save draft</button>}
+          {!last && <button type="button" className="mmf__button mmf__button--primary" onClick={next}>Next →</button>}
+          {last && <button type="submit" disabled={busy} className="mmf__button mmf__button--primary">{busy ? "Submitting…" : st.submit_label}</button>}
         </div>
       </form>
     </div>

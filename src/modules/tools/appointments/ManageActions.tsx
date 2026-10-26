@@ -43,12 +43,12 @@ export default function ManageActions({ token, accent }: { token: string; accent
       ) : (
         <div className="mw-field">
           <label htmlFor="ssa-cancel-note" className="mw-label">
-            Reason for canceling <span className="mw-label__opt">optional</span>
+            Reason for cancelling <span className="mw-label__opt">optional</span>
           </label>
           <textarea id="ssa-cancel-note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} className="mw-textarea" />
           <div className="mw-btnrow" style={{ marginTop: 12 }}>
             <button type="button" disabled={busy} onClick={cancel} className="mw-btn mw-btn--primary" style={{ background: "var(--mw-danger)", borderColor: "var(--mw-danger)" }}>
-              <span>{busy ? "Canceling…" : "Yes, cancel appointment"}</span>
+              <span>{busy ? "Cancelling…" : "Yes, cancel appointment"}</span>
             </button>
             <button type="button" onClick={() => setMode("idle")} className="mw-btn mw-btn--quiet">
               <span>Keep appointment</span>

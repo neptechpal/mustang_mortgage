@@ -65,13 +65,13 @@ export default function DocUploader({ caseId, itemId, mmKey, label, existing }: 
   const ready = buffer.length > 0;
   return (
     <div>
-      <div className="mb-1.5 flex flex-wrap gap-1.5">
+      <div className="mw-upload__files">
         {files.length ? (
           files.map((f, i) => (
-            <a key={i} href={f.url} className="max-w-full truncate rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 hover:bg-emerald-100">✓ {f.name}</a>
+            <a key={i} href={f.url} className="mw-upload__file">✓ {f.name}</a>
           ))
         ) : (
-          <span className="text-xs text-slate-500">No files yet</span>
+          <span className="mw-portal__meta">No files yet</span>
         )}
       </div>
       <div
@@ -84,28 +84,28 @@ export default function DocUploader({ caseId, itemId, mmKey, label, existing }: 
         onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
         onDragLeave={() => setDrag(false)}
         onDrop={(e) => { e.preventDefault(); setDrag(false); add(e.dataTransfer.files); }}
-        className={`cursor-pointer rounded-xl border-[1.5px] border-dashed p-2.5 text-center text-sm outline-none ${drag || ready ? "border-[#f5d48a] bg-[#fffaf2]" : "border-[#e6e1d5] bg-white"}`}
+        className={`mw-upload__dropzone${drag || ready ? " is-ready" : ""}`}
       >
         <strong>Drag &amp; drop</strong> files here, or <strong>click to choose</strong>
-        <small className="mt-1 block text-xs text-slate-500">PDF, JPG, PNG, DOCX — Select multiple files, or add more files before uploading</small>
+        <small className="mw-upload__hint">PDF, JPG, PNG, DOCX — Select multiple files, or add more files before uploading</small>
       </div>
       <input ref={input} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" onChange={(e) => { add(e.target.files); e.target.value = ""; }} />
-      <div className="mt-1.5 flex min-h-[22px] flex-wrap gap-1.5" aria-live="polite">
+      <div className="mw-upload__queue" aria-live="polite">
         {buffer.map((f) => (
-          <span key={keyOf(f)} className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-[#f5d48a] bg-[#fff8e6] px-2.5 py-1 text-xs font-semibold text-[#7a5a00]">
-            {f.name} ({humanSize(f.size)})
-            <button type="button" aria-label={`Remove ${f.name}`} className="text-sm leading-none text-red-700 hover:text-red-900" onClick={() => setBuffer((b) => b.filter((x) => keyOf(x) !== keyOf(f)))}>×</button>
+          <span key={keyOf(f)} className="mw-upload__queued">
+            <span>{f.name} ({humanSize(f.size)})</span>
+            <button type="button" aria-label={`Remove ${f.name}`} className="mw-upload__remove" onClick={() => setBuffer((b) => b.filter((x) => keyOf(x) !== keyOf(f)))}>×</button>
           </span>
         ))}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <button type="button" disabled={!ready || busy} onClick={upload} className={`rounded-lg bg-[#987633] px-3.5 py-2 text-sm font-bold text-white shadow disabled:opacity-50 ${ready && !busy ? "animate-pulse" : ""}`}>
+      <div className="mw-upload__actions">
+        <button type="button" disabled={!ready || busy} onClick={upload} className="mw-btn mw-btn--secondary mw-btn--sm">
           {busy ? "Uploading..." : ready ? `Upload ${buffer.length} file${buffer.length > 1 ? "s" : ""}` : "Upload files"}
         </button>
-        {ready && <span className="text-xs font-semibold text-[#7a5a00]">Files selected: click &quot;Upload files&quot;.</span>}
-        {!ready && <span className="text-xs text-slate-500">You can keep uploading more anytime.</span>}
+        {ready && <span className="mw-upload__ready">Files selected: click &quot;Upload files&quot;.</span>}
+        {!ready && <span className="mw-portal__meta">You can keep uploading more anytime.</span>}
       </div>
-      {toast && <div className={`fixed bottom-4 right-4 z-50 rounded-lg px-3.5 py-2.5 text-sm text-white shadow-lg ${toast.ok ? "bg-green-700" : "bg-[#b00020]"}`}>{toast.msg}</div>}
+      {toast && <div role="status" className={`mw-upload__toast${toast.ok ? " is-success" : " is-error"}`}>{toast.msg}</div>}
     </div>
   );
 }

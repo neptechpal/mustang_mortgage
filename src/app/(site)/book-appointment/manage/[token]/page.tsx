@@ -71,7 +71,7 @@ export default async function ManageAppointmentPage({
                     </>
                   ) : (
                     <>
-                      This appointment has been canceled.{" "}
+                      This appointment has been cancelled.{" "}
                       <a className="mw-link" href={`/book-appointment?type=${appt.appointmentType.slug}`}>
                         Book a new time
                       </a>

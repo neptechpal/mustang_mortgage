@@ -6,8 +6,6 @@ export const metadata: Metadata = { title: "Secure Upload Portal | Mustang Mortg
 
 export default async function PortalPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   return (
-    <main className="min-h-screen bg-white">
-      <Portal searchParams={await searchParams} />
-    </main>
+    <Portal searchParams={await searchParams} />
   );
 }

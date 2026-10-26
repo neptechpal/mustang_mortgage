@@ -61,16 +61,21 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
   return (
     <div className="um-page">
       <AppBody>
-      <div style={{ marginBottom: 28 }}>
+      <div className="um-profile-crumbs">
         <Breadcrumbs items={[{ name: "Members", path: "/members" }, { name: isPrivate ? "Profile" : name, path: profileUrl(user.username) }]} jsonLd={false} />
       </div>
       <div className="um um-profile">
         {isPrivate ? (
           <div className="um-profile-body um-profile-body--solo">
+            <h1 className="um-profile-name">Profile</h1>
             <div className="um-profile-note">This user has chosen to keep their profile private.</div>
           </div>
         ) : editing ? (
           <div className="um-profile-body um-profile-body--solo">
+            <div className="um-profile-intro">
+              <p className="mw-eyebrow">{name}</p>
+              <h1 className="um-profile-name">Edit profile</h1>
+            </div>
             <ProfileEditForm
               description={p.description ?? ""}
               avatar={avatarUrl(user)}
@@ -83,27 +88,28 @@ export default async function UserProfilePage({ params, searchParams }: Props) {
           <>
             <div className="um-profile-header">
               <Avatar src={avatarUrl(user)} name={name} size={140} />
-              <div>
-                <div className="um-profile-name">{name}</div>
+              <div className="um-profile-details">
+                <p className="mw-eyebrow">Profile</p>
+                <h1 className="um-profile-name">{name}</h1>
                 {viewerIsStaff && user.status !== "approved" && <div className="um-profile-meta">Status: {user.status}</div>}
                 {p.description && <div className="um-profile-bio">{p.description}</div>}
               </div>
               {(own || session?.role === "ADMIN") && (
                 <div className="um-profile-edit-btn">
                   {own ? (
-                    <Link href={`${profileUrl(user.username)}?um_action=edit`} className="um-button um-alt" style={{ padding: "10px 18px" }}>
+                    <Link href={`${profileUrl(user.username)}?um_action=edit`} className="um-button um-alt">
                       Edit profile
                     </Link>
                   ) : (
-                    <Link href={`/admin/users/${user.id}`} className="um-button um-alt" style={{ padding: "10px 18px" }}>
+                    <Link href={`/admin/users/${user.id}`} className="um-button um-alt">
                       Edit user
                     </Link>
                   )}
                 </div>
               )}
             </div>
-            <nav className="um-profile-nav">
-              <a className="active" href="#about">
+            <nav className="um-profile-nav" aria-label="Profile sections">
+              <a className="active" href="#about" aria-current="location">
                 About
               </a>
             </nav>

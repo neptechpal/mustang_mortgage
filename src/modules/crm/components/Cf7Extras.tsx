@@ -13,9 +13,9 @@ export default function Cf7Extras() {
     const c = canvas.current;
     if (!c) return;
     const ctx = c.getContext("2d")!;
-    ctx.fillStyle = "#dddddd";
+    ctx.fillStyle = getComputedStyle(c).getPropertyValue("--form-paper").trim();
     ctx.fillRect(0, 0, c.width, c.height);
-    ctx.strokeStyle = "#000000";
+    ctx.strokeStyle = getComputedStyle(c).getPropertyValue("--form-ink").trim();
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
   }, []);
@@ -34,51 +34,51 @@ export default function Cf7Extras() {
   const clear = () => {
     const c = canvas.current!;
     const ctx = c.getContext("2d")!;
-    ctx.fillStyle = "#dddddd";
+    ctx.fillStyle = getComputedStyle(c).getPropertyValue("--form-paper").trim();
     ctx.fillRect(0, 0, c.width, c.height);
     setSig("");
   };
   return (
     <>
-      <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <h3 className="mb-1 text-base font-semibold text-slate-900">Required Document Attachments</h3>
-        <p className="text-sm text-slate-600">Attach here or email to <a className="text-[#0073AA] underline" href="mailto:info@mustangmortgage.com.au?subject=Documents%20for%20Mortgage%20Application">info@mustangmortgage.com.au</a>.</p>
-        <ul className="my-2 text-sm text-slate-700">
+      <section className="mmf__section">
+        <h2 className="mmf__section-title">Required Document Attachments</h2>
+        <p className="mmf__help">Attach here or email to <a className="mmf__link" href="mailto:info@mustangmortgage.com.au?subject=Documents%20for%20Mortgage%20Application">info@mustangmortgage.com.au</a>.</p>
+        <ul className="mmf__attachments">
           <li>• Two most recent payslips for each applicant</li>
           <li>• Driver Licence / Photo ID / Passport for each applicant</li>
           <li>• Liability statements (home/personal/credit card)</li>
           <li>• Rates notice / Contract of Sale (if applicable)</li>
           <li>• Tax returns/NOA (if self-employed)</li>
         </ul>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Attach File(s)</label>
-        <div className="rounded-lg border-2 border-dashed border-slate-300 p-4 text-center text-sm text-slate-600"
+        <label htmlFor="cf7-picker" className="mmf__label">Attach File(s)</label>
+        <div className="mmf__dropzone"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => { e.preventDefault(); setFiles((f) => [...f, ...Array.from(e.dataTransfer.files)].slice(0, 15)); }}>
           Drag &amp; drop files here or{" "}
-          <button type="button" className="text-[#0073AA] underline" onClick={() => document.getElementById("cf7-picker")?.click()}>browse</button>
+          <button type="button" className="mmf__link" onClick={() => document.getElementById("cf7-picker")?.click()}>browse</button>
           <input id="cf7-picker" type="file" multiple accept=".pdf,.jpeg,.png,.jpg,.gif" className="hidden" onChange={(e) => { const l = e.target.files; if (l) setFiles((f) => [...f, ...Array.from(l)].slice(0, 15)); e.target.value = ""; }} />
           <input ref={fileInput} name="mfile-938" type="file" multiple className="hidden" readOnly />
         </div>
         {files.length > 0 && (
-          <ul className="mt-2 space-y-1 text-sm">
+          <ul className="mmf__file-list">
             {files.map((f, i) => (
-              <li key={i} className="flex items-center justify-between rounded border border-slate-200 px-2 py-1">
+              <li key={i} className="mmf__file">
                 <span className="truncate">{f.name}</span>
-                <button type="button" className="text-red-600" onClick={() => setFiles((x) => x.filter((_, j) => j !== i))}>×</button>
+                <button type="button" className="mmf__remove" aria-label={`Remove ${f.name}`} onClick={() => setFiles((x) => x.filter((_, j) => j !== i))}>×</button>
               </li>
             ))}
           </ul>
         )}
       </section>
-      <section className="mb-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <label className="mb-1 block text-sm font-medium text-slate-700">Signature <i className="not-italic text-red-600">*</i></label>
-        <canvas ref={canvas} width={600} height={160} className="w-full max-w-[600px] touch-none rounded border border-slate-300"
+      <section className="mmf__section">
+        <div id="cf7-signature-label" className="mmf__label">Signature <i className="mmf__required" aria-hidden="true">*</i></div>
+        <canvas ref={canvas} width={600} height={160} className="mmf__canvas" aria-labelledby="cf7-signature-label"
           onPointerDown={(e) => { drawing.current = true; const [x, y] = pos(e); const ctx = e.currentTarget.getContext("2d")!; ctx.beginPath(); ctx.moveTo(x, y); e.currentTarget.setPointerCapture(e.pointerId); }}
           onPointerMove={(e) => { if (!drawing.current) return; const [x, y] = pos(e); const ctx = e.currentTarget.getContext("2d")!; ctx.lineTo(x, y); ctx.stroke(); }}
           onPointerUp={(e) => { drawing.current = false; setSig(e.currentTarget.toDataURL("image/png")); }} />
         <input type="hidden" name="signature-337" value={sig} />
-        <button type="button" className="mt-1 text-xs text-slate-600 underline" onClick={clear}>Clear</button>
-        <p className="mt-2 text-sm text-slate-600">By submitting, I declare the information provided is true and correct to the best of my knowledge.</p>
+        <button type="button" className="mmf__link mmf__clear" onClick={clear}>Clear</button>
+        <p className="mmf__help">By submitting, I declare the information provided is true and correct to the best of my knowledge.</p>
       </section>
     </>
   );

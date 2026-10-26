@@ -192,7 +192,7 @@
     border: 1px solid var(--mw-gold-600);
     border-radius: var(--mw-radius-sm);
     background: var(--mw-gold-600);
-    color: #fff;
+    color: var(--mw-surface);
     font: 600 1rem/1.2 var(--mw-sans, inherit);
     text-align: center;
     text-decoration: none;
@@ -203,7 +203,7 @@
   .um .um-button:hover {
     background: var(--mw-gold-700);
     border-color: var(--mw-gold-700);
-    color: #fff;
+    color: var(--mw-surface);
   }
   .um .um-button:focus-visible {
     outline: 2px solid var(--mw-gold-500);
@@ -555,8 +555,37 @@
   .um-directory-search .um-button {
     width: auto !important;
   }
+  .um-directory-search .um-form-field {
+    min-width: 0;
+    flex: 1;
+  }
+  .um-member-name, .um-account-meta > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .um-account-side, .um-account-main {
+    min-width: 0;
+  }
+  .um input[type="file"]::file-selector-button {
+    min-height: 44px;
+    margin-right: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--mw-line-strong);
+    border-radius: var(--mw-radius-sm);
+    background: var(--mw-paper);
+    color: var(--mw-ink);
+    font: inherit;
+    cursor: pointer;
+  }
 
   /* Profile */
+  .um-profile-crumbs { margin-bottom: 28px; }
+  .um-profile-details { min-width: 0; }
+  .um-profile-intro { margin-bottom: 28px; }
+  .um-profile-details .mw-eyebrow, .um-profile-intro .mw-eyebrow { margin-bottom: 12px; }
+  .um-profile-photo-editor { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }
+  .um-profile-photo-fields { flex: 1 1 240px; min-width: 0; }
+  .um-profile-remove-photo { margin-top: 12px; }
   .um-profile-header {
     display: flex;
     align-items: center;
@@ -572,6 +601,7 @@
     font-weight: 340;
     color: var(--mw-ink);
     line-height: 1.15;
+    overflow-wrap: anywhere;
   }
   .um-profile-meta {
     color: var(--mw-text-3);
@@ -582,6 +612,7 @@
     margin-top: 10px;
     color: var(--mw-text-2);
     white-space: pre-line;
+    overflow-wrap: anywhere;
   }
   .um-profile-nav {
     display: flex;
@@ -622,6 +653,7 @@
   }
   .um-profile-edit-btn {
     margin-left: auto;
+    flex-shrink: 0;
   }
   .um-profile-edit-btn .um-button {
     width: auto !important;
