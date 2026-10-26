@@ -23,9 +23,11 @@ export default function LeadForm({ uid = "mmf1" }: { uid?: string }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
+  const [count, setCount] = useState(1);
+  const sections = LEAD_FORM.sections.filter(s => !s.applicant || s.applicant <= count);
   const validate = (form: HTMLFormElement) => {
     const errs: Errors = {};
-    for (const f of LEAD_FORM.sections.flatMap((s) => s.fields)) {
+    for (const f of sections.flatMap((s) => s.fields)) {
       if (f.required && blank(form, f)) errs[f.key] = `${f.label} is required.`;
       else if (f.type === "email") {
         const v = (form.elements.namedItem(f.key) as HTMLInputElement).value;
@@ -109,7 +111,7 @@ export default function LeadForm({ uid = "mmf1" }: { uid?: string }) {
         break;
       case "select":
         control = (
-          <select id={id} name={f.key} defaultValue="" onChange={() => onInput(f.key)}>
+          <select id={id} name={f.key} defaultValue={f.default || ""} onChange={e => { if (f.key === "applicant_count") setCount(Number(e.target.value)); onInput(f.key); }}>
             <option value="">Select…</option>
             {f.options!.map((o) => (
               <option key={o} value={o}>
@@ -163,7 +165,7 @@ export default function LeadForm({ uid = "mmf1" }: { uid?: string }) {
             </div>
           </div>
           <div className="mmf-steps">
-            {LEAD_FORM.sections.map((s, i) => (
+            {sections.map((s, i) => (
               <section className="mmf-step" data-step={i} key={s.title}>
                 <h3 className="mmf-sec-title">{s.title}</h3>
                 <div className="mmf-grid">{s.fields.map(field)}</div>

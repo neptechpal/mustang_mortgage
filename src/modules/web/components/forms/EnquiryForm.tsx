@@ -11,7 +11,7 @@ type Errors = Record<string, string>;
 
 const ENDPOINT = `/api/forms/mmf-${LEAD_FORM.id}`;
 const AUTOCOMPLETE: Record<string, string> = { full_name: "name", email: "email", mobile: "tel" };
-const SECTION_TITLES = ["Your details", "What you need"];
+
 
 function validateField(f: LeadField, form: HTMLFormElement): string | null {
   if (f.type === "checkbox") {
@@ -44,7 +44,9 @@ export function EnquiryForm({ sourcePage, defaultPurpose = [], submitLabel = "Se
   const [busy, setBusy] = useState(false);
   const [doneName, setDoneName] = useState<string | null>(null);
 
-  const fields = LEAD_FORM.sections.flatMap((s) => s.fields);
+  const [count, setCount] = useState(1);
+  const sections = LEAD_FORM.sections.filter(s => !s.applicant || s.applicant <= count);
+  const fields = sections.flatMap(s => s.fields);
 
   const checkOne = (f: LeadField) => {
     if (!formRef.current) return;
@@ -64,7 +66,8 @@ export function EnquiryForm({ sourcePage, defaultPurpose = [], submitLabel = "Se
     // Validate on blur only once the person has typed something, or when the field already shows an error.
     if ((el && el.value.trim()) || errors[f.key]) checkOne(f);
   };
-  const onChange = (f: LeadField) => () => {
+  const onChange = (f: LeadField) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    if (f.key === "applicant_count") { setCount(Number(e.target.value) || 1); setErrors({}); setSummary([]); }
     if (errors[f.key]) checkOne(f);
   };
 
@@ -158,7 +161,7 @@ export function EnquiryForm({ sourcePage, defaultPurpose = [], submitLabel = "Se
         );
       case "select":
         return (
-          <select className="mw-select" id={id} name={f.key} defaultValue="" aria-invalid={invalid || undefined} aria-describedby={describedBy} onChange={onChange(f)}>
+          <select className="mw-select" id={id} name={f.key} defaultValue={f.default || ""} aria-invalid={invalid || undefined} aria-describedby={describedBy} onChange={onChange(f)}>
             <option value="">Choose one</option>
             {f.options!.map((o) => (
               <option key={o} value={o}>
@@ -210,9 +213,9 @@ export function EnquiryForm({ sourcePage, defaultPurpose = [], submitLabel = "Se
         </div>
       )}
 
-      {LEAD_FORM.sections.map((s, si) => (
+      {sections.map((s) => (
         <fieldset className="mw-form__section" key={s.title}>
-          <legend className="mw-form__legend">{SECTION_TITLES[si] ?? s.title}</legend>
+          <legend className="mw-form__legend">{s.title}</legend>
           <div className="mw-form__grid">
             {s.fields.map((f) => {
               const id = `${uid}-${f.key}`;

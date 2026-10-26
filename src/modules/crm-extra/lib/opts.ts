@@ -1,3 +1,4 @@
+import { rehostWpAsset } from "@/lib/assets";
 // Settings used by the crm-extra module.
 // - General CRM options (from_name/from_email/brand_logo/signature …) live under
 //   "crm.options" (owned by crm-core's Settings page). We read them tolerantly
@@ -33,7 +34,7 @@ export async function getCrmOptions(): Promise<CrmOptions> {
   const sig = pick(mail, "signatureHtml") ?? pick(o, "signature_html", "signatureHtml") ?? "";
   const auto = pick(mail, "autoAppendSignature") ?? pick(o, "auto_append_signature", "autoAppendSignature") ?? 1;
   return {
-    brandLogo: String(pick(o, "brand_logo", "brandLogo") ?? DEFAULT_LOGO),
+    brandLogo: rehostWpAsset(String(pick(o, "brand_logo", "brandLogo") ?? DEFAULT_LOGO)),
     fromName: String(pick(o, "from_name", "fromName") ?? process.env.MAIL_FROM_NAME ?? SITE_NAME),
     fromEmail: String(pick(o, "from_email", "fromEmail") ?? process.env.MAIL_FROM ?? "info@mustangmortgage.com.au"),
     signatureHtml: String(sig),

@@ -1,4 +1,7 @@
 // Case helpers shared by crm-extra (port of mmcrm_case_facts & friends).
+import { applicantNames, applicantEmails, type ApplicantCase } from "@/modules/crm/applicants";
+import { readDeal, INCOME_DEFAULTS } from "./income";
+import { getIncomeSettings } from "./income-settings";
 import { prisma } from "@/lib/db";
 import { SITE_URL } from "./opts";
 import { indexGet } from "./threading";
@@ -34,18 +37,15 @@ export const normPct = (v: number | null | undefined) => {
   return n > 0 && n < 1 ? n * 100 : n;
 };
 
-/** commission = max(0, loan × bank%/100 × mm%/100) */
+/** Compatibility reader for legacy commission inputs. */
 export const calcCommission = (loan?: number | null, bank?: number | null, mm?: number | null) =>
-  Math.max(0, (Number(loan) || 0) * (normPct(bank) / 100) * (normPct(mm) / 100));
+  readDeal({ loanAmount: loan, commPct: bank, commMmPct: mm }, INCOME_DEFAULTS).upfrontYou;
 
-export function caseName(c: Pick<CaseRow, "id" | "title" | "app1Name" | "app2Name">) {
-  const names = [c.app1Name, c.app2Name].map((s) => (s || "").trim()).filter(Boolean);
-  return names.length ? names.join(" & ") : c.title || `Case #${c.id}`;
+export function caseName(c: ApplicantCase & { id: number; title: string }) {
+  return applicantNames(c) || c.title || `Case #${c.id}`;
 }
-
-export function caseEmails(c: Pick<CaseRow, "app1Email" | "app2Email" | "legacyEmail">) {
-  const out = [c.app1Email, c.app2Email, c.legacyEmail].map((s) => (s || "").trim().toLowerCase()).filter(Boolean);
-  return Array.from(new Set(out));
+export function caseEmails(c: ApplicantCase) {
+  return Array.from(new Set([...applicantEmails(c), (c.legacyEmail || '').trim().toLowerCase()].filter(Boolean)));
 }
 
 export async function caseFacts(caseId: number) {
@@ -62,6 +62,7 @@ export async function caseFacts(caseId: number) {
     } else pending++;
   }
   const total = c.documents.length;
+  const deal = readDeal(c, await getIncomeSettings());
   return {
     c,
     id: c.id,
@@ -74,7 +75,7 @@ export async function caseFacts(caseId: number) {
     docsPending: pending,
     docsRejected: rejected,
     loan: c.loanAmount ?? 0,
-    commission: calcCommission(c.loanAmount, c.commPct, c.commMmPct),
+    commission: deal.upfrontYou, trailMonth: deal.trailMonthYou, deal,
     ff: (c.ffDraft && typeof c.ffDraft === "object" ? c.ffDraft : {}) as Record<string, unknown>,
   };
 }
@@ -88,6 +89,8 @@ export async function guessCaseByEmail(email: string): Promise<number> {
       OR: [
         { app1Email: { equals: e, mode: "insensitive" } },
         { app2Email: { equals: e, mode: "insensitive" } },
+        { app3Email: { equals: e, mode: "insensitive" } },
+        { app4Email: { equals: e, mode: "insensitive" } },
         { legacyEmail: { equals: e, mode: "insensitive" } },
       ],
     },
@@ -98,10 +101,10 @@ export async function guessCaseByEmail(email: string): Promise<number> {
   const idx = await indexGet("contact", e);
   if (idx) return idx;
   const recent = await prisma.case.findMany({
-    where: { OR: [{ app1Email: { contains: "@" } }, { app2Email: { contains: "@" } }, { legacyEmail: { contains: "@" } }] },
+    where: { OR: [{ app1Email: { contains: "@" } }, { app2Email: { contains: "@" } }, { app3Email: { contains: "@" } }, { app4Email: { contains: "@" } }, { legacyEmail: { contains: "@" } }] },
     orderBy: { createdAt: "desc" },
     take: 200,
-    select: { id: true, app1Email: true, app2Email: true, legacyEmail: true },
+    select: { id: true, app1Email: true, app2Email: true, app3Email: true, app4Email: true, legacyEmail: true },
   });
   for (const r of recent) if (caseEmails(r).some((x) => x.includes(e))) return r.id;
   return 0;
@@ -111,9 +114,9 @@ export async function caseOptions() {
   const rows = await prisma.case.findMany({
     orderBy: { createdAt: "desc" },
     take: 500,
-    select: { id: true, title: true, app1Name: true, app2Name: true, status: true },
+    select: { id: true, title: true, app1Name: true, app2Name: true, app3Name: true, app4Name: true, status: true },
   });
-  return rows.map((r) => ({ id: r.id, label: `${r.title || caseName(r)} (#${r.id})`, status: r.status }));
+  return rows.map((r) => ({ id: r.id, label: `${caseName(r)} (#${r.id})`, status: r.status }));
 }
 
 /** Sydney-local formatting helpers. */

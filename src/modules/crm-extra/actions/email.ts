@@ -14,8 +14,8 @@ type R = { ok: boolean; error?: string };
 async function recipients(caseId: number, to: string) {
   let list = extractEmails(to.replace(/;/g, ","));
   if (!list.length) {
-    const c = await prisma.case.findUnique({ where: { id: caseId }, select: { app1Email: true, app2Email: true, legacyEmail: true } });
-    if (c) list = extractEmails([c.app1Email, c.app2Email].join(",")) ;
+    const c = await prisma.case.findUnique({ where: { id: caseId }, select: { app1Email: true, app2Email: true, app3Email: true, app4Email: true, legacyEmail: true } });
+    if (c) list = extractEmails([c.app1Email, c.app2Email, c.app3Email, c.app4Email].join(",")) ;
     if (!list.length && c) list = extractEmails(c.legacyEmail);
   }
   return list;

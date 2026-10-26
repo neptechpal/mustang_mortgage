@@ -2,7 +2,8 @@ import { CircleDollarSign, Save, Target } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { Button, Card, Field, inputStyles, PageHeader, TabLinks } from "@/components/admin/ui";
-import { calcCommission } from "@/modules/crm-extra/lib/cases";
+import { readDeal } from "@/modules/crm-extra/lib/income";
+import { getIncomeSettings } from "@/modules/crm-extra/lib/income-settings";
 import { getCrmOptions } from "@/modules/crm-extra/lib/opts";
 import { getSetting, setSetting } from "@/lib/settings";
 import { revalidatePath } from "next/cache";
@@ -33,10 +34,11 @@ export default async function CommissionsPage({ searchParams }: { searchParams: 
   const status = SCOPES.some(([k]) => k === sp.status) ? sp.status! : "active";
   const cases = await prisma.case.findMany({
     where: status === "all" ? {} : { status },
-    select: { id: true, title: true, loanAmount: true, commPct: true, commMmPct: true },
+
   });
+  const income = await getIncomeSettings();
   const rows = cases
-    .map((c) => ({ id: c.id, title: c.title, loan: Math.max(0, c.loanAmount ?? 0), amt: calcCommission(c.loanAmount, c.commPct, c.commMmPct) }))
+    .map((c) => ({ id: c.id, title: c.title, loan: Math.max(0, c.loanAmount ?? 0), amt: readDeal(c, income).upfrontYou }))
     .sort((a, b) => b.amt - a.amt || a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
   const o = await getCrmOptions();
   const target = Number(await getSetting<number>("crmx.commissionTarget", 0)) || o.commissionTarget || 0;

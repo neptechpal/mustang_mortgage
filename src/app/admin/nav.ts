@@ -19,10 +19,12 @@ export const ADMIN_NAV: NavGroup[] = [
     title: "Work",
     items: [
       { href: "/admin/reminders", label: "Reminders", icon: "reminders" },
+      { href: "/admin/field-notes", label: "Field notes", icon: "notes" },
       { href: "/admin/notes", label: "Broker Notes", icon: "notes" },
       { href: "/admin/notes/learning", label: "Learning Vault", icon: "learning" },
       { href: "/admin/signals", label: "Activity", icon: "activity" },
       { href: "/admin/trail", label: "Email Trail", icon: "mail" },
+      { href: "/admin/income", label: "Income", icon: "commissions" },
       { href: "/admin/commissions", label: "Commissions", icon: "commissions" },
       { href: "/admin/borrowing", label: "Borrowing Capacity", icon: "calculator" },
       { href: "/admin/marketing", label: "Marketing", icon: "marketing" },

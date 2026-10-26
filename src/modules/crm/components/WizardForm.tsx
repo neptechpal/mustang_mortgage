@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { ArrowRight, Check, CircleCheck, FileStack, Landmark, Loader2, Send, UserRound, UserPlus } from "lucide-react";
-import { buttonStyles, checkboxStyles, cn, inputStyles, labelStyles, selectStyles } from "@/components/admin/ui";
+import { ArrowRight, Check, CircleCheck, FileStack, Landmark, Loader2, Send, UserRound, NotebookPen } from "lucide-react";
+import { Field, Input, Select, Textarea, Card, buttonStyles, checkboxStyles, cn, inputStyles, labelStyles, selectStyles } from "@/components/admin/ui";
 import type { Preset } from "../options";
 import { wizardCreateAction } from "../actions";
 
@@ -53,7 +53,7 @@ function Submit() {
 }
 
 export default function WizardForm({ presets, forms, ffTitle, chaseOn }: { presets: Preset[]; forms: { id: number; title: string }[]; ffTitle: string; chaseOn: boolean }) {
-  const [two, setTwo] = useState(false);
+  const [count, setCount] = useState(1);
   const [loan, setLoan] = useState("purchase");
   const [inc, setInc] = useState("payg");
   const [ticked, setTicked] = useState<Record<string, boolean>>({});
@@ -66,23 +66,16 @@ export default function WizardForm({ presets, forms, ffTitle, chaseOn }: { prese
   return (
     <form action={wizardCreateAction} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="min-w-0 space-y-5">
-        <Step n={1} title="Who is the client?" description="The primary applicant receives the secure portal link." icon={<UserRound />}>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div><label className={lab} htmlFor="p1_name">Applicant 1 — full name <span className="text-red-500">*</span></label><input id="p1_name" className={inp} name="p1_name" required autoFocus /></div>
-            <div><label className={lab} htmlFor="p1_email">Email <span className="text-red-500">*</span></label><input id="p1_email" className={inp} type="email" name="p1_email" required /></div>
-            <div><label className={lab} htmlFor="p1_mobile">Mobile</label><input id="p1_mobile" className={inp} type="tel" name="p1_mobile" /></div>
+        <Step n={1} title="Who is the client?" description="Details flow straight onto the case, the Fact Find and the emails — no need to type them again." icon={<UserRound />}>
+          <Field label="Number of applicants" htmlFor="app_count"><Select id="app_count" name="app_count" value={count} onChange={e => setCount(Number(e.target.value))}>{[1,2,3,4].map(n => <option key={n}>{n}</option>)}</Select></Field>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {[1,2,3,4].map(n => <fieldset key={n} hidden={n > count} disabled={n > count} className="space-y-3 rounded-xl border border-slate-200 p-4">
+              <legend className="px-1 text-sm font-semibold">Applicant {n}</legend>
+              <Field label={`Full name${n === 1 ? ' *' : ''}`} htmlFor={`p${n}_name`}><Input id={`p${n}_name`} name={`p${n}_name`} required={n === 1} autoFocus={n === 1} /></Field>
+              <Field label="Email" htmlFor={`p${n}_email`}><Input id={`p${n}_email`} name={`p${n}_email`} type="email" /></Field>
+              <Field label="Mobile" htmlFor={`p${n}_mobile`}><Input id={`p${n}_mobile`} name={`p${n}_mobile`} type="tel" /></Field>
+            </fieldset>)}
           </div>
-          <label className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700 has-[:checked]:border-solid has-[:checked]:border-brand-300 has-[:checked]:bg-brand-50/50">
-            <input type="checkbox" className={checkboxStyles} checked={two} onChange={(e) => setTwo(e.target.checked)} />
-            <UserPlus className="size-4" /> Add a second applicant
-          </label>
-          {two && (
-            <div className="mt-4 grid gap-4 rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 sm:grid-cols-3">
-              <div><label className={lab} htmlFor="p2_name">Applicant 2 — full name</label><input id="p2_name" className={inp} name="p2_name" /></div>
-              <div><label className={lab} htmlFor="p2_email">Email</label><input id="p2_email" className={inp} type="email" name="p2_email" /></div>
-              <div><label className={lab} htmlFor="p2_mobile">Mobile</label><input id="p2_mobile" className={inp} type="tel" name="p2_mobile" /></div>
-            </div>
-          )}
         </Step>
 
         <Step n={2} title="The deal" description="Loan and income type pick the right document presets in step 3." icon={<Landmark />}>
@@ -102,6 +95,14 @@ export default function WizardForm({ presets, forms, ffTitle, chaseOn }: { prese
               </div></div>
           </div>
         </Step>
+
+        <Card title={<span className="flex items-center gap-2"><NotebookPen className="size-4" />Additional info — conversation notes</span>} description="Everything discussed with the client. Saved as a time-stamped Broker Note on the case for your records and audit trail.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="How did you speak?" htmlFor="contact_type"><Select id="contact_type" name="contact_type">{['Met in person', 'Phone call', 'Video call', 'Email / message', 'Referral', 'Walk-in / other'].map(t => <option key={t}>{t}</option>)}</Select></Field>
+            <Field label="Lead source (optional)" htmlFor="lead_source"><Input id="lead_source" name="lead_source" placeholder="e.g. Referral from Sam, Facebook, open home" /></Field>
+          </div>
+          <Field label="Conversation details" htmlFor="conv_notes" className="mt-4"><Textarea id="conv_notes" name="conv_notes" rows={6} placeholder="Goals, timeframe, current lender & rate, income, deposit, concerns, what was agreed, next steps…" /></Field>
+        </Card>
 
         <Step n={3} title="Documents to request" icon={<FileStack />}
           description={<>Ticked automatically from the loan and income type. Edit the lists in <a className="font-medium text-brand-700 hover:underline" href="/admin/automation">Automation → Checklist presets</a>.</>}>

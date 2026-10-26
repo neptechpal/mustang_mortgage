@@ -1,3 +1,5 @@
+import { applicants, applicantNames, applicantEmails } from "./applicants";
+import { readDeal, INCOME_DEFAULTS } from "@/modules/crm-extra/lib/income";
 import type { Case, CaseDocument, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { logActivity } from "./activity";
@@ -19,7 +21,7 @@ export function docFiles(d: Pick<CaseDocument, "files">): FileRef[] {
 }
 
 /** mmcrm_case_facts() */
-export function caseFacts(c: Case & { documents: CaseDocument[] }) {
+export function caseFacts(c: Case & { documents: CaseDocument[] }, income = INCOME_DEFAULTS) {
   const a1 = c.app1Name.trim();
   const a2 = c.app2Name.trim();
   const e1 = c.app1Email.trim();
@@ -31,18 +33,15 @@ export function caseFacts(c: Case & { documents: CaseDocument[] }) {
     else pending++;
   }
   const total = c.documents.length;
-  const loan = c.loanAmount || 0;
-  let cpct = c.commPct || 0, mpct = c.commMmPct || 0;
-  if (cpct > 0 && cpct < 1) cpct *= 100;
-  if (mpct > 0 && mpct < 1) mpct *= 100;
-  const commission = Math.max(0, loan * (cpct / 100) * (mpct / 100));
-  const names = [a1, a2].filter(Boolean);
+  const deal = readDeal(c, income);
+  const loan = deal.loan, commission = deal.upfrontYou;
   const draft = (c.ffDraft && typeof c.ffDraft === "object" ? c.ffDraft : {}) as Record<string, unknown>;
   return {
     id: c.id,
     a1, a2, e1, e2,
-    name: names.length ? names.join(" & ") : c.title || `Case #${c.id}`,
-    emails: [e1, e2].filter(Boolean),
+    name: applicantNames(c) || c.title || `Case #${c.id}`,
+    applicants: applicants(c),
+    emails: applicantEmails(c),
     stage: STAGES[c.stage] ? c.stage : "new",
     status: c.status,
     statusLabel: STATUSES[c.status] ?? "Active",
@@ -52,7 +51,7 @@ export function caseFacts(c: Case & { documents: CaseDocument[] }) {
     docs_rejected: rejected,
     docs_pct: total ? Math.round((100 * recv) / total) : 0,
     loan,
-    commission,
+    commission, trail_month: deal.trailMonthYou, deal,
     created: c.createdAt,
     modified: c.updatedAt,
     ff_done: c.ffDone,

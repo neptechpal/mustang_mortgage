@@ -6,7 +6,7 @@ import { saveFile } from "@/lib/storage";
 import { logEvent, portalUrl } from "./cases";
 import { notifyBroker, sendToCaseClients } from "./email";
 import { onFfSubmitted } from "./automation";
-import { factFindSchema, syncToCase } from "./forms/service";
+import { saveFormNotes, factFindSchema, syncToCase } from "./forms/service";
 import { fieldIndex, sanitizeValues, stampSignatures, stripHidden, summary, validate, type Values } from "./forms/engine";
 import { mysqlNow, siteUrl } from "./util";
 
@@ -58,6 +58,8 @@ async function commitSubmit(caseId: number, payload: Values, meta: { ip: string;
     `<p>A Fact Find was submitted.</p><ul><li><strong>Case:</strong> ${caseId}</li><li><strong>Time:</strong> ${mysqlNow(now)}</li><li><strong>Snapshot:</strong> <a href="${escapeHtml(link)}">${escapeHtml(link)}</a></li></ul>`,
   ).catch(() => undefined);
   await logEvent(caseId, "submit", "Client submitted Fact Find", "client");
+  const { schema } = await factFindSchema();
+  await saveFormNotes(schema, caseId, payload, "Fact Find", false);
   await onFfSubmitted(caseId);
 }
 

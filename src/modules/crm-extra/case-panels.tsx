@@ -1,3 +1,5 @@
+import { readDeal } from "./lib/income";
+import { getIncomeContext } from "./lib/income-settings";
 // CONTRACT between crm-core (case screen) and crm-extra (advanced modules).
 // crm-core renders these inside the case screen tabs; crm-extra implements them.
 // Each is an async Server Component taking { caseId }.
@@ -62,7 +64,7 @@ export async function EmailPanel({ caseId }: P) {
         <EmailComposer
           caseId={caseId}
           app1={c.app1Email || c.legacyEmail}
-          app2={c.app2Email}
+          app2={c.app2Email} app3={c.app3Email} app4={c.app4Email}
           portal={c.portalClosed ? "" : portalUrl(c) + "&step=factfind"}
           templates={tpls.map((t) => ({ id: t.id, label: t.subject || t.title }))}
           connected={connected}
@@ -256,8 +258,7 @@ export async function BorrowPanel({ caseId }: P) {
 
 /** Deal Value (loan amount, bank comm %, MM split %) with live estimate. */
 export async function CommissionPanel({ caseId }: P) {
-  const c = await prisma.case.findUnique({ where: { id: caseId }, select: { loanAmount: true, commPct: true, commMmPct: true } });
+  const [c, { settings, projection }] = await Promise.all([prisma.case.findUnique({ where: { id: caseId } }), getIncomeContext()]);
   if (!c) return missing;
-  const s = (v: number | null) => (v === null || v === undefined || v === 0 ? "" : String(v));
-  return <DealValue caseId={caseId} loan={s(c.loanAmount)} bank={s(c.commPct)} mm={s(c.commMmPct)} />;
+  return <DealValue caseId={caseId} deal={readDeal(c, settings, undefined, projection)} projection={projection} />;
 }

@@ -1,3 +1,6 @@
+import { applicantCount, type ApplicantCase } from "../applicants";
+import { addBrokerNote, noteDate } from "@/modules/crm-extra/lib/notes";
+import { syncCaseContacts } from "@/modules/crm-extra/lib/marketing";
 import type { Case, CaseForm, CrmForm, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { escapeHtml } from "@/lib/mail";
@@ -6,13 +9,13 @@ import { buttonHtml, mergePlaceholders, notifyBroker, sendToCaseClients } from "
 import { getFfFormId, getFormEmailTpl } from "../options";
 import { autop, mysqlNow, stripTags } from "../util";
 import { onCaseCreated, onFormSubmitted } from "../automation";
-import { classicFactFind } from "./defaults";
+import { classicFactFind, upgradeEnquirySchema, withFourApplicants } from "./defaults";
 import {
   caseMapColumn, countFields, normalizeSchema, sanitizeValues, stampSignatures, stripHidden, summaryHtml, validate,
-  type Schema, type Values,
+  summary, type Schema, type Values,
 } from "./engine";
 
-export const formSchema = (f: Pick<CrmForm, "schema">): Schema => normalizeSchema(f.schema);
+export const formSchema = (f: Pick<CrmForm, "schema">): Schema => upgradeEnquirySchema(normalizeSchema(f.schema));
 
 export async function getPublishedForm(id: number) {
   const f = await prisma.crmForm.findUnique({ where: { id } });
@@ -25,7 +28,7 @@ export async function factFindSchema(): Promise<{ schema: Schema; formId: number
   if (id) {
     const f = await getPublishedForm(id);
     if (f) {
-      const s = formSchema(f);
+      const s = withFourApplicants(formSchema(f));
       if (countFields(s)) return { schema: s, formId: f.id, title: f.title, engine: true };
     }
   }
@@ -33,10 +36,11 @@ export async function factFindSchema(): Promise<{ schema: Schema; formId: number
 }
 
 /* ---------------- case linkage ---------------- */
-type CaseLike = Pick<Case, "app1Name" | "app1Email" | "app1Dob" | "app1Mobile" | "app2Name" | "app2Email" | "app2Dob" | "app2Mobile" | "loanAmount">;
+type CaseLike = ApplicantCase & { loanAmount: number | null };
 
 export function prefillFromCase(s: Schema, c: CaseLike, values: Values): Values {
   const out = { ...values };
+  if (!out.applicant_count && s.sections.some(s => s.fields.some(f => f.key === 'applicant_count'))) out.applicant_count = String(applicantCount(c));
   for (const sec of s.sections)
     for (const f of sec.fields) {
       if (!f.map || out[f.key]) continue;
@@ -61,14 +65,21 @@ export async function syncToCase(s: Schema, caseId: number, values: Values, over
       const col = caseMapColumn(f.map);
       if (!col) continue;
       const cur = (c as unknown as Record<string, unknown>)[col];
-      if (overwrite || cur === "" || cur === null || cur === undefined) {
+      if (overwrite || col === 'applicantCount' || cur === "" || cur === null || cur === undefined) {
         if (col === "loanAmount") {
           const n = parseFloat(v.replace(/[^0-9.\-]/g, ""));
           if (Number.isFinite(n)) data[col] = n;
-        } else data[col] = v;
+        } else if (col === "applicantCount") {
+          const count = Math.max(1, Math.min(4, parseInt(v) || 1));
+          data[col] = overwrite ? count : Math.max(applicantCount(c), count);
+        }
+        else data[col] = v;
       }
     }
-  if (Object.keys(data).length) await prisma.case.update({ where: { id: caseId }, data });
+  if (Object.keys(data).length) {
+    await prisma.case.update({ where: { id: caseId }, data });
+    await syncCaseContacts(caseId);
+  }
 }
 
 /* ---------------- status ---------------- */
@@ -215,6 +226,7 @@ export async function saveFormAnswers(opts: {
       create: { caseId, formId: f.id, draft: values as Prisma.InputJsonValue, submittedAt: now, history, sentAt: fromPublic ? null : now },
       update: { draft: values as Prisma.InputJsonValue, submittedAt: now, history },
     });
+    await saveFormNotes(schema, caseId, values, f.title, fromPublic);
     await logEvent(caseId, "form_submit", `Client submitted "${f.title}"`, "client");
     await notifyBroker(caseId, `"${f.title}" submitted`, `<p>A client submitted <strong>${escapeHtml(f.title)}</strong>.</p>${summaryHtml(schema, values)}`, schema.settings.notify_email);
     await onFormSubmitted(caseId, f.title);
@@ -227,15 +239,35 @@ export async function saveFormAnswers(opts: {
 
 async function createCaseFromPublic(schema: Schema, f: CrmForm, values: Values) {
   let name = "", email = "";
+  const names: Record<string, string> = {};
   for (const sec of schema.sections)
     for (const fl of sec.fields) {
+      if (/^app[1-4]_name$/.test(fl.map)) names[fl.map] = String(values[fl.key] ?? "");
       if (fl.map === "app1_name") name = String(values[fl.key] ?? "");
       if (fl.map === "app1_email") email = String(values[fl.key] ?? "");
     }
-  const title = (name || email || "Website enquiry") + " — " + f.title;
+  const title = (Object.keys(names).sort().map(k => names[k]).filter(Boolean).join(" & ") || name || email || "Website enquiry") + " — " + f.title;
   const c = await createCase({ title, originFormId: f.id, legacyEmail: email, legacyName: name, stage: "new", status: "active" });
   await prisma.caseForm.create({ data: { caseId: c.id, formId: f.id, draft: values as Prisma.InputJsonValue } });
   await syncToCase(schema, c.id, values, true);
   await onCaseCreated(c.id, "public_form");
   return c.id;
+}
+
+/** Mapped answers become append-only Broker Notes on submit, never on autosave. */
+export async function saveFormNotes(schema: Schema, caseId: number, values: Values, formName: string, isPublic: boolean) {
+  const fields = schema.sections.flatMap(s => s.fields).filter(f => f.map === 'broker_note');
+  const parts = fields.map(f => ({ f, value: String(values[f.key] ?? '').trim() })).filter(x => x.value);
+  if (!parts.length && !isPublic) return;
+  const when = noteDate(new Date(), ', '), esc = escapeHtml;
+  let body = `<p><strong>Recorded:</strong> ${esc(when)} · via ${esc(formName)}${isPublic ? ' (website form)' : ''}</p>`;
+  body += parts.map(({ f, value }) => `<p><strong>${esc(f.label || f.key)}:</strong></p><p>${esc(value).replace(/\n/g, '<br>')}</p>`).join('');
+  if (isPublic) {
+    body += '<p><strong>Submitted details</strong></p>';
+    for (const group of summary(schema, values)) {
+      const rows = group.rows.filter(r => !r.table && !fields.some(f => f.key === r.key));
+      if (rows.length) body += `<p><strong>${esc(group.title)}</strong></p><ul>${rows.map(r => `<li><strong>${esc(r.label)}:</strong> ${esc(r.value)}</li>`).join('')}</ul>`;
+    }
+  }
+  await addBrokerNote(caseId, `${isPublic ? 'Website enquiry' : formName} — ${when}`, body);
 }

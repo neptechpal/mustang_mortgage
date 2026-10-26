@@ -67,6 +67,7 @@ model CaseReminder {
 // Broker notes (_mmcrm_broker_notes per case, caseId = 0 → general notes)
 model BrokerNote {
   id        Int      @id @default(autoincrement())
+  sourceKey String?  @unique // WP note identity / mobile retry id; append-only imports
   caseId    Int      @default(0)
   title     String   @default("")
   body      String

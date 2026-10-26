@@ -80,7 +80,7 @@ export async function upsertContactRow(d: { email: string; first?: string; last?
   return true;
 }
 
-/** save_post_mm_case → sync applicant 1/2 (name, email, dob) into contacts. Call from crm-core on case save. */
+/** Sync all four applicants (name, email, dob) into contacts on case save. */
 export async function syncCaseContacts(caseId: number, opts: { withDob?: boolean } = { withDob: true }) {
   const c = await prisma.case.findUnique({ where: { id: caseId } });
   if (!c) return 0;
@@ -89,6 +89,8 @@ export async function syncCaseContacts(caseId: number, opts: { withDob?: boolean
   for (const [name, email, dob] of [
     [c.app1Name, c.app1Email, c.app1Dob],
     [c.app2Name, c.app2Email, c.app2Dob],
+    [c.app3Name, c.app3Email, c.app3Dob],
+    [c.app4Name, c.app4Email, c.app4Dob],
   ]) {
     if (!email) continue;
     const { first, last } = splitName(name);

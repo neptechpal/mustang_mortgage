@@ -16,7 +16,8 @@
  * indexes, CF7 (cfdb7) submissions, SSA appointments. WP primary keys are preserved as the new
  * ids for User/Case/CrmForm/EmailTemplate/FactFindEntry/AppointmentType/Appointment/MktLog so
  * portal links (mm_case=ID), "[MM #ID]" subject tags and template/form ids keep working.
- * Idempotent: parents are upserted on wpId; per-case child rows are cleared and reloaded.
+ * Idempotent: parents are upserted on wpId; per-case child rows are cleared and reloaded,
+ * except Broker Notes, which use stable source keys and preserve Next.js notes.
  *
  * Phase 2 (needs WP_UPLOADS_DIR): copies files referenced by case documents, fact-find
  * snapshots/signatures and CF7 submissions into STORAGE_DIR (StoredFile rows, deterministic
@@ -24,6 +25,10 @@
  *
  * Output is counts/ids only — never row contents (client PII).
  */
+import { updatedWpCaseFields } from "../src/modules/crm-extra/lib/wp-update";
+import { INCOME_DEFAULTS } from "../src/modules/crm-extra/lib/income";
+import { normalizeSchema } from "../src/modules/crm/forms/engine";
+import { upgradeEnquirySchema } from "../src/modules/crm/forms/defaults";
 import { PrismaClient, Prisma } from "@prisma/client";
 import mysql from "mysql2/promise";
 import crypto from "crypto";
@@ -355,7 +360,7 @@ async function migrateForms(tx: Tx) {
   const meta = await postMeta(forms.map((f) => f.ID));
   for (const f of forms) {
     const m = meta.get(f.ID) ?? {};
-    const data = { title: f.post_title, status: f.post_status === "trash" ? "trash" : f.post_status === "publish" ? "publish" : "draft", schema: j(json(m._mmf_schema, obj(m._mmf_schema))), createdAt: or(utc(f.post_date_gmt), new Date()), updatedAt: or(utc(f.post_modified_gmt), new Date()) };
+    const data = { title: f.post_title, status: f.post_status === "trash" ? "trash" : f.post_status === "publish" ? "publish" : "draft", schema: j(upgradeEnquirySchema(normalizeSchema(json(m._mmf_schema, obj(m._mmf_schema))))), createdAt: or(utc(f.post_date_gmt), new Date()), updatedAt: or(utc(f.post_modified_gmt), new Date()) };
     const ex = await tx.crmForm.findUnique({ where: { wpId: f.ID } });
     if (ex) await tx.crmForm.update({ where: { id: ex.id }, data });
     else await tx.crmForm.create({ data: { ...((await freeId(tx, "CrmForm", f.ID)) ? { id: f.ID } : {}), wpId: f.ID, ...data } });
@@ -380,6 +385,8 @@ const STATUSES = new Set(["active", "archive", "completed", "unsuccessful"]);
 const CHASE = new Set(["likely-return", "worth-trying", "keep-following-up", "maybe-later", "low-chance"]);
 // meta keys consumed into columns / child tables (everything else lands in Case.meta)
 const CASE_MAPPED = new Set([
+  "_mmcrm_extra_apps", "mm_applicant_count", "mm_app3_name", "mm_app3_email", "mm_app3_mobile", "mm_app3_dob", "mm_app4_name", "mm_app4_email", "mm_app4_mobile", "mm_app4_dob",
+  "_mmcrm_bank_pct", "_mmcrm_agg_pct", "_mmcrm_trail_pct", "_mmcrm_deal_v2", "_mmcrm_settle_date",
   "_edit_lock", "_edit_last", "_mm_name", "_mm_email", "mm_app1_name", "mm_app1_email", "mm_app1_mobile", "mm_app1_dob", "mm_app2_name", "mm_app2_email", "mm_app2_mobile", "mm_app2_dob",
   "_mm_token", "_mm_ff_link_disabled", "mm_show_factfind", "mm_show_documents", "_mm_ff_draft", "_mm_ff_done", "_mm_ff_done_at", "_mmf_ff_sent", "_mm_ff_signature_ts", "_mmf_origin",
   "_mmcrm_loan_type", "_mmc_loan_amount", "_mmc_comm_pct", "_mmc_comm_mm_pct", "_mmcrm_init", "_mmcrm_docs_done_flag", "_mmcrm_last_chase", "_mmcrm_chase_count", "_mmcrm_chase_exhausted",
@@ -439,6 +446,7 @@ async function migrateCases(tx: Tx) {
       app2Email: str(m.mm_app2_email),
       app2Mobile: str(m.mm_app2_mobile),
       app2Dob: str(m.mm_app2_dob),
+      ...updatedWpCaseFields(m),
       portalToken: token,
       portalClosed: truthy(m._mm_ff_link_disabled),
       showFactfind: m.mm_show_factfind === undefined || m.mm_show_factfind === "" ? true : truthy(m.mm_show_factfind),
@@ -480,7 +488,7 @@ async function migrateCases(tx: Tx) {
     await tx.caseForm.deleteMany(w);
     await tx.caseEmail.deleteMany(w);
     await tx.caseReminder.deleteMany(w);
-    await tx.brokerNote.deleteMany(w);
+    // Broker Notes are append-only imports: preserve notes created in Next.js and their IDs.
     await tx.borrowCalc.deleteMany(w);
     await tx.flexState.deleteMany(w);
     await tx.caseSignalState.deleteMany(w);
@@ -641,7 +649,10 @@ async function migrateCases(tx: Tx) {
     // _mmcrm_broker_notes → BrokerNote
     const bn = arr(m._mmcrm_broker_notes);
     src("BrokerNote", bn.length);
-    for (const n of bn) await tx.brokerNote.create({ data: brokerNoteData(n, id) });
+    for (const n of bn) {
+      const sourceKey = `wp:case:${p.ID}:note:${str(n?.id) || sha1(JSON.stringify(n))}`;
+      await importBrokerNote(tx, brokerNoteData(n, id), sourceKey);
+    }
 
     // _mmcrm_borrow_hist → BorrowCalc (global history merged later, de-duped on id)
     const bh = arr(m._mmcrm_borrow_hist);
@@ -671,6 +682,15 @@ async function migrateCases(tx: Tx) {
 const caseIdMap = new Map<number, number>();
 const mapCase = (wp: unknown) => caseIdMap.get(int(wp)) ?? 0;
 
+async function importBrokerNote(tx: Tx, data: ReturnType<typeof brokerNoteData>, sourceKey: string) {
+  // Adopt a row imported by older script versions, which had no stable source key.
+  const existing = await tx.brokerNote.findUnique({ where: { sourceKey } });
+  if (existing) { await tx.brokerNote.update({ where: { sourceKey }, data }); return; }
+  const old = await tx.brokerNote.findFirst({ where: { sourceKey: null, caseId: data.caseId, title: data.title, body: data.body, createdAt: data.createdAt } });
+  if (old) await tx.brokerNote.update({ where: { id: old.id }, data: { sourceKey } });
+  await tx.brokerNote.upsert({ where: { sourceKey }, create: { ...data, sourceKey }, update: data });
+}
+
 function brokerNoteData(n: any, caseId: number) {
   const a = n?.author;
   const authorId = typeof a === "number" || /^\d+$/.test(str(a)) ? int(a) : 0;
@@ -679,7 +699,7 @@ function brokerNoteData(n: any, caseId: number) {
     caseId,
     title: str(n?.title),
     body: str(n?.body),
-    author: authorId ? userName.get(authorId) ?? "" : str(a),
+    author: authorId ? userName.get(authorId) ?? "User" : (str(a) && str(a) !== "0" ? str(a) : "System"),
     authorId: mapUser(authorId),
     createdAt: when,
     updatedAt: when,
@@ -746,12 +766,12 @@ async function migrateGlobalNotes(tx: Tx) {
   src("BrokerNote", gen.length + cpt.length);
   for (const n of gen) {
     const d = brokerNoteData(n, 0);
-    if (!(await exists(tx, "brokerNote", { caseId: 0, title: d.title, body: d.body, createdAt: d.createdAt }))) await tx.brokerNote.create({ data: d });
+    await importBrokerNote(tx, d, `wp:general:note:${str(n?.id) || sha1(JSON.stringify(n))}`);
   }
   for (const c of cpt) {
     const caseId = mapCase(cm.get(c.ID)?._mmcrm_case_id);
     const d = { caseId, title: c.post_title, body: c.post_content, author: userName.get(c.post_author) ?? "", authorId: mapUser(c.post_author), createdAt: or(utc(c.post_date_gmt), new Date()), updatedAt: or(utc(c.post_modified_gmt), new Date()) };
-    if (!(await exists(tx, "brokerNote", { caseId, body: d.body }))) await tx.brokerNote.create({ data: d });
+    await importBrokerNote(tx, d, `wp:note-post:${c.ID}`);
   }
   if (cpt.length) notes.push(`mmcrm_broker_note CPT (${cpt.length}) attached to its _mmcrm_case_id (0 if case missing)`);
 
@@ -824,6 +844,12 @@ async function setSetting(tx: Tx, key: string, value: unknown) {
 }
 
 async function migrateSettings(tx: Tx) {
+  const income = obj(await option('mmcrm_income'));
+  for (const [key, fallback] of Object.entries(INCOME_DEFAULTS)) {
+    // WP stores plain percentages already; do not normalise them a second time.
+    await setSetting(tx, `crmx.income.${key}`, key === 'paydown' ? (truthy(income[key] ?? fallback) ? 1 : 0) : num(income[key]) ?? fallback);
+  }
+  if (await option('mmcrm_enquiry_v2')) await setSetting(tx, 'crm.enquiryV2', 1);
   const o = obj(await option("mm_crm_options"));
   if (Object.keys(o).length) {
     const core: Record<string, unknown> = {};

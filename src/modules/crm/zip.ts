@@ -65,16 +65,14 @@ export function buildZip(files: { name: string; data: Buffer }[]) {
 }
 
 /** "J Smith & F Mercury" */
-export function applicantSlug(a1: string, a2: string) {
+export function applicantSlug(...names: string[]) {
   const fmt = (full: string) => {
     full = full.trim().replace(/\s+/g, " ");
     if (!full) return "";
     const parts = full.split(" ");
     return parts[0].slice(0, 1).toUpperCase() + " " + parts[parts.length - 1];
   };
-  const p1 = fmt(a1), p2 = fmt(a2);
-  if (p1 && p2) return `${p1} & ${p2}`;
-  return p1 || p2 || "Client";
+  return names.map(fmt).filter(Boolean).join(' & ') || 'Client';
 }
 
 export function prettyFilename(people: string, label: string, orig: string, index = 1) {

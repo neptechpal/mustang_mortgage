@@ -10,6 +10,7 @@ import { Alert, Button, Card, PageHeader, hintStyles, inputStyles, labelStyles }
 
 export const dynamic = "force-dynamic";
 const TAGS = ["greeting_names", "applicants_first_names", "applicants_full_names", "applicant_first_name", "applicant_full_name", "applicant1_first_name", "applicant1_full_name", "applicant2_first_name", "applicant2_full_name", "applicant_email_list", "client_name", "case_id", "today", "portal_url", "portal_button", "checklist_pending_list", "site_name", "brand_logo_url"];
+TAGS.splice(TAGS.indexOf('applicant_email_list'), 0, 'applicant3_first_name', 'applicant3_full_name', 'applicant4_first_name', 'applicant4_full_name');
 const LABELS = Object.fromEntries(PLACEHOLDER_CATALOG.map((p) => [p.key, p.label.replace(/\s*\(.*\)\s*$/, "")]));
 
 export default async function TemplatePage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | undefined>> }) {

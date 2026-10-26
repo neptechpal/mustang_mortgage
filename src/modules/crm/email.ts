@@ -1,3 +1,4 @@
+import { applicants, applicantEmails } from "./applicants";
 import type { Case, CaseDocument } from "@prisma/client";
 import { escapeHtml, sendMail } from "@/lib/mail";
 import { sendCaseEmail } from "@/modules/crm-extra/send";
@@ -14,8 +15,8 @@ export async function buildContext(c: CaseWithDocs) {
   const portal = await portalUrl(c);
   const app1 = c.app1Name, app2 = c.app2Name;
   const f1 = firstWord(app1), f2 = firstWord(app2);
-  const smartFirst = joinIfBoth(f1, f2);
-  const smartFull = joinIfBoth(app1, app2);
+  const smartFirst = applicants(c).map(a => firstWord(a.name)).filter(Boolean).join(" & ");
+  const smartFull = applicants(c).map(a => a.name).filter(Boolean).join(" & ");
   const legacyFull = smartFull || c.legacyName;
   const legacyFirst = smartFirst || firstWord(legacyFull);
   const pending = c.documents.filter((d) => d.status === "Pending" || d.status === "Rejected");
@@ -25,6 +26,8 @@ export async function buildContext(c: CaseWithDocs) {
   return {
     applicant1_full_name: app1,
     applicant2_full_name: app2,
+    applicant3_full_name: c.app3Name, applicant4_full_name: c.app4Name,
+    applicant3_first_name: firstWord(c.app3Name), applicant4_first_name: firstWord(c.app4Name),
     applicant1_first_name: f1,
     applicant2_first_name: f2,
     applicants_first_names: smartFirst,
@@ -32,7 +35,7 @@ export async function buildContext(c: CaseWithDocs) {
     greeting_names: smartFirst,
     applicant_full_name: legacyFull,
     applicant_first_name: legacyFirst,
-    applicant_email_list: [c.app1Email, c.app2Email].filter(Boolean).join(", "),
+    applicant_email_list: applicantEmails(c).join(", "),
     case_id: String(c.id),
     client_name: c.legacyName,
     site_name: "Mustang Mortgage",
@@ -61,6 +64,7 @@ export const PLACEHOLDER_CATALOG: { key: string; label: string }[] = [
   { key: "applicant2_first_name", label: "Applicant 2 — First Name" },
   { key: "applicant1_full_name", label: "Applicant 1 — Full Name" },
   { key: "applicant2_full_name", label: "Applicant 2 — Full Name" },
+  ...[3, 4].flatMap(n => [{ key: `applicant${n}_first_name`, label: `Applicant ${n} — First Name` }, { key: `applicant${n}_full_name`, label: `Applicant ${n} — Full Name` }]),
   { key: "applicant_first_name", label: "Applicant First Name (legacy)" },
   { key: "applicant_full_name", label: "Applicant Full Name (legacy)" },
   { key: "portal_url", label: "Secure Upload URL" },

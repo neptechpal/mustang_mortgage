@@ -1,3 +1,4 @@
+import { applicantNames, applicantSearch } from "@/modules/crm/applicants";
 import Link from "next/link";
 import { Eye, FileText, History, Paperclip, Printer, Search } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -31,7 +32,7 @@ async function Portal({ q }: { q: string }) {
   const cases = await prisma.case.findMany({
     where: {
       OR: [{ ffDone: true }, { NOT: { ffDraft: { equals: {} } } }],
-      ...(q ? { AND: [{ OR: [{ title: { contains: q, mode: "insensitive" } }, { app1Name: { contains: q, mode: "insensitive" } }, { app2Name: { contains: q, mode: "insensitive" } }] }] } : {}),
+      ...(q ? { AND: [{ OR: [{ title: { contains: q, mode: "insensitive" } }, ...applicantSearch(q)] }] } : {}),
     },
     orderBy: [{ ffDoneAt: { sort: "desc", nulls: "last" } }, { updatedAt: "desc" }],
     take: 300,
@@ -67,7 +68,7 @@ async function Portal({ q }: { q: string }) {
             <TBody>
               {cases.map((c) => {
                 const status = c.ffDone ? <Badge tone="success" dot>Submitted</Badge> : <Badge tone="info" dot>In progress</Badge>;
-                const apps = [c.app1Name, c.app2Name].filter(Boolean).join(" & ");
+                const apps = applicantNames(c);
                 return (
                   <TR key={c.id}>
                     <TD className="min-w-[200px]">
@@ -124,8 +125,7 @@ async function Legacy({ sel }: { sel: number }) {
     }
   }
   const meta: [string, string][] = [];
-  if (data.applicant1_fullname) meta.push(["Applicant 1", pretty(data.applicant1_fullname)]);
-  if (data.applicant2_fullname) meta.push(["Applicant 2", pretty(data.applicant2_fullname)]);
+  for (const n of [1, 2, 3, 4]) if (data[`applicant${n}_fullname`]) meta.push([`Applicant ${n}`, pretty(data[`applicant${n}_fullname`])]);
   if (data.applicant_count) meta.push(["Applicants", pretty(data.applicant_count)]);
   const present = FF_SECTIONS.filter(([sid]) => buckets[sid]?.length);
   return (

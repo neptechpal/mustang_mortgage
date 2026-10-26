@@ -1,3 +1,4 @@
+import { getIncomeSettings } from "@/modules/crm-extra/lib/income-settings";
 import Link from "next/link";
 import {
   AlertTriangle, ArrowRight, Briefcase, Calculator, CheckCircle2, ClipboardList, Coins, FileClock, FileText, Landmark,
@@ -39,6 +40,7 @@ const decode = (s: string) => s.replace(/&gt;/g, ">").replace(/&lt;/g, "<").repl
 export default async function Dashboard() {
   const s = await requireStaff();
   const now = Date.now();
+  const income = await getIncomeSettings();
   const [user, auto, cases] = await Promise.all([
     prisma.user.findUnique({ where: { id: s.uid }, select: { firstName: true, displayName: true } }),
     getAutoOptions(),
@@ -51,15 +53,15 @@ export default async function Dashboard() {
     dueTasks(new Date(now + DAY), ids),
   ]);
   const pipe: Record<string, { n: number; loan: number; comm: number }> = Object.fromEntries(Object.keys(STAGES).map((k) => [k, { n: 0, loan: 0, comm: 0 }]));
-  const k = { active: cases.length, new7: 0, waiting_docs: 0, pending_items: 0, ff_open: 0, loan: 0, comm: 0 };
+  const k = { active: cases.length, new7: 0, waiting_docs: 0, pending_items: 0, ff_open: 0, loan: 0, comm: 0, trail: 0 };
   const attn: Attn[] = [];
   const nameOf: Record<number, string> = {};
   for (const c of cases) {
-    const f = caseFacts(c);
+    const f = caseFacts(c, income);
     nameOf[c.id] = f.name;
     const st = f.stage;
     pipe[st].n++; pipe[st].loan += f.loan; pipe[st].comm += f.commission;
-    k.loan += f.loan; k.comm += f.commission;
+    k.loan += f.loan; k.comm += f.commission; k.trail += f.trail_month;
     if (now - f.created.getTime() <= 7 * DAY) k.new7++;
     if (f.docs_total && f.docs_pending > 0) { k.waiting_docs++; k.pending_items += f.docs_pending; }
     const ffOn = c.showFactfind;
@@ -102,6 +104,7 @@ export default async function Dashboard() {
           <>
             <LinkButton href="/admin/cases" variant="secondary"><Briefcase /> All cases</LinkButton>
             <LinkButton href="/admin/borrowing" variant="secondary"><Calculator /> Borrowing capacity</LinkButton>
+            <LinkButton href="/admin/income" variant="secondary"><Coins /> Income</LinkButton>
             <LinkButton href="/admin/forms" variant="secondary"><ClipboardList /> Forms</LinkButton>
           </>
         }
@@ -131,7 +134,7 @@ export default async function Dashboard() {
         <StatCard label="Waiting on docs" value={k.waiting_docs} hint={`${k.pending_items} items outstanding`} href="/admin/cases" icon={<FileClock />} tone="warning" />
         <StatCard label="Fact Finds open" value={k.ff_open} hint="not yet submitted" href="/admin/cases" icon={<ClipboardList />} tone="violet" />
         <StatCard label="Pipeline value" value={<span title={money(k.loan)}>{compact(k.loan)}</span>} hint={<span title="Loan amount, active cases" className="tabular-nums">{money(k.loan)} in loans</span>} icon={<Landmark />} tone="brand" />
-        <StatCard label="Est. commission" value={<span title={money(k.comm)}>{compact(k.comm)}</span>} hint={<span title="To MM, active pipeline" className="tabular-nums">{money(k.comm)} to MM</span>} icon={<Coins />} tone="success" />
+        <StatCard label="Est. upfront income" href="/admin/income" value={<span title={money(k.comm)}>{compact(k.comm)}</span>} hint={<span title="To MM, active pipeline" className="tabular-nums">+ {money(k.trail)}/mo trail · see Income</span>} icon={<Coins />} tone="success" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">

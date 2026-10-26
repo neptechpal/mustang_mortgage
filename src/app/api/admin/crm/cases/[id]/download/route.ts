@@ -11,7 +11,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const c = await loadCase(Number(id));
   if (!c) return new NextResponse("Not found", { status: 404 });
   const item = new URL(req.url).searchParams.get("item");
-  const people = applicantSlug(c.app1Name, c.app2Name);
+  const people = applicantSlug(c.app1Name, c.app2Name, c.app3Name, c.app4Name);
   const out: { name: string; data: Buffer }[] = [];
   for (const d of c.documents) {
     if (item && String(d.id) !== item) continue;

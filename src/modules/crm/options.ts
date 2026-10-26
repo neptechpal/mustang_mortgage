@@ -1,4 +1,5 @@
 import { getSetting, setSetting } from "@/lib/settings";
+import { rehostWpAsset } from "@/lib/assets";
 
 // mm_crm_options (core.php defaults) minus the Zoho keys, which crm-extra stores itself.
 export type CrmOptions = {
@@ -19,7 +20,10 @@ export const CRM_OPTIONS_DEFAULTS: CrmOptions = {
   commission_target: 0,
   notify_email: "",
 };
-export const getCrmOptions = () => getSetting<CrmOptions>("crm.options", CRM_OPTIONS_DEFAULTS);
+export const getCrmOptions = async () => {
+  const o = await getSetting<CrmOptions>("crm.options", CRM_OPTIONS_DEFAULTS);
+  return { ...o, brand_logo: o.brand_logo ? rehostWpAsset(o.brand_logo) : o.brand_logo };
+};
 export const saveCrmOptions = (o: CrmOptions) => setSetting("crm.options", o);
 
 // mmcrm_auto (MMCRM_Automation::defaults)

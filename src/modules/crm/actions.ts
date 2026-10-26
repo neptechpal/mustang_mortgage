@@ -1,5 +1,10 @@
 "use server";
 // Staff server actions for the CRM. Every action re-checks the staff session.
+import { APPLICANT_NUMBERS, applicantCount, applicantEmails, applicants } from "./applicants";
+import { addBrokerNote, noteDate } from "@/modules/crm-extra/lib/notes";
+import { syncCaseContacts } from "@/modules/crm-extra/lib/marketing";
+import { dealSaveData } from "@/modules/crm-extra/lib/income";
+import { getIncomeSettings } from "@/modules/crm-extra/lib/income-settings";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Prisma } from "@prisma/client";
@@ -114,12 +119,16 @@ export async function saveApplicantsAction(caseId: number, fd: FormData): Promis
     where: { id: caseId },
     data: {
       title: g("title") || c.title,
-      app1Name: g("app1Name"), app1Email: extractEmails(g("app1Email"))[0] ?? "", app1Mobile: g("app1Mobile"), app1Dob: dob("app1Dob", c.app1Dob),
-      app2Name: g("app2Name"), app2Email: extractEmails(g("app2Email"))[0] ?? "", app2Mobile: g("app2Mobile"), app2Dob: dob("app2Dob", c.app2Dob),
+      ...Object.fromEntries(APPLICANT_NUMBERS.flatMap(n => [
+        [`app${n}Name`, g(`app${n}Name`)], [`app${n}Email`, extractEmails(g(`app${n}Email`))[0] ?? ""],
+        [`app${n}Mobile`, g(`app${n}Mobile`)], [`app${n}Dob`, dob(`app${n}Dob`, c[`app${n}Dob`])],
+      ])),
+      applicantCount: Math.max(1, Math.min(4, parseInt(g('applicantCount'), 10) || applicantCount(c))),
       initDone: true,
     },
   });
   rev(caseId);
+  await syncCaseContacts(caseId);
   return ok("Case saved.");
 }
 
@@ -216,7 +225,7 @@ export async function sendEmailAction(caseId: number, input: { to: string; cc: s
   const c = await loadCase(caseId);
   if (!c) return fail("Bad case");
   let to = extractEmails(input.to.replace(/;/g, ","));
-  if (!to.length) to = extractEmails([c.app1Email, c.app2Email].join(","));
+  if (!to.length) to = applicantEmails(c);
   if (!to.length) to = extractEmails(c.legacyEmail);
   if (!to.length) return fail("Recipient is required");
   const ctx = await buildContext(c);
@@ -263,21 +272,32 @@ export async function adminReplyAction(caseId: number, text: string): Promise<R>
 
 /* ---------------- New Client wizard ---------------- */
 export async function wizardCreateAction(fd: FormData) {
-  await requireStaff();
+  const me = await requireStaff();
   const g = (k: string) => String(fd.get(k) ?? "").trim();
-  const n1 = g("p1_name"), e1 = extractEmails(g("p1_email"))[0] ?? "";
-  const n2 = g("p2_name"), e2 = extractEmails(g("p2_email"))[0] ?? "";
+  const count = Math.max(1, Math.min(4, parseInt(g("app_count"), 10) || (g("p2_name") ? 2 : 1)));
+  const apps = APPLICANT_NUMBERS.filter(n => n <= count).map(n => ({ n, name: g(`p${n}_name`), email: extractEmails(g(`p${n}_email`))[0] ?? '', mobile: g(`p${n}_mobile`) }));
+  const { name: n1, email: e1 } = apps[0];
+  const n2 = apps[1]?.name || '', e2 = apps[1]?.email || '';
+  const income = await getIncomeSettings();
   if (!n1) redirect("/admin/cases/new?err=" + encodeURIComponent("Please enter the applicant’s name."));
   const loanType = (g("loan_type") || "purchase").toLowerCase().replace(/[^a-z_\-]/g, "");
   const title = (n1 + (n2 ? " & " + n2 : "")).trim() + " — " + loanType.charAt(0).toUpperCase() + loanType.slice(1);
   const amount = parseFloat(g("loan_amount"));
   const c = await createCase({
-    title, app1Name: n1, app1Email: e1, app1Mobile: g("p1_mobile"),
-    app2Name: n2, app2Email: n2 ? e2 : "", app2Mobile: n2 ? g("p2_mobile") : "",
+    title, applicantCount: count,
+    ...Object.fromEntries(apps.flatMap(a => [[`app${a.n}Name`, a.name], [`app${a.n}Email`, a.email], [`app${a.n}Mobile`, a.mobile]])),
     legacyName: n1, legacyEmail: e1, showFactfind: !!fd.get("send_ff"), showDocuments: true,
-    loanType, loanAmount: Number.isFinite(amount) && amount > 0 ? amount : null,
+    loanType, ...(Number.isFinite(amount) && amount > 0 ? dealSaveData(amount, income.bank_pct, income.agg_pct, income.trail_pct) : {}),
     stage: "new", status: "active", chasePaused: !fd.get("auto_chase"), initDone: true,
   });
+  const when = noteDate(new Date(), ', '), contact = g('contact_type'), source = g('lead_source'), conv = g('conv_notes');
+  const esc = escapeHtml;
+  const body = `<p><strong>Recorded:</strong> ${esc(when)} by ${esc(me.name)}${contact ? ` · <strong>Contact:</strong> ${esc(contact)}` : ''}${source ? ` · <strong>Source:</strong> ${esc(source)}` : ''}</p>`
+    + `<p><strong>Enquiry:</strong> ${esc(loanType)}${amount > 0 ? ` · approx. $${amount.toLocaleString('en-AU')}` : ''} · ${g('income_type') === 'self' ? 'Self-employed' : 'PAYG / employed'}</p>`
+    + `<ul>${apps.filter(a => a.name || a.email || a.mobile).map(a => `<li><strong>Applicant ${a.n}:</strong> ${esc([a.name, a.email || 'no email', a.mobile || 'no mobile'].join(' · '))}</li>`).join('')}</ul>`
+    + (conv ? `<p><strong>Conversation:</strong></p><p>${esc(conv).replace(/\n/g, '<br>')}</p>` : '<p><em>No conversation details were entered.</em></p>');
+  await addBrokerNote(c.id, `Initial conversation — ${contact || 'new client'} — ${when}`, body, me.name, me.uid);
+  await syncCaseContacts(c.id);
   const added = await applyPresets(c.id, fd.getAll("presets").map(String));
   await onCaseCreated(c.id, "wizard");
   let msg = "Case created" + (added ? ` with ${added} document requests` : "") + ".";
@@ -290,10 +310,10 @@ export async function wizardCreateAction(fd: FormData) {
     const [good, m] = await sendForm(c.id, t, send && first);
     if (send && first) { msg += " " + (good ? "Email sent." : m); first = false; }
   }
-  if (send && !targets.length && e1) {
+  if (send && !targets.length && apps.some(a => a.email)) {
     const full = (await loadCase(c.id))!;
     const html = await mergePlaceholders(full, "Hi {{greeting_names}},\n\nThanks for choosing us. Here's your secure portal where you can upload documents any time:\n\n{{portal_button}}", true);
-    const r = await sendToCaseClients(c.id, [e1, e2].filter(Boolean), "Your secure portal — Mustang Mortgage", html);
+    const r = await sendToCaseClients(c.id, apps.map(a => a.email).filter(Boolean), "Your secure portal — Mustang Mortgage", html);
     msg += r.ok ? " Email sent." : " " + r.error;
   }
   rev();

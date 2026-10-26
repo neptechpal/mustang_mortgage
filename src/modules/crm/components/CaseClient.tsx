@@ -1,10 +1,11 @@
 "use client";
+import { APPLICANT_NUMBERS, applicantCount, type ApplicantCase, type ApplicantNumber } from "../applicants";
 // Interactive pieces of the case screen (case-ui.js, admin.inline.js, forms box).
 import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Ban, BellRing, Check, ChevronDown, ClipboardCheck, Copy, Download, ExternalLink, Eye, EyeOff, FileText, Library, Link2,
-  ListChecks, Loader2, Lock, LockOpen, Mail, Paperclip, Plus, RefreshCw, Save, Send, Trash2, Upload, X,
+  Printer, ListChecks, Loader2, Lock, LockOpen, Mail, Paperclip, Plus, RefreshCw, Save, Send, Trash2, Upload, X,
 } from "lucide-react";
 import {
   Avatar, Badge, buttonStyles, checkboxStyles, cn, inputStyles, labelStyles, selectStyles, textareaStyles, type Tone,
@@ -259,7 +260,7 @@ export function DealBox({ caseId, loanType, loanAmount }: { caseId: number; loan
 }
 
 /* ======================= applicants & portal link ======================= */
-type Apps = { title: string; app1Name: string; app1Email: string; app1Mobile: string; app1Dob: string; app2Name: string; app2Email: string; app2Mobile: string; app2Dob: string };
+type Apps = ApplicantCase & { title: string };
 export function ApplicantsBox({ caseId, apps, link, closed }: { caseId: number; apps: Apps; link: string; closed: boolean }) {
   const [pending, start] = useTransition();
   const [dirty, setDirty] = useState(false);
@@ -271,10 +272,11 @@ export function ApplicantsBox({ caseId, apps, link, closed }: { caseId: number; 
     document.addEventListener("keydown", h);
     return () => document.removeEventListener("keydown", h);
   }, []);
-  const A = (n: 1 | 2) => {
+  const [count, setCount] = useState(applicantCount(apps));
+  const A = (n: ApplicantNumber) => {
     const name = apps[`app${n}Name`];
     return (
-      <fieldset className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+      <fieldset key={n} hidden={n > count} disabled={n > count} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
         <legend className="sr-only">Applicant {n}</legend>
         <div className="mb-3 flex items-center gap-2.5">
           {name ? <Avatar name={name} size="sm" /> : <span className="flex size-7 items-center justify-center rounded-full border border-dashed border-slate-300 text-[11px] font-semibold text-slate-400">{n}</span>}
@@ -296,7 +298,8 @@ export function ApplicantsBox({ caseId, apps, link, closed }: { caseId: number; 
     <div>
       <form ref={formRef} onChange={() => setDirty(true)} action={(fd) => start(async () => { const r = await saveApplicantsAction(caseId, fd); toast(r.ok ? "Case saved." : r.error || "Error", !r.ok); setDirty(false); router.refresh(); })}>
         <div className="mb-4"><label className={lab} htmlFor="mm-case-title">Case title</label><input id="mm-case-title" name="title" defaultValue={apps.title} className={inp} /></div>
-        <div className="grid gap-4 md:grid-cols-2">{A(1)}{A(2)}</div>
+        <div className="mb-4"><label className={lab} htmlFor="case-app-count">Number of applicants</label><select id="case-app-count" name="applicantCount" className={selectStyles} value={count} onChange={e => setCount(Number(e.target.value))}>{APPLICANT_NUMBERS.map(n => <option key={n}>{n}</option>)}</select></div>
+        <div className="grid gap-4 md:grid-cols-2">{APPLICANT_NUMBERS.map(A)}</div>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button className={btnP} disabled={pending}>{pending ? <><Loader2 className="animate-spin" /> Saving…</> : <><Save /> Save changes</>}</button>
           <span className="hidden items-center gap-1 text-xs text-slate-400 sm:inline-flex"><kbd className="rounded border border-slate-200 bg-white px-1 font-sans text-[10px]">⌘</kbd><kbd className="rounded border border-slate-200 bg-white px-1 font-sans text-[10px]">S</kbd> to save</span>
@@ -502,7 +505,7 @@ export function ChecklistBox({ caseId, rows: init, presets }: { caseId: number; 
 }
 
 /* ======================= forms box ======================= */
-export type FormRowView = { id: string; title: string; isFf: boolean; statusLabel: string; tone: string; sent: string; submitted: string; url: string; canView: boolean; answers?: ReactNode };
+export type FormRowView = { id: string; title: string; isFf: boolean; statusLabel: string; tone: string; sent: string; submitted: string; url: string; printUrl: string; versions?: { label: string; url: string }[]; canView: boolean; answers?: ReactNode };
 
 export function FormsBox({ caseId, rows, options, tpl }: { caseId: number; rows: FormRowView[]; options: { value: string; label: string }[]; tpl: { subject: string; body: string } }) {
   const [open, setOpen] = useState<string | null>(null);
@@ -572,22 +575,23 @@ function FormItem({ r, open, onCopy, onView, onResend, onRemove, pending }: { r:
         </div>
         <div className="flex flex-wrap items-center gap-1.5 pl-12 md:pl-0">
           {r.canView && <button type="button" className={cn(btnXs, open && "!border-brand-300 !bg-brand-50 !text-brand-800")} onClick={onView} aria-expanded={open}>{open ? <EyeOff /> : <Eye />} View answers</button>}
+          {r.canView && <a className={btnXs} href={r.printUrl} target="_blank" rel="noopener"><Printer />Print</a>}
           <button type="button" className={btnXs} onClick={onCopy}><Copy /> Copy link</button>
           <a className={btnXs} target="_blank" rel="noopener" href={r.url}><ExternalLink /> Open</a>
           <button type="button" className={btnXs} disabled={pending} onClick={onResend}><Mail /> Resend</button>
           {!r.isFf && <button type="button" className={cn(ghostXs, "!px-1.5 text-slate-400 hover:!bg-red-50 hover:!text-red-600")} title="Remove from client portal" aria-label="Remove from client portal" onClick={onRemove}><X /></button>}
         </div>
       </div>
-      {r.canView && open && <div className="border-t border-slate-100 bg-slate-50/70 p-4 sm:p-5">{r.answers}</div>}
+      {r.canView && open && <div className="border-t border-slate-100 bg-slate-50/70 p-4 sm:p-5">{r.answers}{!!r.versions?.length && <div className="mt-5 border-t border-slate-200 pt-4"><h4 className="mb-2 text-sm font-semibold">Submission history</h4><ul className="space-y-2">{r.versions.map(v => <li key={v.url}><a className={btnXs} href={v.url} target="_blank" rel="noopener"><Printer />{v.label}</a></li>)}</ul></div>}</div>}
     </li>
   );
 }
 
 /* ======================= email composer ======================= */
-export function EmailComposer({ caseId, app1, app2, templates, placeholders, portalLink, closed }: {
-  caseId: number; app1: string; app2: string; templates: { id: number; title: string }[]; placeholders: { key: string; label: string }[]; portalLink: string; closed: boolean;
+export function EmailComposer({ caseId, app1, app2, app3 = "", app4 = "", templates, placeholders, portalLink, closed }: {
+  caseId: number; app1: string; app2: string; app3?: string; app4?: string; templates: { id: number; title: string }[]; placeholders: { key: string; label: string }[]; portalLink: string; closed: boolean;
 }) {
-  const [to, setTo] = useState([app1, app2].filter(Boolean).join(", "));
+  const [to, setTo] = useState([app1, app2, app3, app4].filter(Boolean).join(", "));
   const [cc, setCc] = useState("");
   const [bcc, setBcc] = useState("");
   const [subject, setSubject] = useState("Update from Mustang Mortgage");
@@ -616,7 +620,7 @@ export function EmailComposer({ caseId, app1, app2, templates, placeholders, por
         <label className={lab} htmlFor="mm_to">To</label>
         <input id="mm_to" value={to} onChange={(e) => setTo(e.target.value)} className={inp} placeholder="email1@example.com, email2@example.com" />
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {[["Applicant 1", app1], ["Applicant 2", app2]].filter(([, e]) => e).map(([l, e]) => {
+          {[["Applicant 1", app1], ["Applicant 2", app2], ["Applicant 3", app3], ["Applicant 4", app4]].filter(([, e]) => e).map(([l, e]) => {
             const on = list.some((x) => x.toLowerCase() === e.toLowerCase());
             return (
               <label key={e} className={cn("inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors", on ? "border-brand-200 bg-brand-50 text-brand-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50")}>

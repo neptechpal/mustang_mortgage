@@ -63,13 +63,17 @@ export const CASE_MAP_OPTIONS: Record<string, string> = {
   app2_email: "Case: Applicant 2 email",
   app2_dob: "Case: Applicant 2 DOB",
   app2_mobile: "Case: Applicant 2 mobile",
+  ...Object.fromEntries([3, 4].flatMap(n => ['name', 'email', 'dob', 'mobile'].map(k => [`app${n}_${k}`, `Case: Applicant ${n} ${k === 'dob' ? 'DOB' : k}`]))),
+  applicant_count: "Case: Number of applicants",
   loan_amount: "Case: Loan amount",
+  broker_note: "Save answer as a Broker Note",
 };
 
 /** map -> Case column */
 export function caseMapColumn(map: string): string {
+  if (map === "applicant_count") return "applicantCount";
   if (map === "loan_amount") return "loanAmount";
-  const m = /^app([12])_(name|email|dob|mobile)$/.exec(map);
+  const m = /^app([1-4])_(name|email|dob|mobile)$/.exec(map);
   if (!m) return "";
   return `app${m[1]}${m[2][0].toUpperCase()}${m[2].slice(1)}`;
 }
@@ -353,7 +357,10 @@ export function stampSignatures(s: Schema, values: Values, previous: Values, now
 
 /* ---------------- display ---------------- */
 export function formatValue(f: Pick<Field, "type">, v: unknown): string {
-  if (Array.isArray(v)) return v.map(str).join(", ");
+  if (Array.isArray(v)) {
+    if (v.some(x => x === null || typeof x === 'object')) return `${v.length} item${v.length === 1 ? '' : 's'}`;
+    return v.map(str).join(", ");
+  }
   const s = str(v);
   if (s === "") return "";
   if (f.type === "currency" && !isNaN(Number(s))) {

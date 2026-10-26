@@ -1,3 +1,4 @@
+import { APPLICANT_NUMBERS, applicantCount, applicants } from "@/modules/crm/applicants";
 // Flex Entry (port of includes/mmcrm-flex.php) + Flex helper prefill (mmcrm-flex-helper.php).
 import { prisma } from "@/lib/db";
 import { getSetting, setSetting } from "@/lib/settings";
@@ -117,9 +118,9 @@ export async function buildFlex(caseId: number) {
   const ov = (st?.overrides ?? {}) as Record<string, string>;
   const done = (st?.done ?? {}) as Record<string, boolean>;
   const texts = (st?.texts ?? {}) as Record<string, string>;
-  const two = str(a.applicant_count) === "2" || !!str(a.applicant2_fullname) || !!c.app2Name;
-  const ns = two ? [1, 2] : [1];
-  const meta = (n: number, k: "name" | "dob" | "mobile" | "email") => (n === 1 ? c[`app1${k[0].toUpperCase()}${k.slice(1)}` as "app1Name"] : c[`app2${k[0].toUpperCase()}${k.slice(1)}` as "app2Name"]) ?? "";
+  const count = Math.max(applicantCount(c), Math.min(4, Number(a.applicant_count) || 1));
+  const ns = APPLICANT_NUMBERS.filter(n => n <= count);
+  const meta = (n: number, k: "name" | "dob" | "mobile" | "email") => applicants(c).find(a => a.n === n)?.[k] || '';
   const sections: FlexSection[] = [];
 
   // Applicants

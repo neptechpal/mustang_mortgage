@@ -1,3 +1,6 @@
+import { staffPrintUrl } from "@/modules/crm/forms/print";
+import { applicants } from "@/modules/crm/applicants";
+import { getIncomeSettings } from "@/modules/crm-extra/lib/income-settings";
 import ConfirmSubmit from "@/components/admin/ConfirmSubmit";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -56,7 +59,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
   const sp = await searchParams;
   const c = await loadCase(Number(id));
   if (!c) notFound();
-  const f = caseFacts(c);
+  const f = caseFacts(c, await getIncomeSettings());
   const link = await portalUrl(c, { step: "factfind" });
   const [rows, presets, tpl, ffSchema, ffId, forms, templates, msgs, events, subs, flex] = await Promise.all([
     caseFormRows(c), getPresets(), getFormEmailTpl(), factFindSchema(), getFfFormId(),
@@ -79,15 +82,19 @@ export default async function CasePage({ params, searchParams }: { params: Promi
       const [label, tone] = statusLabel(r.status);
       const canView = r.status === "submitted" || r.status === "in_progress";
       let answers: React.ReactNode = null;
+      let versions: { label: string; url: string }[] = [];
       if (canView) {
         if (r.isFf) answers = <Summary schema={ffSchema.schema} values={(c.ffDraft ?? {}) as Record<string, unknown>} />;
         else {
           const st = await prisma.caseForm.findUnique({ where: { caseId_formId: { caseId: c.id, formId: Number(r.id) } } });
           const form = forms.find((x) => x.id === r.id);
-          if (st && form) answers = <Summary schema={formSchema(form)} values={(st.draft ?? {}) as Record<string, unknown>} />;
+          if (st && form) {
+            answers = <Summary schema={formSchema(form)} values={(st.draft ?? {}) as Record<string, unknown>} />;
+            versions = (Array.isArray(st.history) ? st.history : []).map((x, i) => ({ label: `Submission ${i + 1} — ${String((x as { ts?: string })?.ts || '')}`, url: staffPrintUrl(c.id, r.id, i) }));
+          }
         }
       }
-      return { id: String(r.id), title: r.title, isFf: r.isFf, statusLabel: label, tone, sent: r.sentAt ? fmtDateTime(r.sentAt) : "", submitted: r.submittedAt ? fmtDateTime(r.submittedAt) : "", url: r.url, canView, answers };
+      return { id: String(r.id), title: r.title, isFf: r.isFf, statusLabel: label, tone, sent: r.sentAt ? fmtDateTime(r.sentAt) : "", submitted: r.submittedAt ? fmtDateTime(r.submittedAt) : "", url: r.url, printUrl: staffPrintUrl(c.id, r.id), versions, canView, answers };
     }),
   );
   const ffForm = forms.find((x) => x.id === ffId);
@@ -125,7 +132,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
     </ol>
   );
 
-  const contacts: [string, string, string][] = [[f.a1, c.app1Email.trim(), c.app1Mobile.trim()], [f.a2, c.app2Email.trim(), c.app2Mobile.trim()]];
+  const contacts: [string, string, string][] = applicants(c).map(a => [a.name, a.email, a.mobile]);
   const shown = contacts.filter(([, e, m]) => e || m);
 
   const tabs: CaseTab[] = [
@@ -134,12 +141,12 @@ export default async function CasePage({ params, searchParams }: { params: Promi
       content: (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="min-w-0 space-y-6">
-            <Card title="Applicants & portal link" description="Contact details used on emails, forms and the client portal."><ApplicantsBox caseId={c.id} closed={c.portalClosed} link={link} apps={{ title: c.title, app1Name: c.app1Name, app1Email: c.app1Email, app1Mobile: c.app1Mobile, app1Dob: c.app1Dob, app2Name: c.app2Name, app2Email: c.app2Email, app2Mobile: c.app2Mobile, app2Dob: c.app2Dob }} /></Card>
+            <Card title="Applicants & portal link" description="Contact details used on emails, forms and the client portal."><ApplicantsBox caseId={c.id} closed={c.portalClosed} link={link} apps={c} /></Card>
             <Card title="Notes & Reminders"><RemindersPanel caseId={c.id} /></Card>
           </div>
           <div className="min-w-0 space-y-6">
             <Card title="Case status"><StatusBox caseId={c.id} status={c.status} options={STATUS_OPTIONS} /></Card>
-            <Card title="Deal value">
+            <Card title="Deal value & income">
               <DealBox caseId={c.id} loanType={c.loanType} loanAmount={c.loanAmount} />
               <div className="mt-5 border-t border-slate-100 pt-5"><CommissionPanel caseId={c.id} /></div>
             </Card>
@@ -174,7 +181,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
             right={
               <div className="flex gap-1.5">
                 <Link className={buttonStyles({ variant: "secondary", size: "sm" })} href={`/admin/factfinds/case/${c.id}`}><Eye /> View answers</Link>
-                <Link className={buttonStyles({ variant: "ghost", size: "sm" })} href={`/admin/factfinds/case/${c.id}?print=1`} target="_blank"><Printer /> Print</Link>
+                <Link className={buttonStyles({ variant: "ghost", size: "sm" })} href={staffPrintUrl(c.id)} target="_blank"><Printer /> Print</Link>
               </div>
             }>
             {subs.length ? (
@@ -184,6 +191,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 tabular-nums">{i + 1}</span>
                     <span className="min-w-0 flex-1 font-medium text-slate-900 tabular-nums">{fmtDate(x.createdAt, { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
                     <span className="flex flex-wrap gap-1.5">
+                      <a className={buttonStyles({ variant: "secondary", size: "xs" })} target="_blank" rel="noopener" href={staffPrintUrl(c.id, "ff", i)}><Printer /> Print</a>
                       {x.htmlFileId && <a className={buttonStyles({ variant: "secondary", size: "xs" })} target="_blank" href={`/api/admin/crm/files/${x.htmlFileId}`}><FileCode2 /> HTML</a>}
                       {x.legacyHtmlUrl && <a className={buttonStyles({ variant: "secondary", size: "xs" })} target="_blank" href={x.legacyHtmlUrl}><FileCode2 /> HTML</a>}
                       {x.pdfFileId && <a className={buttonStyles({ variant: "secondary", size: "xs" })} target="_blank" href={`/api/admin/crm/files/${x.pdfFileId}`}><FileText /> PDF</a>}
@@ -213,7 +221,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                 <ChevronDown className="size-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
               </summary>
               <div className="border-t border-slate-100 p-5">
-                <EmailComposer caseId={c.id} app1={c.app1Email} app2={c.app2Email} templates={templates} placeholders={PLACEHOLDER_CATALOG} portalLink={c.portalClosed ? "" : link} closed={c.portalClosed} />
+                <EmailComposer caseId={c.id} app1={c.app1Email} app2={c.app2Email} app3={c.app3Email} app4={c.app4Email} templates={templates} placeholders={PLACEHOLDER_CATALOG} portalLink={c.portalClosed ? "" : link} closed={c.portalClosed} />
               </div>
             </details>
           </div>
@@ -286,7 +294,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
         </div>
         <dl className="grid grid-cols-2 gap-px border-t border-slate-200/70 bg-slate-100 md:grid-cols-3 xl:grid-cols-6">
           <Fact label="Loan amount" sub={LOAN_TYPES[c.loanType] ?? (c.loanType || "Loan type not set")}>{f.loan ? money(f.loan) : <span className="font-normal text-slate-400">Not set</span>}</Fact>
-          <Fact label="Est. commission" sub="to MM">{money(f.commission)}</Fact>
+          <Fact label="Your income" sub="after the aggregator"><Link href="/admin/income" className="text-brand-700 hover:underline">{money(f.commission)} upfront<span className="block text-xs">{money(f.trail_month)}/mo trail</span></Link></Fact>
           <Fact label="Documents" sub={f.docs_total ? (f.docs_pending ? `${f.docs_pending} outstanding${f.docs_rejected ? ` · ${f.docs_rejected} rejected` : ""}` : "All received") : "No checklist yet"}>
             <span className="flex items-baseline justify-between gap-2"><span>{f.docs_done}/{f.docs_total}</span>{f.docs_total > 0 && <span className="text-xs font-medium text-slate-400">{f.docs_pct}%</span>}</span>
             {f.docs_total > 0 && <Meter pct={f.docs_pct} done={f.docs_pct >= 100} />}

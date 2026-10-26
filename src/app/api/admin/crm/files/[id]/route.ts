@@ -20,7 +20,7 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     const doc = c?.documents.find((d) => docFiles(d).some((x) => x.fileId === id));
     if (c && doc) {
       const idx = docFiles(doc).findIndex((x) => x.fileId === id) + 1;
-      name = prettyFilename(applicantSlug(c.app1Name, c.app2Name), doc.label, f.rec.originalName, idx);
+      name = prettyFilename(applicantSlug(c.app1Name, c.app2Name, c.app3Name, c.app4Name), doc.label, f.rec.originalName, idx);
     }
   }
   const inlineSafe = /^(application\/pdf|image\/(png|jpe?g|gif|webp))$/.test(f.rec.mimeType);

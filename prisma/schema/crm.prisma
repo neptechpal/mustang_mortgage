@@ -18,6 +18,15 @@ model Case {
   app2Email       String    @default("")
   app2Mobile      String    @default("")
   app2Dob         String    @default("")
+  applicantCount  Int       @default(1)
+  app3Name        String    @default("")
+  app3Email       String    @default("")
+  app3Mobile      String    @default("")
+  app3Dob         String    @default("")
+  app4Name        String    @default("")
+  app4Email       String    @default("")
+  app4Mobile      String    @default("")
+  app4Dob         String    @default("")
   portalToken     String    @unique
   portalClosed    Boolean   @default(false)
   showFactfind    Boolean   @default(true)
@@ -32,6 +41,11 @@ model Case {
   loanAmount      Float?
   commPct         Float?
   commMmPct       Float?
+  dealV2          Boolean   @default(false)
+  bankPct         Float?
+  aggregatorPct   Float?
+  trailPct        Float?
+  settlementDate  String    @default("") // Sydney calendar date YYYY-MM-DD
   initDone        Boolean   @default(false)
   docsDoneAt      DateTime?
   lastChaseAt     DateTime?

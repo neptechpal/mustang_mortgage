@@ -1,4 +1,5 @@
 // Merge-tag engine (port of core.php mmcrm_build_context / merge).
+import { applicants, applicantEmails } from "@/modules/crm/applicants";
 import { prisma } from "@/lib/db";
 import { getCrmOptions, SITE_NAME } from "./opts";
 import { portalUrl } from "./cases";
@@ -26,16 +27,18 @@ export async function buildContext(caseId: number): Promise<Record<string, strin
   const a1 = c.app1Name.trim() || c.legacyName.trim();
   const a2 = c.app2Name.trim();
   const portal = portalUrl(c);
-  const emails = Array.from(new Set([c.app1Email, c.app2Email, c.legacyEmail].map((e) => e.trim()).filter(Boolean)));
+  const emails = Array.from(new Set([...applicantEmails(c), c.legacyEmail].filter(Boolean)));
   return {
     ...base,
     applicant1_full_name: a1,
     applicant2_full_name: a2,
+    applicant3_full_name: c.app3Name, applicant4_full_name: c.app4Name,
+    applicant3_first_name: first(c.app3Name), applicant4_first_name: first(c.app4Name),
     applicant1_first_name: first(a1),
     applicant2_first_name: first(a2),
-    applicants_first_names: smartJoin([first(a1), first(a2)]),
-    applicants_full_names: smartJoin([a1, a2]),
-    greeting_names: smartJoin([first(a1), first(a2)]) || "there",
+    applicants_first_names: smartJoin([first(a1), ...applicants(c).slice(1).map(a => first(a.name))]),
+    applicants_full_names: smartJoin([a1, ...applicants(c).slice(1).map(a => a.name)]),
+    greeting_names: smartJoin([first(a1), ...applicants(c).slice(1).map(a => first(a.name))]) || "there",
     applicant_full_name: a1 || c.legacyName,
     applicant_first_name: first(a1 || c.legacyName),
     applicant_email_list: emails.join(", "),
@@ -59,7 +62,7 @@ export const MERGE_TAGS = [
   "applicant1_full_name",
   "applicant2_full_name",
   "applicant1_first_name",
-  "applicant2_first_name",
+  "applicant2_first_name", "applicant3_first_name", "applicant4_first_name", "applicant3_full_name", "applicant4_full_name",
   "applicants_first_names",
   "applicants_full_names",
   "applicant_email_list",

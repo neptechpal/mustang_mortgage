@@ -1,4 +1,7 @@
 // Client portal ([mm_doc_portal] + Fact Find shell + assigned forms + messages).
+import { clientPrintUrl } from "../forms/print";
+import { Printer } from "lucide-react";
+import { applicants, type ApplicantCase } from "../applicants";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -35,7 +38,7 @@ function ErrorBox({ msg }: { msg: string }) {
   );
 }
 
-function greetingName(c: { app1Name: string; app2Name: string; legacyName: string; ffDraft: unknown }) {
+function greetingName(c: ApplicantCase & { app1Name: string; app2Name: string; legacyName: string; ffDraft: unknown }) {
   const norm = (s: string) => {
     s = (s || "").trim();
     return ["n/a", "na", "none", "nil", "-", "not applicable"].includes(s.toLowerCase()) ? "" : s.replace(/\s+/g, " ");
@@ -44,8 +47,8 @@ function greetingName(c: { app1Name: string; app2Name: string; legacyName: strin
   const a1 = c.app1Name.trim() || String(d.applicant1_fullname ?? "").trim();
   const a2 = c.app2Name.trim() || String(d.applicant2_fullname ?? "").trim();
   const names: string[] = [];
-  for (const n of [firstWord(norm(a1)), firstWord(norm(a2))]) if (n && !names.some((x) => x.toLowerCase() === n.toLowerCase())) names.push(n);
-  if (names.length) return names.length === 1 ? names[0] : `${names[0]} and ${names[1]}`;
+  for (const n of [firstWord(norm(a1)), firstWord(norm(a2)), ...applicants(c).slice(2).map(a => firstWord(norm(a.name)))]) if (n && !names.some((x) => x.toLowerCase() === n.toLowerCase())) names.push(n);
+  if (names.length) return names.join(" & ");
   return firstWord(norm(c.legacyName)) || "there";
 }
 
@@ -99,6 +102,7 @@ export default async function Portal({ searchParams, basePath = "/portal" }: { s
           <p className="mw-portal__muted">Thanks! You can still edit and re-submit while your portal link is active.</p>
           <div className="mw-portal__actions">
             <Link className="mw-btn mw-btn--primary" href={base({ step: "factfind", edit: "1" })}>Edit &amp; Re-submit</Link>
+            <a className="mw-btn mw-btn--secondary" href={clientPrintUrl(c.id, key)} target="_blank" rel="noopener"><Printer size={16} />Print a copy</a>
             {latest && <span className="mw-portal__meta">Submitted {fmtLong(latest.createdAt)}</span>}
           </div>
           <details className="mt-3">
@@ -136,6 +140,7 @@ export default async function Portal({ searchParams, basePath = "/portal" }: { s
           {schema.settings.allow_edit ? (
             <p className="mt-3"><Link className="mw-btn mw-btn--primary" href={base({ step: `form-${curForm.id}`, edit: "1" })}>Edit &amp; re-submit</Link></p>
           ) : null}
+          <p className="mt-3"><a className="mw-btn mw-btn--secondary" href={clientPrintUrl(c.id, key, curForm.id)} target="_blank" rel="noopener"><Printer size={16} />Print / save a copy</a></p>
           <details className="mt-4 text-left"><summary className="mw-portal__disclosure">View my answers</summary><div className="mt-3"><Summary schema={schema} values={draft} publicView /></div></details>
         </div>
       );

@@ -8,12 +8,11 @@ const F = (key: string, label: string, type = "text", o: FD = {}): FD => ({ key,
 
 /* ---------------- Classic (built-in) Fact Find ---------------- */
 export function classicFactFind(): Schema {
-  const two = { field: "applicant_count", op: "eq", value: "2" };
   const lt3 = (k: string) => ({ field: k, op: "lt", value: "3" });
   const req = { required: 1 };
-  const app = (n: 1 | 2): FD[] => {
+  const app = (n: 1 | 2 | 3 | 4): FD[] => {
     const p = `applicant${n}_`;
-    const show = n === 2 ? { show_if: two } : {};
+    const show = n > 1 ? { show_if: { field: "applicant_count", op: "gt", value: String(n - 1) } } : {};
     const personal = [
       F(p + "fullname", "Full Name", "text", { ...req, map: `app${n}_name` }),
       F(p + "email", "Email Address", "email", { ...req, map: `app${n}_email` }),
@@ -32,12 +31,12 @@ export function classicFactFind(): Schema {
       F(p + "length_previous_employment", "Length of Previous Employment", "text", { ...req, show_if: lt3(p + "length_current_employer") }),
       { key: p + "emp_hint", type: "info", label: "", width: "full", content: "If less than 3 years, previous employment fields will be required." },
     ];
-    if (n === 2) {
+    if (n > 1) {
       employment.push(
-        { key: "applicant2_income_info", type: "info", label: "Income", width: "full" },
-        F("applicant2_income_frequency", "Income Frequency", "select", { options: ["Weekly", "Fortnightly", "Monthly"] }),
-        F("applicant2_income_amount", "Gross Income Amount"),
-        F("applicant2_rental_income", "Rental Income"),
+        { key: p + "income_info", type: "info", label: "Income", width: "full" },
+        F(p + "income_frequency", "Income Frequency", "select", { options: ["Weekly", "Fortnightly", "Monthly"] }),
+        F(p + "income_amount", "Gross Income Amount"),
+        F(p + "rental_income", "Rental Income"),
       );
     }
     return [
@@ -68,11 +67,11 @@ export function classicFactFind(): Schema {
       intro: "You can save and return anytime using the same link.", success_msg: "Thank you — your Fact Find has been submitted.",
     },
     sections: [
-      { title: "", fields: [F("applicant_count", "Number of Applicants", "select", { required: 1, options: ["1", "2"], default: "1" })] },
+      { title: "", fields: [F("applicant_count", "Number of Applicants", "select", { required: 1, options: ["1", "2", "3", "4"], default: "1", map: "applicant_count" })] },
       { title: "Purpose of Loan", description: "Select all that apply.", fields: [F("purpose_of_lending", "Purpose of Loan", "checkbox", { width: "full", options: ["Buy", "Refinance", "Construction", "Other"] })] },
       { title: "Objective of the Loan", fields: [F("compliance_objective", "Briefly describe what you want to achieve…", "textarea", { width: "full" })] },
       ...app(1),
-      ...app(2),
+      ...app(2), ...app(3), ...app(4),
       { title: "Monthly Expenses", fields: exp.map(([k, l]) => F(k, l, "text", { required: 1 })) },
       {
         title: "Assets",
@@ -100,19 +99,18 @@ export function classicFactFind(): Schema {
 
 /* ---------------- Engine default Fact Find (seeded as form "Fact Find") ---------------- */
 export function defaultFactFind(): Schema {
-  const two = { field: "applicant_count", op: "eq", value: "2" };
   const sections: FD[] = [
     {
       title: "Your loan", description: "Tell us what you are looking to do.", fields: [
-        F("applicant_count", "Number of applicants", "select", { required: 1, options: ["1", "2"], default: "1" }),
+        F("applicant_count", "Number of applicants", "select", { required: 1, options: ["1", "2", "3", "4"], default: "1", map: "applicant_count" }),
         F("purpose_of_lending", "Purpose of loan", "checkbox", { width: "full", options: ["Buy", "Refinance", "Construction", "Other"] }),
         F("compliance_objective", "Objective of the loan", "textarea", { width: "full", placeholder: "Briefly describe what you want to achieve…" }),
       ],
     },
   ];
-  for (const n of [1, 2]) {
+  for (const n of [1, 2, 3, 4]) {
     const p = `applicant${n}_`;
-    const show = n === 2 ? { show_if: two } : {};
+    const show = n > 1 ? { show_if: { field: "applicant_count", op: "gt", value: String(n - 1) } } : {};
     const tone = `a${n}`;
     const label = `Applicant ${n}`;
     const lt3 = (k: string) => ({ field: p + k, op: "lt", value: "3" });
@@ -213,13 +211,17 @@ export function defaultEnquiry(): Schema {
       intro: "Tell us a little about what you need and we will be in touch shortly.", success_msg: "Thanks — we have your enquiry and will be in touch soon.",
     },
     sections: [
-      { title: "About you", fields: [F("full_name", "Full name", "text", { required: 1, map: "app1_name" }), F("email", "Email address", "email", { required: 1, map: "app1_email" }), F("mobile", "Mobile number", "tel", { map: "app1_mobile", required: 1 })] },
+      { title: "About you", fields: [F("applicant_count", "Number of applicants", "select", { required: 1, options: ["1", "2", "3", "4"], default: "1", map: "applicant_count" }), F("full_name", "Applicant 1 — full name", "text", { required: 1, map: "app1_name" }), F("email", "Email address", "email", { required: 1, map: "app1_email" }), F("mobile", "Mobile number", "tel", { map: "app1_mobile", required: 1 })] },
+      ...[2, 3, 4].map(n => ({ title: `Applicant ${n}`, tone: n === 2 ? 'a2' : '', show_if: { field: 'applicant_count', op: 'gt', value: String(n - 1) }, fields: [
+        F(`full_name_${n}`, 'Full name', 'text', { required: 1, map: `app${n}_name` }),
+        F(`email_${n}`, 'Email address', 'email', { map: `app${n}_email` }), F(`mobile_${n}`, 'Mobile number', 'tel', { map: `app${n}_mobile` }),
+      ] })),
       {
         title: "What are you looking for?", fields: [
           F("purpose", "I would like help to", "checkbox", { width: "full", options: ["Buy a home", "Refinance", "Invest", "Build", "Something else"] }),
           F("loan_amount", "Approximate loan amount", "currency", { map: "loan_amount" }),
           F("timeframe", "When are you looking to proceed?", "select", { options: ["As soon as possible", "Within 1–3 months", "3–6 months", "Just exploring"] }),
-          F("notes", "Anything else we should know?", "textarea", { width: "full" }),
+          F("notes", "Additional info (details of the conversation)", "textarea", { width: "full", map: "broker_note", help: "Saved on the case as a time-stamped Broker Note." }),
         ],
       },
     ],
@@ -274,3 +276,42 @@ export const BLOCKS: { id: string; label: string; section: FD }[] = [
     F("declaration_name", "Full name", "text", { required: 1 }), F("signature", "Signature", "signature", { required: 1 }),
   ] } },
 ];
+
+/** The WP one-off only replaces public forms with this exact original field set. */
+export function upgradeEnquirySchema(s: Schema): Schema {
+  const keys = s.sections.flatMap(s => s.fields.map(f => f.key)).sort().join(',');
+  if (s.settings.public && keys === ['full_name','email','mobile','purpose','loan_amount','timeframe','notes'].sort().join(',')) return defaultEnquiry();
+  // Updated WP sample stores extra contacts in its answers only. Give them case mappings.
+  if (s.settings.public && s.sections.some(s => s.fields.some(f => f.key === 'applicant_count'))) {
+    s = JSON.parse(JSON.stringify(s));
+    for (const field of s.sections.flatMap(s => s.fields)) {
+      const m = /^(full_name|email|mobile)_([34])$/.exec(field.key);
+      if (m && !field.map) field.map = `app${m[2]}_${m[1] === 'full_name' ? 'name' : m[1]}`;
+      if (field.key === 'applicant_count' && !field.map) field.map = 'applicant_count';
+    }
+  }
+  return s;
+}
+
+/** Extend an existing designated Fact Find while retaining its custom sections. */
+export function withFourApplicants(s: Schema): Schema {
+  const out: Schema = JSON.parse(JSON.stringify(s));
+  const count = out.sections.flatMap(s => s.fields).find(f => f.key === 'applicant_count');
+  if (!count) return out;
+  count.options = ['1', '2', '3', '4']; count.map = 'applicant_count';
+  for (const section of out.sections) {
+    if (section.show_if?.field === 'applicant_count' && section.show_if.op === 'eq' && section.show_if.value === '2') section.show_if = { field: 'applicant_count', op: 'gt', value: '1' };
+    for (const f of section.fields) if (f.show_if?.field === 'applicant_count' && f.show_if.op === 'eq' && f.show_if.value === '2') f.show_if = { field: 'applicant_count', op: 'gt', value: '1' };
+  }
+  for (const n of [3, 4]) {
+    if (out.sections.some(s => s.fields.some(f => f.map === `app${n}_name`))) continue;
+    const sources = out.sections.filter(s => s.fields.some(f => /^applicant2_/.test(f.key)) && s.fields.every(f => /^applicant2_/.test(f.key)));
+    if (sources.length) for (const source of sources) {
+      const clone = JSON.parse(JSON.stringify(source).replaceAll('applicant2_', `applicant${n}_`).replaceAll('app2_', `app${n}_`).replaceAll('Applicant 2', `Applicant ${n}`));
+      clone.id += `_${n}`; clone.show_if = { field: 'applicant_count', op: 'gt', value: String(n - 1) };
+      const previous = out.sections.findIndex(s => s.id === `${source.id}_${n - 1}`);
+      out.sections.splice((previous >= 0 ? previous : out.sections.indexOf(source)) + 1, 0, clone);
+    } else out.sections.push(normalizeSchema({ sections: [{ title: `Applicant ${n}`, show_if: { field: 'applicant_count', op: 'gt', value: String(n - 1) }, fields: [F(`applicant${n}_fullname`, 'Full name', 'text', { map: `app${n}_name` }), F(`applicant${n}_email`, 'Email address', 'email', { map: `app${n}_email` }), F(`applicant${n}_mobile`, 'Mobile number', 'tel', { map: `app${n}_mobile` })] }] }).sections[0]);
+  }
+  return out;
+}

@@ -109,7 +109,7 @@ export async function fetchTrail(caseId: number, cursor: Cursor) {
   const primary = c.legacyEmail.trim().toLowerCase(),
     a1 = c.app1Email.trim().toLowerCase(),
     a2 = c.app2Email.trim().toLowerCase();
-  const res = nameRegexes([c.app1Name, c.app2Name, c.legacyName].filter(Boolean));
+  const res = nameRegexes([c.app1Name, c.app2Name, c.app3Name, c.app4Name, c.legacyName].filter(Boolean));
   const [, mail] = dcBase(z.dc);
   const items: TrailItem[] = [];
   for (const row of rows) {
@@ -120,6 +120,8 @@ export async function fetchTrail(caseId: number, cursor: Cursor) {
       if (primary && hay.includes(primary)) why = "CLIENT";
       else if (a1 && hay.includes(a1)) why = "APP1";
       else if (a2 && hay.includes(a2)) why = "APP2";
+      else if (c.app3Email && hay.includes(c.app3Email.toLowerCase())) why = "APP3";
+      else if (c.app4Email && hay.includes(c.app4Email.toLowerCase())) why = "APP4";
     }
     if (!why && res.some((re) => re.test(subjectRaw))) why = "NAME";
     if (!why) continue;

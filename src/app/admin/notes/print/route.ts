@@ -1,3 +1,4 @@
+import { applicantNames, applicantEmails } from "@/modules/crm/applicants";
 // Standalone printable "Broker Notes" document (admin-post mmcrm_bn_print).
 import { prisma } from "@/lib/db";
 import { staffSessionOrNull } from "@/lib/session";
@@ -22,8 +23,8 @@ export async function GET(req: Request) {
   const company = SITE_NAME;
   const now = new Date();
   const longDate = (d: Date) => fmtDate(d, { weekday: "long", month: "long", day: "numeric", year: "numeric" }) + " @ " + fmtDate(d, { hour: "numeric", minute: "2-digit", hour12: true }).toUpperCase();
-  const applicants = c ? [c.app1Name, c.app2Name].filter((x) => x.trim()).join(" & ") || c.legacyName || "Client" : "";
-  const email = c ? c.app1Email || c.legacyEmail : "";
+  const applicants = c ? applicantNames(c) || c.legacyName || "Client" : "";
+  const email = c ? applicantEmails(c).join(", ") || c.legacyEmail : "";
   const row = (k: string, v: string) => `<div class="row"><span class="k">${k}</span><span>${esc(v)}</span></div>`;
   const info = [
     c ? row("Case Reference:", c.title) : "",

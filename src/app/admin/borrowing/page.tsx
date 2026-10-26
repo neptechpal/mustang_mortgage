@@ -165,7 +165,7 @@ export default async function BorrowingPage({ searchParams }: { searchParams: Pr
   const c = caseId
     ? await prisma.case.findUnique({
         where: { id: caseId },
-        select: { id: true, title: true, app1Name: true, app2Name: true },
+        select: { id: true, title: true, app1Name: true, app2Name: true, app3Name: true, app4Name: true },
       })
     : null;
   const S = await borrowSettings();

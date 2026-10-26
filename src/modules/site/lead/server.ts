@@ -15,14 +15,18 @@ type Result = { success: boolean; data?: { errors?: string[]; fields?: Record<st
 export async function handleLeadSubmission(fd: FormData, ctx: { ip: string; userAgent: string; url: string }): Promise<Result> {
   const values: Record<string, string | string[]> = {};
   const fields: Record<string, string> = {};
+  const count = String(fd.get('applicant_count') || '1');
+  if (!['1','2','3','4'].includes(count)) fields.applicant_count = 'Choose between 1 and 4 applicants.';
   for (const f of LEAD_FIELDS) {
+    const applicant = /_(2|3|4)$/.exec(f.key);
+    if (applicant && Number(applicant[1]) > Number(count)) continue;
     if (f.type === "checkbox") {
       const v = fd.getAll(`${f.key}[]`).map(String).filter((x) => f.options!.includes(x));
       values[f.key] = v;
       if (f.required && !v.length) fields[f.key] = `${f.label} is required.`;
       continue;
     }
-    let v = String(fd.get(f.key) ?? "").trim().slice(0, f.type === "textarea" ? 5000 : 300);
+    let v = String(fd.get(f.key) ?? f.default ?? "").trim().slice(0, f.type === "textarea" ? 5000 : 300);
     if (f.type === "select" && v && !f.options!.includes(v)) v = "";
     if (f.type === "currency") v = v.replace(/[^0-9.\-]/g, "");
     values[f.key] = v;

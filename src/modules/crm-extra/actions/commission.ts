@@ -1,19 +1,13 @@
 "use server";
-import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db";
-import { requireStaff } from "@/lib/session";
+import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/db';
+import { requireStaff } from '@/lib/session';
+import { dealSaveData, normIncomePct, normAggregatorPct } from '../lib/income';
 
-const toFloat = (v: unknown) => {
-  const s = String(v ?? "").replace(/[,\s]/g, "");
-  const n = parseFloat(s);
-  return isFinite(n) ? n : 0;
-};
-
-/** Deal Value metabox save (_mmc_loan_amount, _mmc_comm_pct, _mmc_comm_mm_pct). */
-export async function saveDealValue(caseId: number, loan: string, bank: string, mm: string) {
+export async function saveDealValue(caseId: number, loan: string, bank: string, aggregator: string, trail: string, settlement: string) {
   await requireStaff();
-  await prisma.case.update({ where: { id: caseId }, data: { loanAmount: toFloat(loan), commPct: toFloat(bank), commMmPct: toFloat(mm) } });
-  revalidatePath(`/admin/cases/${caseId}`);
-  revalidatePath("/admin/commissions");
+  const n = (v: string) => Number(v.replace(/[,\s]/g, '')) || 0;
+  await prisma.case.update({ where: { id: caseId }, data: dealSaveData(n(loan), normIncomePct(n(bank)), normAggregatorPct(n(aggregator)), normIncomePct(n(trail)), settlement) });
+  for (const path of [`/admin/cases/${caseId}`, '/admin/cases', '/admin/kanban', '/admin', '/admin/commissions', '/admin/income']) revalidatePath(path);
   return { ok: true };
 }

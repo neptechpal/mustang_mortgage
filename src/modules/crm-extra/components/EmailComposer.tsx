@@ -17,6 +17,7 @@ export default function EmailComposer({
   caseId,
   app1,
   app2,
+  app3 = "", app4 = "",
   portal,
   templates,
   connected,
@@ -24,6 +25,7 @@ export default function EmailComposer({
   caseId: number;
   app1: string;
   app2: string;
+  app3?: string; app4?: string;
   portal: string;
   templates: { id: number; label: string }[];
   connected: boolean;
@@ -31,7 +33,7 @@ export default function EmailComposer({
   const router = useRouter();
   const { show, node } = useToast();
   const [pending, start] = useTransition();
-  const [to, setTo] = useState([app1, app2].filter(Boolean).join(", "));
+  const [to, setTo] = useState([app1, app2, app3, app4].filter(Boolean).join(", "));
   const [cc, setCc] = useState("");
   const [bcc, setBcc] = useState("");
   const [subject, setSubject] = useState("Update from Mustang Mortgage");
@@ -54,7 +56,7 @@ export default function EmailComposer({
 
   const picks = [
     ["Applicant 1", app1],
-    ["Applicant 2", app2],
+    ["Applicant 2", app2], ["Applicant 3", app3], ["Applicant 4", app4],
   ].filter(([, e]) => e);
 
   return (
