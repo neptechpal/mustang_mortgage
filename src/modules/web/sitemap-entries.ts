@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { PATHS } from "./config";
 import { suburbSitemapEntries } from "./suburbs/sitemap";
 import { dutySitemapEntries } from "./duty/sitemap";
+import { ensureReviewRows, reviewedPaths } from "./review";
 
 /**
  * Sitemap registry. src/app/sitemap.ts flattens every source below.
@@ -43,6 +44,7 @@ export const STATIC_ENTRIES: SitemapEntry[] = [
   // Home-loan service pages (src/modules/web/content/home-loans).
   { path: PATHS.homeLoans, lastModified: BUILT, changeFrequency: "monthly", priority: 0.9 },
   { path: PATHS.homeLoansFirstHomeBuyers, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
+  { path: PATHS.firstHomeBuyers, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
   { path: PATHS.refinancing, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
   { path: PATHS.investmentLoans, lastModified: BUILT, changeFrequency: "monthly", priority: 0.8 },
   { path: PATHS.constructionLoans, lastModified: BUILT, changeFrequency: "monthly", priority: 0.7 },
@@ -66,3 +68,9 @@ SITEMAP_SOURCES.push(suburbSitemapEntries);
 
 // State stamp duty calculators /stamp-duty/<state> (reviewed "duty:<state>" pages only).
 SITEMAP_SOURCES.push(dutySitemapEntries);
+
+// Community guides enter the sitemap only after broker sign-off.
+SITEMAP_SOURCES.push(async () => {
+  await ensureReviewRows([{ key: "community:nepali-sydney", kind: "community", path: PATHS.nepaliCommunity }]);
+  return (await reviewedPaths("community")).map((r) => ({ path: r.path, lastModified: r.updatedAt, changeFrequency: "monthly", priority: 0.7 }));
+});
