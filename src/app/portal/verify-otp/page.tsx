@@ -1,10 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Container } from "@/modules/web/components/ui/Container";
 
 export default function VerifyOtpPage() {
+  return (
+    <Suspense fallback={null}>
+      <VerifyOtpForm />
+    </Suspense>
+  );
+}
+
+function VerifyOtpForm() {
   const searchParams = useSearchParams();
   const linkToken = searchParams.get("token") || "";
   const [otp, setOtp] = useState("");
