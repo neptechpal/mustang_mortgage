@@ -20,9 +20,11 @@ export function SiteFooter() {
                 <div style={{ fontSize: "0.875rem", marginTop: 4 }}>Mortgage broker · {SITE.broker.name}</div>
               </div>
             </div>
-            <a href={SITE.broker.phoneHref} className="mw-footer__phone">
-              {SITE.broker.phone}
-            </a>
+            {SITE.broker.phone && SITE.broker.phoneHref && (
+              <a href={SITE.broker.phoneHref} className="mw-footer__phone">
+                {SITE.broker.phone}
+              </a>
+            )}
             <p style={{ margin: "6px 0 0" }}>
               <a href={`mailto:${SITE.contact.email}`}>{SITE.contact.email}</a>
             </p>

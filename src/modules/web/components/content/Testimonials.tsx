@@ -31,7 +31,7 @@ export async function Testimonials() {
             {"★".repeat(testimonial.rating)}
           </div>
           <p className="mw-body" style={{ marginBottom: 16, fontStyle: "italic" }}>
-            "{testimonial.content}"
+            &ldquo;{testimonial.content}&rdquo;
           </p>
           <div>
             <p className="mw-small" style={{ fontWeight: 600 }}>

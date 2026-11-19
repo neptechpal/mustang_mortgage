@@ -41,7 +41,7 @@ export function CtaBand({
           <LinkButton href={primary.href} size="lg" arrow>
             {primary.label}
           </LinkButton>
-          {showPhone && (
+          {showPhone && SITE.broker.phone && SITE.broker.phoneHref && (
             <LinkButton href={SITE.broker.phoneHref} variant="secondary" size="lg" icon={<Phone size={18} strokeWidth={1.5} aria-hidden="true" />}>
               <span className="mw-num">{SITE.broker.phone}</span>
             </LinkButton>

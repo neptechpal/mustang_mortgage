@@ -28,13 +28,13 @@ export default async function BookAppointmentPage({ searchParams }: { searchPara
         crumbs={[{ name: "Book a consultation", path: "/book-appointment" }]}
         eyebrow="Mortgage consultation"
         title={`Book ${SITE.consultation.minutes} minutes with ${SITE.broker.givenName}`}
-        lede={`Choose a time that suits you, 7 days a week, by ${consultationModes()}. Times are shown in your own time zone; you can change it below. Prefer to talk first? Call ${SITE.broker.phone}.`}
+        lede={`Choose a time that suits you, 7 days a week, by ${consultationModes()}. Times are shown in your own time zone; you can change it below. ${SITE.broker.phone ? `Prefer to talk first? Call ${SITE.broker.phone}.` : `Prefer to ask first? Email ${SITE.contact.email}.`}`}
       >
         <TrustRow
           items={[
             { icon: <Clock {...icon} />, children: <><strong>{SITE.consultation.minutes} minutes</strong>, {SITE.hours.days}</> },
             { icon: <Video {...icon} />, children: <><strong>By {consultationModes()}</strong>, wherever you are</> },
-            { icon: <Phone {...icon} />, children: <><strong>{SITE.broker.phone}</strong> if no time suits</> },
+            ...(SITE.broker.phone ? [{ icon: <Phone {...icon} />, children: <><strong>{SITE.broker.phone}</strong> if no time suits</> }] : []),
           ]}
         />
       </PageIntro>

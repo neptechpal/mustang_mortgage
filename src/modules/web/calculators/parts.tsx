@@ -385,9 +385,11 @@ export function TalkCta({ note }: { note?: React.ReactNode }) {
       <LinkButton href={PATHS.book} block arrow>
         Talk this through
       </LinkButton>
-      <LinkButton href={SITE.broker.phoneHref} variant="quiet" block icon={<Phone size={18} strokeWidth={1.5} aria-hidden="true" />}>
-        <span className="mw-num">{SITE.broker.phone}</span>
-      </LinkButton>
+      {SITE.broker.phone && SITE.broker.phoneHref && (
+        <LinkButton href={SITE.broker.phoneHref} variant="quiet" block icon={<Phone size={18} strokeWidth={1.5} aria-hidden="true" />}>
+          <span className="mw-num">{SITE.broker.phone}</span>
+        </LinkButton>
+      )}
       <p>{note ?? `A ${SITE.consultation.minutes}-minute consultation with ${SITE.broker.name}, by ${SITE.consultation.modes.join(" or ")}. We check these numbers against real lender policy.`}</p>
     </div>
   );

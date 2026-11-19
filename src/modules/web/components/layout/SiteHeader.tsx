@@ -20,10 +20,12 @@ export function SiteHeader() {
         </Link>
         <HeaderNav groups={NAV} />
         <div className="mw-header__actions">
-          <a href={SITE.broker.phoneHref} className="mw-header__phone" aria-label={`Call ${SITE.broker.name} on ${SITE.broker.phone}`}>
-            <Phone size={18} strokeWidth={1.5} aria-hidden="true" />
-            <span className="mw-header__phone-text">{SITE.broker.phone}</span>
-          </a>
+          {SITE.broker.phone && SITE.broker.phoneHref && (
+            <a href={SITE.broker.phoneHref} className="mw-header__phone" aria-label={`Call ${SITE.broker.name} on ${SITE.broker.phone}`}>
+              <Phone size={18} strokeWidth={1.5} aria-hidden="true" />
+              <span className="mw-header__phone-text">{SITE.broker.phone}</span>
+            </a>
+          )}
           <Link href={HEADER_ACTIONS.login.href} className="mw-header__login">
             {HEADER_ACTIONS.login.label}
           </Link>

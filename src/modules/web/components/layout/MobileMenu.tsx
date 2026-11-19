@@ -7,7 +7,7 @@ import { ChevronDown, Menu, Phone, X } from "lucide-react";
 import type { NavGroup } from "../../config";
 
 /** Menu button + full-height sheet for screens below 1140px. */
-export function MobileMenu({ groups, phone, phoneHref, book, login }: { groups: NavGroup[]; phone: string; phoneHref: string; book: { label: string; href: string }; login: { label: string; href: string } }) {
+export function MobileMenu({ groups, phone, phoneHref, book, login }: { groups: NavGroup[]; phone?: string | null; phoneHref?: string | null; book: { label: string; href: string }; login: { label: string; href: string } }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -58,10 +58,12 @@ export function MobileMenu({ groups, phone, phoneHref, book, login }: { groups: 
           <Link href={book.href} className="mw-btn mw-btn--primary mw-btn--lg mw-btn--block">
             {book.label}
           </Link>
-          <a href={phoneHref} className="mw-btn mw-btn--secondary mw-btn--lg mw-btn--block">
-            <Phone size={18} strokeWidth={1.5} aria-hidden="true" />
-            <span className="mw-num">Call {phone}</span>
-          </a>
+          {phone && phoneHref && (
+            <a href={phoneHref} className="mw-btn mw-btn--secondary mw-btn--lg mw-btn--block">
+              <Phone size={18} strokeWidth={1.5} aria-hidden="true" />
+              <span className="mw-num">Call {phone}</span>
+            </a>
+          )}
           <Link href={login.href} className="mw-btn mw-btn--quiet mw-btn--block">
             {login.label}
           </Link>

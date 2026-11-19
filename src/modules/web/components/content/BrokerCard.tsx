@@ -59,9 +59,11 @@ export function BrokerCard({
         <LinkButton href={HEADER_ACTIONS.book.href} arrow>
           {HEADER_ACTIONS.book.label}
         </LinkButton>
-        <span className="mw-brokermini__call">
-          or call <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
-        </span>
+        {SITE.broker.phone && SITE.broker.phoneHref && (
+          <span className="mw-brokermini__call">
+            or call <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
+          </span>
+        )}
       </aside>
     );
   }
@@ -111,9 +113,11 @@ export function BrokerCard({
           <LinkButton href={HEADER_ACTIONS.book.href} arrow>
             Book with {SITE.broker.givenName}
           </LinkButton>
-          <LinkButton href={SITE.broker.phoneHref} variant="secondary" icon={<Phone size={18} strokeWidth={1.5} aria-hidden="true" />}>
-            <span className="mw-num">{SITE.broker.phone}</span>
-          </LinkButton>
+          {SITE.broker.phone && SITE.broker.phoneHref && (
+            <LinkButton href={SITE.broker.phoneHref} variant="secondary" icon={<Phone size={18} strokeWidth={1.5} aria-hidden="true" />}>
+              <span className="mw-num">{SITE.broker.phone}</span>
+            </LinkButton>
+          )}
           {showProfileLink && (
             <TextLink href={PATHS.broker} arrow>
               Full profile

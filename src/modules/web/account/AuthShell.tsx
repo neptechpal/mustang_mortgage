@@ -12,7 +12,7 @@ const icon = { size: 20, strokeWidth: 1.5, "aria-hidden": true } as const;
 export const ACCOUNT_POINTS = [
   { icon: <FileLock2 {...icon} />, title: "Upload documents securely", body: "Payslips, bank statements, ID and visa documents go to us through the portal, not by email." },
   { icon: <ListChecks {...icon} />, title: "See what is still needed", body: "Your checklist shows what we have and what is outstanding for your application." },
-  { icon: <Phone {...icon} />, title: "Talk to a person", body: `If you are locked out or stuck on a step, call ${SITE.broker.givenName} on ${SITE.broker.phone}.` },
+  { icon: <Phone {...icon} />, title: "Talk to a person", body: SITE.broker.phone ? `If you are locked out or stuck on a step, call ${SITE.broker.givenName} on ${SITE.broker.phone}.` : `If you are locked out or stuck on a step, email ${SITE.contact.email}.` },
 ];
 
 /**

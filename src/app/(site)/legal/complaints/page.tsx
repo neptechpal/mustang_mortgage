@@ -32,9 +32,11 @@ export default function ComplaintsPage() {
         <h2>Tell us first</h2>
         <p>You can complain in whatever way suits you:</p>
         <ul>
-          <li>
-            phone {SITE.broker.name} on <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
-          </li>
+          {SITE.broker.phone && SITE.broker.phoneHref && (
+            <li>
+              phone {SITE.broker.name} on <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
+            </li>
+          )}
           <li>
             email <a href={`mailto:${SITE.contact.email}`}>{SITE.contact.email}</a>
           </li>

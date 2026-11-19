@@ -104,7 +104,7 @@ export function EnquiryForm({ sourcePage, defaultPurpose = [], submitLabel = "Se
         requestAnimationFrame(() => summaryRef.current?.focus());
       }
     } catch {
-      setSummary([`We couldn't reach our server. Check your connection and try again, or call ${SITE.broker.phone}.`]);
+      setSummary([`We couldn't reach our server. Check your connection and try again, or email ${SITE.contact.email}.`]);
       requestAnimationFrame(() => summaryRef.current?.focus());
     }
     setBusy(false);

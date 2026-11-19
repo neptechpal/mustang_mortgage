@@ -64,7 +64,7 @@ export default function CreditGuidePage() {
           <div>
             <dt>Contact</dt>
             <dd>
-              Phone <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>, email <a href={`mailto:${SITE.contact.email}`}>{SITE.contact.email}</a>
+              {SITE.broker.phone && SITE.broker.phoneHref && (<>Phone <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>, </>)}Email <a href={`mailto:${SITE.contact.email}`}>{SITE.contact.email}</a>
             </dd>
           </div>
         </dl>

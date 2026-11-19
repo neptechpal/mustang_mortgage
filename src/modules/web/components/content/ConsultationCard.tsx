@@ -35,9 +35,11 @@ export function ConsultationCard({ title = `${SITE.consultation.minutes} minutes
       <LinkButton href={HEADER_ACTIONS.book.href} block size="lg" arrow>
         {HEADER_ACTIONS.book.label}
       </LinkButton>
-      <p className="mw-consult__call">
-        Prefer to talk first? Call <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
-      </p>
+      {SITE.broker.phone && SITE.broker.phoneHref && (
+        <p className="mw-consult__call">
+          Prefer to talk first? Call <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
+        </p>
+      )}
     </aside>
   );
 }

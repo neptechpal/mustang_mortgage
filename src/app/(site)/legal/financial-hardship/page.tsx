@@ -53,7 +53,12 @@ export default function HardshipPage() {
       <section id="how-we-help">
         <h2>How we can help</h2>
         <p>
-          If we arranged your loan, call {SITE.broker.givenName} on <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>. We can explain the process, help you find the
+          If we arranged your loan,{" "}
+          {SITE.broker.phone && SITE.broker.phoneHref ? (
+            <>call {SITE.broker.givenName} on <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>.</>
+          ) : (
+            <>email us at <a href={`mailto:${SITE.contact.email}`}>{SITE.contact.email}</a>.</>
+          )} We can explain the process, help you find the
           right contact at your lender and help you put your request together. We can&rsquo;t make the decision for the lender.
         </p>
       </section>

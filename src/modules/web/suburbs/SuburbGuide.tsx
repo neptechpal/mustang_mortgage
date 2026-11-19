@@ -408,9 +408,11 @@ export function SuburbGuide({ v, review, isProduction }: { v: SuburbView; review
               <LinkButton href={PATHS.borrowingPower} variant="secondary">
                 Check borrowing power
               </LinkButton>
-              <LinkButton href={SITE.broker.phoneHref} variant="quiet" icon={<Phone size={18} strokeWidth={1.5} aria-hidden="true" />}>
-                <span className="mw-num">{SITE.broker.phone}</span>
-              </LinkButton>
+              {SITE.broker.phone && SITE.broker.phoneHref && (
+                <LinkButton href={SITE.broker.phoneHref} variant="quiet" icon={<Phone size={18} strokeWidth={1.5} aria-hidden="true" />}>
+                  <span className="mw-num">{SITE.broker.phone}</span>
+                </LinkButton>
+              )}
             </div>
           </>
         }

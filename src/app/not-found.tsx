@@ -22,9 +22,9 @@ export default function NotFound() {
                 We can&rsquo;t find that page
               </h1>
               <p className="mw-lede">
-                It may have moved when we rebuilt the website. Try one of these, or call {SITE.broker.givenName} on{" "}
-                <a className="mw-link mw-num" href={SITE.broker.phoneHref}>
-                  {SITE.broker.phone}
+                It may have moved when we rebuilt the website. Try one of these, or email{" "}
+                <a className="mw-link" href={`mailto:${SITE.contact.email}`}>
+                  {SITE.contact.email}
                 </a>
                 .
               </p>

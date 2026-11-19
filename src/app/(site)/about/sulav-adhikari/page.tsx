@@ -119,18 +119,20 @@ export default function BrokerProfilePage() {
 
       <Section id="contact-sulav" tone="white" layout="split-even" eyebrow="Contact" title={`Talk to ${SITE.broker.givenName}`}>
         <dl className="mw-contactlist">
-          <div>
-            <Phone size={20} strokeWidth={1.5} aria-hidden="true" />
-            <dt>Phone</dt>
-            <dd className="mw-contactlist__big">
-              <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
-            </dd>
-          </div>
+          {SITE.broker.phone && SITE.broker.phoneHref && (
+            <div>
+              <Phone size={20} strokeWidth={1.5} aria-hidden="true" />
+              <dt>Phone</dt>
+              <dd className="mw-contactlist__big">
+                <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
+              </dd>
+            </div>
+          )}
           <div>
             <Mail size={20} strokeWidth={1.5} aria-hidden="true" />
             <dt>Email</dt>
             <dd>
-              <a href={`mailto:${SITE.broker.email}`}>{SITE.broker.email}</a>
+              <a href={`mailto:${SITE.broker.email ?? SITE.contact.email}`}>{SITE.broker.email ?? SITE.contact.email}</a>
             </dd>
           </div>
           <div>
