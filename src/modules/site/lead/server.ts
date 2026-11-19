@@ -3,6 +3,7 @@ import { escapeHtml, sendMail } from "@/lib/mail";
 import { siteInfo } from "../forms/site-info";
 import { LEAD_EMAIL_RE, LEAD_FIELDS, LEAD_FORM } from "./definition";
 import { saveFormAnswers } from "@/modules/crm/forms/service";
+import { getEnquiryEmailRecipients } from "@/modules/web/admin/settings";
 
 type Result = { success: boolean; data?: { errors?: string[]; fields?: Record<string, string>; submissionId?: number } };
 
@@ -62,13 +63,14 @@ export async function handleLeadSubmission(fd: FormData, ctx: { ip: string; user
   }
 
   const info = await siteInfo();
+  const recipients = await getEnquiryEmailRecipients();
   const rows = LEAD_FIELDS.map((f) => {
     const v = values[f.key];
     const s = Array.isArray(v) ? v.join(", ") : f.type === "currency" && v ? `$${Number(v).toLocaleString("en-AU")}` : v;
     return `<tr><td style="padding:8px;border:1px solid #ddd;font-weight:600">${escapeHtml(f.label)}</td><td style="padding:8px;border:1px solid #ddd">${escapeHtml(s || "—").replace(/\n/g, "<br />")}</td></tr>`;
   }).join("");
   const mail = await sendMail({
-    to: info.adminEmail,
+    to: recipients.join(","),
     subject: `New website enquiry — ${values.full_name}`,
     replyTo: String(values.email),
     html:

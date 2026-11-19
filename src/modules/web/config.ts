@@ -115,10 +115,10 @@ export const SITE = {
     familyName: "Adhikari",
     initials: "SA",
     role: "Mortgage broker",
-    phone: "0416 066 954",
-    phoneHref: "tel:+61416066954",
-    phoneE164: "+61416066954",
-    email: "sulav.adhikari@mustangmortgage.com.au",
+    phone: null as string | null, // Hidden on public pages
+    phoneHref: null as string | null,
+    phoneE164: null as string | null,
+    email: null as string | null, // Hidden on public pages
     /** Set once a real portrait is supplied; until then BrokerCard shows a monogram seal. */
     photo: null as Photo | null,
     qualifications: null as string | null, // e.g. "Diploma of Finance and Mortgage Broking Management"
@@ -128,9 +128,9 @@ export const SITE = {
   },
 
   contact: {
-    email: "info@mustangmortgage.com.au",
-    phone: "0416 066 954",
-    phoneHref: "tel:+61416066954",
+    email: "info@mustangmortgage.com.au", // General business email only
+    phone: null as string | null, // Hidden on public pages
+    phoneHref: null as string | null,
     /** We publish no street address (service-area business). */
     address: null as string | null,
   },
@@ -180,6 +180,20 @@ export const SITE = {
     count: null as string | null, // number of lenders on the accredited panel
     names: null as string[] | null, // text list, only lenders we are accredited with
   },
+
+  /** AFG-accredited lenders and banks we work with */
+  lenders: [
+    { name: "ANZ", category: "Major Bank" },
+    { name: "Commonwealth Bank", category: "Major Bank" },
+    { name: "NAB", category: "Major Bank" },
+    { name: "Westpac", category: "Major Bank" },
+    { name: "ING", category: "Online Bank" },
+    { name: "Macquarie Bank", category: "Specialist Bank" },
+    { name: "Bendigo Bank", category: "Regional Bank" },
+    { name: "Broadvision", category: "Mortgage Lender" },
+    { name: "CITI", category: "International Bank" },
+    { name: "Homeloans Limited", category: "Mortgage Lender" },
+  ] as Array<{ name: string; category: string }>,
 
   fees: {
     /** Whether the business ever charges the client a fee. Must match the licensee Credit Guide. */

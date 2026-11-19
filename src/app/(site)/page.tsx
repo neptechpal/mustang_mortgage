@@ -4,9 +4,11 @@ import { ConsultationCard } from "@/modules/web/components/content/ConsultationC
 import { CtaBand } from "@/modules/web/components/content/CtaBand";
 import { Faq, type FaqEntry } from "@/modules/web/components/content/Faq";
 import { KeyFacts } from "@/modules/web/components/content/KeyFacts";
+import { LendersGrid } from "@/modules/web/components/content/LendersGrid";
 import { ReviewBadge } from "@/modules/web/components/content/ReviewBadge";
 import { SituationSelector } from "@/modules/web/components/content/SituationSelector";
 import { Steps } from "@/modules/web/components/content/Steps";
+import { Testimonials } from "@/modules/web/components/content/Testimonials";
 import { TrustRow } from "@/modules/web/components/content/TrustRow";
 import { VisaIndex } from "@/modules/web/components/content/VisaIndex";
 import { LinkButton, TextLink } from "@/modules/web/components/ui/Button";
@@ -22,7 +24,7 @@ import { JsonLd, buildMetadata, webPageJsonLd } from "@/modules/web/seo";
 
 const TITLE = "Sydney mortgage broker for first home buyers and visa holders";
 const DESCRIPTION =
-  "Sulav Adhikari helps first home buyers, new permanent residents and skilled visa holders in Sydney and across NSW get a home loan. Book a 60-minute consultation.";
+  "Get a home loan through a mortgage broker. Help for first home buyers, new permanent residents and skilled visa holders in Sydney and across NSW.";
 
 export const metadata = buildMetadata({ title: TITLE, description: DESCRIPTION, path: "/" });
 
@@ -90,8 +92,7 @@ export default function HomePage() {
                 Home loans for first home buyers, new&nbsp;Australians and <em>visa holders</em> in Sydney
               </h1>
               <p className="mw-lede">
-                {SITE.broker.name} is a mortgage broker for people buying their first Australian home, including skilled visa holders and new permanent residents. Sulav works out
-                which lenders will accept your situation, shows you the costs in plain numbers and manages the application through to settlement.
+                We are a mortgage broker for people buying their first Australian home, including skilled visa holders and new permanent residents. We work out which lenders will accept your situation, show you the costs in plain numbers and manage the application through to settlement.
               </p>
               <div className="mw-intents mw-hero__cta">
                 <LinkButton href={PATHS.homeLoans} variant="secondary" size="lg" arrow>
@@ -245,7 +246,23 @@ export default function HomePage() {
         <BrokerCard />
       </Section>
 
-      {/* 05 Calculators */}
+      {/* 05 Lenders we work with */}
+      <Section
+        id="lenders"
+        layout="split"
+        eyebrow="Lenders & Banks"
+        title="We work with AFG-accredited lenders"
+        lede="We arrange home loans with a panel of major banks, online lenders, regional banks and specialist mortgage lenders. We compare their policies on deposits, visas, income types and loan structures to find the right fit for your situation."
+      >
+        <LendersGrid />
+      </Section>
+
+      {/* 06 Testimonials */}
+      <Section id="testimonials" tone="white" eyebrow="Testimonials" title="What our clients say">
+        <Testimonials />
+      </Section>
+
+      {/* 07 Calculators */}
       <Section
         id="calculators"
         index="04"

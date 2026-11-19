@@ -1,4 +1,4 @@
-import { Clock, Lock, Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Lock, Mail, MapPin } from "lucide-react";
 import { PageIntro } from "@/modules/web/components/content/PageIntro";
 import { EnquiryForm } from "@/modules/web/components/forms/EnquiryForm";
 import { LinkButton, TextLink } from "@/modules/web/components/ui/Button";
@@ -8,7 +8,7 @@ import { consultationHoursSentence, consultationModes } from "@/modules/web/form
 import { JsonLd, buildMetadata, webPageJsonLd } from "@/modules/web/seo";
 
 const TITLE = "Contact Mustang Mortgage";
-const DESCRIPTION = `Call Sulav Adhikari on ${SITE.broker.phone}, email ${SITE.contact.email} or send an enquiry. We reply within 1 business day.`;
+const DESCRIPTION = `Email ${SITE.contact.email} or send an enquiry. We reply within 1 business day.`;
 
 export const metadata = buildMetadata({ title: TITLE, description: DESCRIPTION, path: PATHS.contact });
 
@@ -21,8 +21,8 @@ export default function ContactPage() {
       <PageIntro
         crumbs={[{ name: "Contact", path: PATHS.contact }]}
         eyebrow="Contact"
-        title="Talk to Sulav"
-        lede={`Call, email or send an enquiry and we will reply ${SITE.responsePromise}. If you already know you want to talk it through, book a ${SITE.consultation.minutes}-minute consultation.`}
+        title="Get in touch"
+        lede={`Send an enquiry and we will reply ${SITE.responsePromise}. If you already know you want to talk it through, book a ${SITE.consultation.minutes}-minute consultation.`}
         actions={
           <LinkButton href={PATHS.book} arrow>
             Book a consultation
@@ -35,26 +35,17 @@ export default function ContactPage() {
             <div className="mw-card" style={{ padding: "clamp(22px, 4vw, 40px)" }}>
               <h2 className="mw-h3">Send an enquiry</h2>
               <p className="mw-small" style={{ marginTop: 8, marginBottom: 28 }}>
-                A few details are enough. We will call you to talk through the rest.
+                A few details are enough. We will get back to you to talk through the rest.
               </p>
               <EnquiryForm sourcePage={PATHS.contact} />
             </div>
             <div>
               <dl className="mw-contactlist">
                 <div>
-                  <Phone {...ic} />
-                  <dt>Phone</dt>
-                  <dd className="mw-contactlist__big">
-                    <a href={SITE.broker.phoneHref}>{SITE.broker.phone}</a>
-                  </dd>
-                </div>
-                <div>
                   <Mail {...ic} />
                   <dt>Email</dt>
                   <dd>
                     <a href={`mailto:${SITE.contact.email}`}>{SITE.contact.email}</a>
-                    <br />
-                    <a href={`mailto:${SITE.broker.email}`}>{SITE.broker.email}</a>
                   </dd>
                 </div>
                 <div>

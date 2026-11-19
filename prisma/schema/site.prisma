@@ -16,3 +16,45 @@ model FormSubmission {
   @@index([formKey, createdAt])
   @@index([createdAt])
 }
+
+model Testimonial {
+  id        Int      @id @default(autoincrement())
+  clientName String
+  content   String   // testimonial text
+  role      String   @default("") // e.g., "First Home Buyer"
+  rating    Int      @default(5) // 1-5
+  approved  Boolean  @default(false)
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, createdAt])
+}
+
+model TwoFactorAuth {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  secret    String   // base32-encoded TOTP secret
+  backupCodes String // JSON array of backup codes
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OtpToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique // 6-digit OTP
+  email     String   // client email
+  linkToken String   @unique // unique token for secure link
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email, expiresAt])
+}
+
+model SiteSettings {
+  key       String   @id // e.g., "enquiry.email", "enquiry.recipients"
+  value     Json
+  updatedAt DateTime @updatedAt
+}

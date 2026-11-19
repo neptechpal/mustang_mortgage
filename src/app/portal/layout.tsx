@@ -19,9 +19,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <span className="mw-brand__name">{SITE.name}</span>
           </Link>
           <span className="mw-portal__secure"><LockKeyhole size={16} strokeWidth={1.5} aria-hidden="true" />Secure client portal</span>
-          <a href={SITE.broker.phoneHref} className="mw-portal__phone" aria-label={`Call ${SITE.broker.name} on ${SITE.broker.phone}`}>
-            <Phone size={18} strokeWidth={1.5} aria-hidden="true" /><span>{SITE.broker.phone}</span>
-          </a>
+          {SITE.contact.email && (
+            <a href={`mailto:${SITE.contact.email}`} className="mw-portal__phone" aria-label={`Email us at ${SITE.contact.email}`}>
+              <span>{SITE.contact.email}</span>
+            </a>
+          )}
         </Container>
       </header>
       <main id="main" tabIndex={-1}>{children}</main>
