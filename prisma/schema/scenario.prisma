@@ -1,0 +1,271 @@
+// AI Scenario Assistant (owned by the "scenario" module, src/modules/scenario).
+// Cases are referenced by plain `caseId Int` columns (no relation) per ARCHITECTURE.md.
+// Policy + pricing records are append-only versions: editing creates a new row with the
+// same `ruleKey`/`recordKey` and version+1; the previous published row becomes "superseded".
+
+// Lender on (or considered for) the broker's accredited panel.
+model ScnLender {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique // short stable code, e.g. "LDR-A"
+  onPanel     Boolean  @default(true)  // considered by assessments
+  accredited  Boolean  @default(true)
+  notes       String   @default("")
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  products    ScnProduct[]
+}
+
+model ScnProduct {
+  id             Int       @id @default(autoincrement())
+  lenderId       Int
+  lender         ScnLender @relation(fields: [lenderId], references: [id], onDelete: Cascade)
+  name           String
+  code           String    @unique
+  purposes       String[]  @default(["purchase", "refinance"]) // purchase | refinance
+  occupancies    String[]  @default(["owner_occupied", "investment"])
+  repaymentTypes String[]  @default(["PI", "IO"])
+  rateType       String    @default("variable") // variable | fixed | split
+  features       String[]  @default([]) // offset | redraw | extra_repayments | split | fixed_option | package | no_annual_fee | cashback
+  minLoan        Float?
+  maxLoan        Float?    // product loan limit (distinct from borrowing capacity)
+  active         Boolean   @default(true)
+  notes          String    @default("")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+// An authorised source document: lender guide, rate sheet, aggregator data, public
+// product page or a written BDM confirmation. Permission flags gate storage/indexing/AI use.
+model ScnSource {
+  id              Int       @id @default(autoincrement())
+  lenderId        Int?      // null = panel-wide / aggregator
+  kind            String    // lender_guide | rate_sheet | aggregator | public_page | bdm_confirmation | other
+  title           String
+  reference       String    @default("") // doc number / version label
+  url             String    @default("")
+  fileId          String?   // StoredFile id (private)
+  excerpt         String    @default("") // optional pasted text (used for BDM confirmations)
+  caseId          Int?      // case-specific BDM confirmation
+  bdmName         String    @default("")
+  receivedAt      DateTime?
+  permStore       Boolean   @default(false) // permission confirmed to store this material
+  permAi          Boolean   @default(false) // permission confirmed to transmit extracts to the AI provider
+  permNote        String    @default("")
+  status          String    @default("draft") // draft | published | superseded | withdrawn
+  createdBy       String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([lenderId])
+  @@index([caseId])
+}
+
+// Versioned policy rule. `check` selects the structured server-side test; `params`
+// holds its typed parameters (see src/modules/scenario/policy/checks.ts).
+model ScnPolicyRule {
+  id             Int       @id @default(autoincrement())
+  ruleKey        String    // stable identity across versions
+  version        Int       @default(1)
+  lenderId       Int
+  productId      Int?      // null = all products of the lender
+  segment        String    @default("all") // free label for applicable segment, e.g. "temporary visa", "PAYG casual"
+  category       String    // visa_residency | borrower_combination | employment | income | genuine_savings | gift | max_lvr | property | scheme | other
+  check          String    // see CHECKS
+  params         Json      @default("{}")
+  statement      String    // the rule as written in the source (short)
+  conditions     String    @default("")
+  exceptions     String    @default("")
+  sourceId       Int
+  sourceSection  String    @default("") // page / section reference
+  caseId         Int?      // case-specific BDM response
+  effectiveFrom  DateTime?
+  effectiveTo    DateTime?
+  verifiedAt     DateTime?
+  reviewDue      DateTime?
+  reviewer       String    @default("")
+  reviewerId     Int?
+  status         String    @default("draft") // draft | published | superseded | withdrawn
+  changeNote     String    @default("")
+  createdBy      String    @default("")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([ruleKey, version])
+  @@index([lenderId, status])
+  @@index([caseId])
+}
+
+// Versioned pricing record (rate + fees + cashback) per product / LVR band / occupancy / repayment type.
+model ScnPriceRecord {
+  id              Int       @id @default(autoincrement())
+  recordKey       String
+  version         Int       @default(1)
+  lenderId        Int
+  productId       Int
+  occupancy       String    @default("owner_occupied") // owner_occupied | investment
+  repaymentType   String    @default("PI") // PI | IO
+  lvrMin          Float     @default(0)
+  lvrMax          Float     @default(80)
+  ratePct         Float
+  comparisonPct   Float?
+  upfrontFees     Float     @default(0)
+  annualFee       Float     @default(0)
+  monthlyFee      Float     @default(0)
+  cashback        Float     @default(0)
+  cashbackTerms   String    @default("")
+  cashbackExpiry  DateTime?
+  pricingType     String    @default("published") // published | conditional | confirmed_quote
+  caseId          Int?      // confirmed quote for one case
+  sourceId        Int
+  sourceSection   String    @default("")
+  effectiveFrom   DateTime?
+  expiresAt       DateTime?
+  verifiedAt      DateTime?
+  reviewDue       DateTime?
+  reviewer        String    @default("")
+  status          String    @default("draft") // draft | published | superseded | withdrawn
+  changeNote      String    @default("")
+  createdBy       String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([recordKey, version])
+  @@index([productId, status])
+}
+
+// Current editable fact sheet for a case (one per case). Every field carries provenance.
+model ScnFacts {
+  caseId        Int       @id
+  submissionId  Int?      // originating website enquiry (FormSubmission)
+  facts         Json      @default("{}")
+  hash          String    @default("")
+  updatedBy     String    @default("")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Broker-entered result from an approved lender/aggregator serviceability calculator.
+model ScnServiceability {
+  id             Int       @id @default(autoincrement())
+  caseId         Int
+  lenderId       Int
+  productId      Int?
+  calculator     String    // calculator name
+  inputs         Json      @default("{}") // snapshot of the serviceability inputs used
+  inputsHash     String
+  maxBorrowing   Float
+  calculatedAt   DateTime
+  note           String    @default("")
+  enteredBy      String    @default("")
+  createdAt      DateTime  @default(now())
+
+  @@index([caseId, lenderId])
+}
+
+// One saved assessment run. Never edited after sign-off; reruns create a new row.
+model ScnAssessment {
+  id              Int       @id @default(autoincrement())
+  caseId          Int
+  runNo           Int       @default(1)
+  status          String    @default("draft") // draft | reviewed | superseded
+  factsSnapshot   Json      @default("{}")
+  factsHash       String    @default("")
+  calc            Json      @default("{}") // funding / LVR / repayments result
+  engine          Json      @default("{}") // deterministic per-lender/product evaluation
+  evidence        Json      @default("[]") // [{type:"rule"|"price"|"source", id, key, version, ...}] exact versions used
+  panel           Json      @default("[]") // lenders/products considered
+  ai              Json      @default("{}") // validated AI explanation (withheld parts removed)
+  aiStatus        String    @default("off") // off | ok | partial | unavailable | rejected
+  aiError         String    @default("")
+  aiModel         String    @default("")
+  promptVersion   String    @default("")
+  calcVersion     String    @default("")
+  aiPayloadHash   String    @default("")
+  selections      Json      @default("{}") // { "<lenderId>:<productId>": { decision: selected|excluded|considered, reason } }
+  rationale       String    @default("")
+  clientUpdate    String    @default("")
+  bdmDraft        String    @default("")
+  overrideReason  String    @default("")
+  reviewedBy      String    @default("")
+  reviewedById    Int?
+  reviewedAt      DateTime?
+  supersededAt    DateTime?
+  supersededWhy   String    @default("")
+  createdBy       String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([caseId, createdAt])
+}
+
+// Case Q&A tied to an assessment and the approved sources.
+model ScnQuestion {
+  id            Int      @id @default(autoincrement())
+  caseId        Int
+  assessmentId  Int
+  question      String
+  answer        Json     @default("{}")
+  status        String   @default("ok") // ok | withheld | unavailable
+  askedBy       String   @default("")
+  createdAt     DateTime @default(now())
+
+  @@index([assessmentId, createdAt])
+}
+
+// Follow-up task generated by the assistant. Mirrors into CaseReminder (reminderId) so it
+// shows on the case Notes & Reminders panel and the broker dashboard.
+model ScnTask {
+  id            Int       @id @default(autoincrement())
+  caseId        Int
+  key           String    // dedupe key, e.g. "payslips:a1"
+  category      String    // documents | calculator | policy | pricing | lender_condition | dates | compliance
+  title         String
+  detail        String    @default("")
+  owner         String    @default("")
+  ownerId       Int?
+  dueAt         DateTime?
+  status        String    @default("open") // open | done | dismissed
+  reminderId    Int?
+  assessmentId  Int?
+  doneAt        DateTime?
+  doneBy        String    @default("")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([caseId, key])
+  @@index([status, dueAt])
+}
+
+// Stage compliance checklist state per case (templates live in Setting "scenario.checklists").
+model ScnComplianceItem {
+  id         Int       @id @default(autoincrement())
+  caseId     Int
+  stage      String    // enquiry | recommendation | application | approval | settlement
+  itemKey    String
+  done       Boolean   @default(false)
+  date       String    @default("") // YYYY-MM-DD (e.g. Credit Guide provided on)
+  evidence   String    @default("")
+  by         String    @default("")
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([caseId, stage, itemKey])
+}
+
+// Human review gates: recommendation ready to share / application ready to lodge.
+model ScnReviewGate {
+  id             Int      @id @default(autoincrement())
+  caseId         Int
+  gate           String   // recommendation_ready | application_ready
+  assessmentId   Int?
+  reviewer       String
+  reviewerId     Int
+  rationale      String
+  evidence       Json     @default("{}") // snapshot: checklist, calculator results, sources
+  overrideReason String   @default("")
+  revoked        Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([caseId, gate])
+}

@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
-import { Download, FileText, Globe, Mail, MailOpen, Paperclip, PenLine, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { Download, FileText, Globe, Mail, MailOpen, Paperclip, PenLine, Sparkles, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
-import { Avatar, Badge, Button, Card, KeyValue, PageHeader, cn, type Tone } from "@/components/admin/ui";
+import { Avatar, Badge, Button, Card, KeyValue, PageHeader, buttonStyles, cn, type Tone } from "@/components/admin/ui";
 import { FORM_LABELS, submissionFiles, submissionRows, type SubmissionFile } from "@/modules/site/forms/admin";
 import { deleteSubmissionAction, setSubmissionStatusAction } from "../actions";
 
@@ -63,6 +64,17 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
   const uploads = files.filter((f) => f.kind !== "signature");
   const signatures = files.filter((f) => f.kind === "signature");
   const mail = Object.entries(meta.mail ?? {});
+  // Broker-only: the CRM case created from this enquiry (linked scenario facts, else same email around the same time).
+  const linked = await prisma.scnFacts.findFirst({ where: { submissionId: sub.id }, select: { caseId: true } });
+  const leadCase = linked
+    ? { id: linked.caseId }
+    : sub.email && (sub.formKey === "mmf:3012" || sub.formKey === "cf7:1767")
+      ? await prisma.case.findFirst({
+          where: { OR: [{ app1Email: { equals: sub.email, mode: "insensitive" } }, { legacyEmail: { equals: sub.email, mode: "insensitive" } }], createdAt: { gte: new Date(sub.createdAt.getTime() - 120_000) } },
+          orderBy: { createdAt: "asc" },
+          select: { id: true },
+        })
+      : null;
 
   const FileChip = ({ f }: { f: SubmissionFile }) => (
     <a
@@ -139,6 +151,11 @@ export default async function SubmissionDetail({ params }: { params: Promise<{ i
         }
         actions={
           <>
+            {leadCase && (
+              <Link href={`/admin/cases/${leadCase.id}/scenario`} className={buttonStyles({ variant: "primary" })}>
+                <Sparkles /> Assess Scenario
+              </Link>
+            )}
             <form action={setSubmissionStatusAction}>
               <input type="hidden" name="id" value={sub.id} />
               <input type="hidden" name="status" value="new" />

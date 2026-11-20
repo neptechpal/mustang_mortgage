@@ -6,7 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   Activity, Calculator, CalendarClock, ChevronDown, ChevronRight, ClipboardList, Eye, FileCode2, FileText, FolderOpen, Globe, Hash, LayoutDashboard,
-  Lock, Mail, NotebookPen, Phone, Printer, Send, Table2, Trash2,
+  Lock, Mail, NotebookPen, Phone, Printer, Send, Sparkles, Table2, Trash2,
 } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
@@ -70,6 +70,7 @@ export default async function CasePage({ params, searchParams }: { params: Promi
     prisma.factFindSubmission.findMany({ where: { caseId: c.id }, orderBy: { createdAt: "asc" } }),
     flexDoneCount(c.id),
   ]);
+  const scenario = await prisma.scnAssessment.findFirst({ where: { caseId: c.id }, orderBy: { runNo: "desc" }, select: { runNo: true, status: true } });
   const ff = rows[0];
   const [ffLab, ffTone] = statusLabel(ff.status);
   const otherOpen = rows.slice(1).filter((r) => r.status !== "submitted").length;
@@ -281,8 +282,12 @@ export default async function CasePage({ params, searchParams }: { params: Promi
                 </div>
               </div>
             </div>
-            <div className="w-full shrink-0 lg:w-auto">
+            <div className="flex w-full shrink-0 flex-col gap-2 lg:w-auto">
               <StageSelect caseId={c.id} stage={f.stage} stages={STAGES} colors={STAGE_COLORS} />
+              <Link href={`/admin/cases/${c.id}/scenario`} className={buttonStyles({ variant: "primary", size: "sm", className: "justify-center" })}>
+                <Sparkles /> Assess Scenario
+                {scenario && <span className="ml-1 rounded bg-white/20 px-1.5 text-[11px] font-medium">#{scenario.runNo} {scenario.status}</span>}
+              </Link>
             </div>
           </div>
           <div className="mt-5 border-t border-slate-100 pt-4">

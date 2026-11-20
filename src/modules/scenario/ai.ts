@@ -1,0 +1,80 @@
+// AI calls (Claude via the official Anthropic SDK). Pure payload/validation logic is in ai-core.ts.
+export { PROMPT_VERSION } from "./ai-core";
+import { createHash } from "node:crypto";
+import Anthropic from "@anthropic-ai/sdk";
+import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
+import type { z } from "zod/v4";
+import type { Facts } from "./facts";
+import type { ScenarioCalc } from "./calc";
+import type { EngineResult } from "./engine";
+import { getScenarioSettings } from "./settings";
+import { AnswerOut, ASK_SYSTEM, AssessmentOut, calcSummary, candidateView, minimalFacts, redact, SYSTEM, validateAnswer, validateAssessment, type EvidenceItem } from "./ai-core";
+
+/* ------------------------------------------------------------------ model call */
+
+export class AiUnavailable extends Error {}
+
+async function callModel<T>(schema: z.ZodType<T>, system: string, user: string, maxTokens: number): Promise<{ data: T; model: string }> {
+  const s = await getScenarioSettings();
+  if (!s.aiEnabled) throw new AiUnavailable("AI is switched off in Scenario settings");
+  if (!process.env.ANTHROPIC_API_KEY) throw new AiUnavailable("ANTHROPIC_API_KEY is not configured on the server");
+  const client = new Anthropic({ timeout: 120_000, maxRetries: 1 });
+  try {
+    const res = await client.beta.messages.parse({
+      model: s.model,
+      max_tokens: maxTokens,
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      system,
+      output_config: { effort: s.effort, format: betaZodOutputFormat(schema) },
+      messages: [{ role: "user", content: user }],
+    });
+    if (res.stop_reason === "refusal") throw new AiUnavailable("The model declined this request");
+    if (res.stop_reason === "max_tokens") throw new AiUnavailable("The model response was cut off (max tokens)");
+    if (!res.parsed_output) throw new AiUnavailable("The model response did not match the required schema");
+    return { data: res.parsed_output as T, model: res.model };
+  } catch (e) {
+    if (e instanceof AiUnavailable) throw e;
+    if (e instanceof Anthropic.AuthenticationError) throw new AiUnavailable("AI provider rejected the API key");
+    if (e instanceof Anthropic.RateLimitError) throw new AiUnavailable("AI provider rate limit — try again shortly");
+    if (e instanceof Anthropic.APIError) throw new AiUnavailable(`AI provider error ${e.status ?? ""}`.trim());
+    throw new AiUnavailable("AI request failed (network or parsing)");
+  }
+}
+
+/* ------------------------------------------------------------------ public entry points */
+
+export function payloadHash(s: string) {
+  return createHash("sha256").update(s).digest("hex").slice(0, 16);
+}
+
+export async function explainAssessment(input: { facts: Facts; calc: ScenarioCalc; engine: EngineResult; evidence: EvidenceItem[] }) {
+  const allowed = new Set(input.evidence.map((e) => e.id));
+  const facts = minimalFacts(input.facts);
+  const body = {
+    task: "Explain the server's shortlist for each candidate, list open questions, missing facts, assumptions and next actions; draft a client update and, if needed, a BDM enquiry.",
+    scenario: facts,
+    calculations: calcSummary(input.calc),
+    candidates: input.engine.candidates.map((c) => candidateView(c, allowed)),
+    evidence: input.evidence.map((e) => ({ id: e.id, kind: e.kind, lenderId: e.lenderId, content: e.text })),
+  };
+  const user = JSON.stringify(body);
+  const { data, model } = await callModel(AssessmentOut, SYSTEM, user, 16000);
+  const factsJson = JSON.stringify({ facts, calc: calcSummary(input.calc) });
+  const v = validateAssessment(data, input.engine, input.evidence, factsJson);
+  return { ...v, model, payloadHash: payloadHash(user) };
+}
+
+export async function answerQuestion(input: { question: string; facts: Facts; calc: ScenarioCalc; engine: EngineResult; evidence: EvidenceItem[] }) {
+  const allowed = new Set(input.evidence.map((e) => e.id));
+  const facts = minimalFacts(input.facts);
+  const user = JSON.stringify({
+    question: redact(input.question, 600),
+    scenario: facts,
+    calculations: calcSummary(input.calc),
+    candidates: input.engine.candidates.map((c) => candidateView(c, allowed)),
+    evidence: input.evidence.map((e) => ({ id: e.id, kind: e.kind, lenderId: e.lenderId, content: e.text })),
+  });
+  const { data, model } = await callModel(AnswerOut, ASK_SYSTEM, user, 6000);
+  return { ...validateAnswer(data, input.evidence, JSON.stringify({ facts, calc: calcSummary(input.calc) })), model };
+}

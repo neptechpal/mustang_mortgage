@@ -27,6 +27,7 @@ export const ADMIN_NAV: NavGroup[] = [
       { href: "/admin/income", label: "Income", icon: "commissions" },
       { href: "/admin/commissions", label: "Commissions", icon: "commissions" },
       { href: "/admin/borrowing", label: "Borrowing Capacity", icon: "calculator" },
+      { href: "/admin/lender-policy", label: "Lender Policy", icon: "learning" },
       { href: "/admin/marketing", label: "Marketing", icon: "marketing" },
       { href: "/admin/social", label: "Loan Ad Generator", icon: "social" },
       { href: "/admin/links", label: "Custom Links", icon: "links" },
@@ -47,6 +48,7 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { href: "/admin/settings", label: "Settings", icon: "settings", adminOnly: true },
       { href: "/admin/automation", label: "Automation", icon: "automation", adminOnly: true },
+      { href: "/admin/scenario-settings", label: "Scenario Assistant", icon: "settings", adminOnly: true },
       { href: "/admin/zoho", label: "Zoho Mail", icon: "zoho", adminOnly: true },
       { href: "/admin/diagnostics", label: "Diagnostics", icon: "diagnostics", adminOnly: true },
     ],
