@@ -2,8 +2,7 @@ import { getIncomeSettings } from "@/modules/crm-extra/lib/income-settings";
 import Link from "next/link";
 import {
   AlertTriangle, ArrowRight, Briefcase, Calculator, CheckCircle2, ClipboardList, Coins, FileClock, FileText, Landmark,
-  ListTodo, MailWarning, MessageSquare, Paperclip, PartyPopper, Send, Activity as ActivityIcon, LayoutGrid,
-} from "lucide-react";
+  ListTodo, MailWarning, MessageSquare, Paperclip, PartyPopper, Send, Activity as ActivityIcon, LayoutGrid, Zap } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { caseFacts } from "@/modules/crm/cases";
@@ -102,6 +101,7 @@ export default async function Dashboard() {
         }
         actions={
           <>
+            <LinkButton href="/admin/quick-scenario" variant="primary"><Zap /> Quick scenario</LinkButton>
             <LinkButton href="/admin/cases" variant="secondary"><Briefcase /> All cases</LinkButton>
             <LinkButton href="/admin/borrowing" variant="secondary"><Calculator /> Borrowing capacity</LinkButton>
             <LinkButton href="/admin/income" variant="secondary"><Coins /> Income</LinkButton>

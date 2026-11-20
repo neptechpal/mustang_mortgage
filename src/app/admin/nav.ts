@@ -9,6 +9,7 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { href: "/admin", label: "Dashboard", icon: "dashboard" },
       { href: "/admin/cases", label: "Cases", icon: "cases" },
+      { href: "/admin/quick-scenario", label: "Quick Scenario", icon: "quick" },
       { href: "/admin/kanban", label: "Pipeline", icon: "pipeline" },
       { href: "/admin/forms", label: "Forms", icon: "forms" },
       { href: "/admin/templates", label: "Email Templates", icon: "templates" },

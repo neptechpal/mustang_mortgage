@@ -5,7 +5,7 @@
 export type AreaKey = "cases" | "forms" | "work" | "money" | "tools" | "lenderPolicy" | "website" | "content";
 
 export const AREAS: Record<AreaKey, { label: string; hint: string; prefixes: string[] }> = {
-  cases: { label: "Cases and pipeline", hint: "Cases, pipeline board, fact find history, client files", prefixes: ["/admin/cases", "/admin/kanban", "/admin/factfinds", "/api/admin/crm"] },
+  cases: { label: "Cases and pipeline", hint: "Cases, pipeline board, quick scenarios, fact find history, client files", prefixes: ["/admin/cases", "/admin/quick-scenario", "/admin/kanban", "/admin/factfinds", "/api/admin/crm"] },
   forms: { label: "Forms and email templates", hint: "Build forms, edit email templates", prefixes: ["/admin/forms", "/admin/templates"] },
   work: { label: "Reminders, notes and activity", hint: "Reminders, field notes, broker notes, activity, email trail", prefixes: ["/admin/reminders", "/admin/field-notes", "/admin/notes", "/admin/signals", "/admin/trail", "/api/admin/x/email"] },
   money: { label: "Income and commissions", hint: "Income dashboard and commission records", prefixes: ["/admin/income", "/admin/commissions"] },

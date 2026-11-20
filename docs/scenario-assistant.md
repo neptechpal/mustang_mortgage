@@ -40,3 +40,13 @@ Built 2026-11-20 from the "Mustang Mortgage AI Scenario Assistant — Developer 
 - Duty / grant figures come from `src/modules/calc` (verified rules with dates) or a broker figure; LMI is broker-entered only.
 - Policy is entered as structured rules + quoted statement per source section; documents are stored but not auto-parsed.
 - Client communication is draft-only — nothing is sent from this module.
+
+## Quick Scenario (meeting mode)
+For first meetings where there is no full fact set yet: **CRM → Quick Scenario** (`/admin/quick-scenario`, also on the Dashboard). Same access area as Cases.
+
+- ~12 optional fields (goal + state required): price/value, deposit or loan balance, 1–2 applicants' income, employment and time in job, residency/visa subclass, dependants, other repayments, card limits, assumed rate (estimate only), and a short note. **No names or contact fields.**
+- Figures are calculated server-side with the verified engines (`src/modules/calc`): duty with/without the first-home concession, FHOG, foreign surcharge, govt costs, LVR, deposit, LMI likely, 20% deposit gap, indicative borrowing power and repayment, 5% Deposit Scheme cap check, FIRB/visa flags. Every figure shows its source and verified date.
+- If AI is on (Scenario settings), Claude writes a headline, 4–6 "Say this" talking points, strengths, watch-outs, questions to ask, documents and next steps — using the same model/key/kill switch, effort capped at medium for speed. The free-text note is **never sent**; only topic flags (gift, guarantor, probation, HELP…) and rounded amounts are. Output is validated: claims citing unknown/stale/unverified sources, numbers not in the evidence, guarantees/"best"/commission wording, unbacked lender names and contact details are withheld (count shown). Confidence is never "high".
+- AI off/unavailable → the same screen with the calculations and a rule-based checklist.
+- **Save to case** adds a readable Broker Note (inputs, talking points, numbers, watch-outs, sources); **Start full assessment** opens the case's full Scenario Assistant.
+- Code: `src/modules/scenario/quick-input.ts`, `quick-core.ts` (pure), `quick.ts`, `quick-actions.ts`, `ui/Quick*.tsx`. Tests: `src/modules/scenario/__tests__/quick.test.ts`.

@@ -6,14 +6,14 @@ import { useEffect, useState } from "react";
 import {
   Activity, BarChart3, Bot, Briefcase, Calculator, CalendarClock, CalendarDays, ClipboardList, Columns3, ExternalLink,
   FileText, GraduationCap, Inbox, KanbanSquare, Landmark, LayoutDashboard, Link2, Mail, Megaphone, Menu, Settings, ShieldCheck,
-  Quote, Sparkles, Stethoscope, StickyNote, Users, Wallet, X, type LucideIcon,
+  Quote, Sparkles, Zap, Stethoscope, StickyNote, Users, Wallet, X, type LucideIcon,
 } from "lucide-react";
 import type { NavGroup } from "@/app/admin/nav";
 
 const ICONS: Record<string, LucideIcon> = {
   dashboard: LayoutDashboard, cases: Briefcase, pipeline: KanbanSquare, forms: ClipboardList, templates: FileText,
   factfind: Columns3, reminders: CalendarClock, notes: StickyNote, learning: GraduationCap, activity: Activity,
-  mail: Mail, commissions: Wallet, calculator: Calculator, marketing: Megaphone, social: Sparkles, links: Link2,
+  mail: Mail, commissions: Wallet, calculator: Calculator, marketing: Megaphone, social: Sparkles, quick: Zap, links: Link2,
   calendarFeed: CalendarDays, submissions: Inbox, appointments: CalendarDays, users: Users, settings: Settings,
   automation: Bot, zoho: ShieldCheck, diagnostics: Stethoscope, chart: BarChart3, testimonials: Quote, lenders: Landmark,
 };

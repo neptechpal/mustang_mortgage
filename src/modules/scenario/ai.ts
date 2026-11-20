@@ -15,7 +15,8 @@ import { AnswerOut, ASK_SYSTEM, AssessmentOut, calcSummary, candidateView, minim
 
 export class AiUnavailable extends Error {}
 
-async function callModel<T>(schema: z.ZodType<T>, system: string, user: string, maxTokens: number): Promise<{ data: T; model: string }> {
+/** Shared structured call. The optional cap only lowers effort; existing assessments keep their settings. */
+export async function callStructuredModel<T>(schema: z.ZodType<T>, system: string, user: string, maxTokens: number, options: { maxEffort?: "medium" } = {}): Promise<{ data: T; model: string }> {
   const s = await getScenarioSettings();
   if (!s.aiEnabled) throw new AiUnavailable("AI is switched off in Scenario settings");
   const apiKey = await getAnthropicKey();
@@ -28,7 +29,7 @@ async function callModel<T>(schema: z.ZodType<T>, system: string, user: string, 
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
       system,
-      output_config: { effort: s.effort, format: betaZodOutputFormat(schema) },
+      output_config: { effort: options.maxEffort === "medium" && s.effort === "high" ? "medium" : s.effort, format: betaZodOutputFormat(schema) },
       messages: [{ role: "user", content: user }],
     });
     if (res.stop_reason === "refusal") throw new AiUnavailable("The model declined this request");
@@ -61,7 +62,7 @@ export async function explainAssessment(input: { facts: Facts; calc: ScenarioCal
     evidence: input.evidence.map((e) => ({ id: e.id, kind: e.kind, lenderId: e.lenderId, content: e.text })),
   };
   const user = JSON.stringify(body);
-  const { data, model } = await callModel(AssessmentOut, SYSTEM, user, 16000);
+  const { data, model } = await callStructuredModel(AssessmentOut, SYSTEM, user, 16000);
   const factsJson = JSON.stringify({ facts, calc: calcSummary(input.calc) });
   const v = validateAssessment(data, input.engine, input.evidence, factsJson);
   return { ...v, model, payloadHash: payloadHash(user) };
@@ -77,7 +78,7 @@ export async function answerQuestion(input: { question: string; facts: Facts; ca
     candidates: input.engine.candidates.map((c) => candidateView(c, allowed)),
     evidence: input.evidence.map((e) => ({ id: e.id, kind: e.kind, lenderId: e.lenderId, content: e.text })),
   });
-  const { data, model } = await callModel(AnswerOut, ASK_SYSTEM, user, 6000);
+  const { data, model } = await callStructuredModel(AnswerOut, ASK_SYSTEM, user, 6000);
   return { ...validateAnswer(data, input.evidence, JSON.stringify({ facts, calc: calcSummary(input.calc) })), model };
 }
 

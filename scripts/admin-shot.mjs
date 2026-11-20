@@ -14,7 +14,8 @@ if (!base?.startsWith("http://localhost") && !base?.startsWith("http://127.0.0.1
 const env = Object.fromEntries(
   fs.readFileSync(".env", "utf8").split("\n").filter((l) => l.includes("=")).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).replace(/^"|"$/g, "")]),
 );
-const token = await new SignJWT({ uid: 1, role: "ADMIN", name: "Sulove Admin" })
+const now = Math.floor(Date.now() / 1000);
+const token = await new SignJWT({ uid: 1, role: "ADMIN", name: "Sulove Admin", areas: ["*"], pat: now, ses: now, mfa: 1, rem: 1 })
   .setProtectedHeader({ alg: "HS256" }).setExpirationTime("10m").sign(new TextEncoder().encode(env.SESSION_SECRET));
 const browser = await puppeteer.launch({ executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", headless: true });
 const page = await browser.newPage();
