@@ -17,3 +17,4 @@ See `.env.example`. Never commit `.env` or anything under `storage/` (private cl
 - `ARCHITECTURE.md` — module layout and conventions
 - `ADMIN_UI.md` — admin design system
 - `scripts/migrate-wp.ts` — one-off WordPress → Postgres data migration
+- test
