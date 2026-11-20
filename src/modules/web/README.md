@@ -121,7 +121,7 @@ Desktop: sticky rail with scroll-spy ToC + compact `BrokerCard` (override with `
 <LinkButton href={PATHS.refinancing} variant="secondary" size="lg" arrow>I'm refinancing</LinkButton>
 <LinkButton href={SITE.broker.phoneHref} variant="quiet" icon={<Phone size={18} strokeWidth={1.5} />}>0416 066 954</LinkButton>
 <Button type="submit">Send</Button>
-<TextLink href={PATHS.creditGuide} arrow>Credit Guide</TextLink>
+<TextLink href={PATHS.privacy} arrow>Privacy policy</TextLink>
 <TextLink href="https://www.revenue.nsw.gov.au/" external>Revenue NSW</TextLink>
 ```
 One primary button per view. Inside `tone="ink"` primary turns gold 300 with ink text automatically.

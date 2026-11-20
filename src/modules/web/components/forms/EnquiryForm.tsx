@@ -254,7 +254,7 @@ export function EnquiryForm({ sourcePage, defaultPurpose = [], submitLabel = "Se
           {!busy && <ArrowRight className="mw-arrow" size={18} strokeWidth={1.75} aria-hidden="true" />}
         </button>
         <p className="mw-form__privacy">
-          We use these details only to respond to your enquiry. Read our <Link href={PATHS.privacy}>Privacy policy</Link> and <Link href={PATHS.creditGuide}>Credit Guide</Link>.
+          We use these details only to respond to your enquiry. Read our <Link href={PATHS.privacy}>Privacy policy</Link>.
           We reply {SITE.responsePromise}.
         </p>
       </div>

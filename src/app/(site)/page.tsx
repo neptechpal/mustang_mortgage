@@ -1,16 +1,14 @@
-import { ArrowLeftRight, Calculator, Clock, Landmark, MapPin, Percent, ShieldCheck } from "lucide-react";
-import { BrokerCard } from "@/modules/web/components/content/BrokerCard";
+import { ArrowLeftRight, Calculator, Clock, Landmark, MapPin, Percent } from "lucide-react";
 import { ConsultationCard } from "@/modules/web/components/content/ConsultationCard";
 import { CtaBand } from "@/modules/web/components/content/CtaBand";
 import { Faq, type FaqEntry } from "@/modules/web/components/content/Faq";
-import { KeyFacts } from "@/modules/web/components/content/KeyFacts";
 import { LendersGrid } from "@/modules/web/components/content/LendersGrid";
+import { KeyFacts } from "@/modules/web/components/content/KeyFacts";
 import { ReviewBadge } from "@/modules/web/components/content/ReviewBadge";
 import { SituationSelector } from "@/modules/web/components/content/SituationSelector";
 import { Steps } from "@/modules/web/components/content/Steps";
 import { Testimonials } from "@/modules/web/components/content/Testimonials";
 import { TrustRow } from "@/modules/web/components/content/TrustRow";
-import { VisaIndex } from "@/modules/web/components/content/VisaIndex";
 import { LinkButton, TextLink } from "@/modules/web/components/ui/Button";
 import { Container } from "@/modules/web/components/ui/Container";
 import { Eyebrow } from "@/modules/web/components/ui/Eyebrow";
@@ -18,15 +16,21 @@ import { Fact } from "@/modules/web/components/ui/Fact";
 import { IndexList } from "@/modules/web/components/ui/IndexList";
 import { Seal } from "@/modules/web/components/ui/Seal";
 import { Section } from "@/modules/web/components/ui/Section";
-import { PATHS, SITE } from "@/modules/web/config";
+import { PATHS, SITE, factValue } from "@/modules/web/config";
 import { consultationModes } from "@/modules/web/format";
+import { getLenders } from "@/modules/web/lenders";
+import { LEARN_GUIDES } from "@/modules/web/learn/LearnPage";
+import { LoanExplorer } from "@/modules/web/learn/LoanExplorer";
+import { getPublishedTestimonials } from "@/modules/web/testimonials";
 import { JsonLd, buildMetadata, webPageJsonLd } from "@/modules/web/seo";
 
-const TITLE = "Sydney mortgage broker for first home buyers and visa holders";
+const TITLE = "Mortgage broker in Sydney and NSW: home loans from a panel of lenders";
 const DESCRIPTION =
-  "Get a home loan through a mortgage broker. Help for first home buyers, new permanent residents and skilled visa holders in Sydney and across NSW.";
+  "Mustang Mortgage arranges home loans for first home buyers, upgraders, investors and refinancers across Sydney, NSW and Australia, with a panel of banks and lenders. Book a 60-minute consultation.";
 
 export const metadata = buildMetadata({ title: TITLE, description: DESCRIPTION, path: "/" });
+// Lenders and testimonials come from the database; the admin screens refresh this page immediately, this is the safety net.
+export const revalidate = 300;
 
 const icon = { size: 20, strokeWidth: 1.5, "aria-hidden": true } as const;
 
@@ -37,22 +41,8 @@ const FAQ: FaqEntry[] = [
       "Most of our work is paid for by the lender, through commission when your loan settles. Before you apply, we tell you in writing what we will be paid and about any fee you would pay. Our Credit Guide sets this out in full.",
   },
   {
-    question: "Can I get a home loan on a temporary visa?",
-    answer: (
-      <>
-        <p>
-          Often, yes, but fewer lenders will consider it. Lenders look at your visa subclass, how long it has left to run, your income and your deposit. Temporary residents
-          usually need approval from the Foreign Investment Review Board (FIRB) before buying, and in NSW may pay surcharge purchaser duty on top of transfer duty.
-        </p>
-        <p>
-          <TextLink href={PATHS.visaHomeLoans} arrow>
-            Visa and PR home loans
-          </TextLink>
-        </p>
-      </>
-    ),
-    answerText:
-      "Often, yes, but fewer lenders will consider it. Lenders look at your visa subclass, how long it has left to run, your income and your deposit. Temporary residents usually need approval from the Foreign Investment Review Board (FIRB) before buying, and in NSW may pay surcharge purchaser duty on top of transfer duty.",
+    question: "Which banks and lenders do you work with?",
+    answer: "We arrange loans with a panel of major banks, regional banks, mutuals and non-bank lenders, listed on this page. Which lenders suit you depends on your income, deposit, the property and what you want from the loan, so we compare them for your situation instead of starting with one name.",
   },
   {
     question: "Do you only work with clients in Sydney?",
@@ -60,7 +50,7 @@ const FAQ: FaqEntry[] = [
   },
   {
     question: "What happens at the first consultation?",
-    answer: `We spend ${SITE.consultation.minutes} minutes on your situation: income, savings, debts, visa status and what you want to buy. You leave with an estimated borrowing range, a list of the documents you'll need and the next steps. You don't need to prepare anything formal for this first conversation.`,
+    answer: `We spend ${SITE.consultation.minutes} minutes on your situation: income, savings, debts and what you want to buy. You leave with an estimated borrowing range, a list of the documents you'll need and the next steps. You don't need to prepare anything formal for this first conversation.`,
   },
   {
     question: "Can I use money from family overseas for my deposit?",
@@ -74,7 +64,10 @@ const FAQ: FaqEntry[] = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [lenders, testimonials] = await Promise.all([getLenders(), getPublishedTestimonials()]);
+  let n = 0;
+  const idx = () => String(++n).padStart(2, "0");
   return (
     <>
       <JsonLd data={webPageJsonLd({ path: "/", name: TITLE, description: DESCRIPTION })} />
@@ -89,10 +82,11 @@ export default function HomePage() {
             <div className="mw-hero__copy">
               <Eyebrow>Mortgage broker · Sydney and NSW</Eyebrow>
               <h1 id="hero-title" className="mw-display">
-                Home loans for first home buyers, new&nbsp;Australians and <em>visa holders</em> in Sydney
+                Home loans from a panel of banks and <em>lenders</em> across Australia
               </h1>
               <p className="mw-lede">
-                We are a mortgage broker for people buying their first Australian home, including skilled visa holders and new permanent residents. We work out which lenders will accept your situation, show you the costs in plain numbers and manage the application through to settlement.
+                We are a mortgage broker for first home buyers, upgraders, investors and refinancers. We compare loans across the lenders on our panel, show you the costs in plain
+                numbers and manage the application through to settlement.
               </p>
               <div className="mw-intents mw-hero__cta">
                 <LinkButton href={PATHS.homeLoans} variant="secondary" size="lg" arrow>
@@ -115,11 +109,10 @@ export default function HomePage() {
           <TrustRow
             items={[
               {
-                icon: <ShieldCheck {...icon} />,
+                icon: <Landmark {...icon} />,
                 children: (
                   <>
-                    <strong>Credit Representative</strong> <Fact path="licence.creditRepresentativeNumber" /> of <Fact path="licence.licenseeName" />, Australian Credit
-                    Licence <Fact path="licence.licenseeAcl" />
+                    <strong>A panel of lenders</strong> including major banks, mutuals and non-bank lenders
                   </>
                 ),
               },
@@ -148,7 +141,7 @@ export default function HomePage() {
       <Section
         id="situations"
         tone="white"
-        index="01"
+        index={idx()}
         eyebrow="Start here"
         title="Start with your situation"
         lede="Pick the one closest to yours. Each page covers what lenders look at, the costs involved and what to prepare."
@@ -156,48 +149,23 @@ export default function HomePage() {
         <SituationSelector />
       </Section>
 
-      {/* 02 Visa and PR specialism */}
+      {/* 02 Lenders */}
       <Section
-        id="visa"
-        tone="ink"
+        id="lenders"
         layout="split"
-        index="02"
-        eyebrow="Visa and PR home loans"
-        title="Buying on a visa changes the questions lenders ask"
-        lede={
-          <div className="mw-stack">
-            <p className="mw-lede">
-              Your visa subclass decides more than most people expect: which lenders will consider you, how much deposit they want, whether you need FIRB approval, and whether
-              NSW surcharge purchaser duty applies on top of transfer duty.
-            </p>
-            <p className="mw-body">Many of our clients hold skilled visas or have just become permanent residents. We work through these questions at your first consultation.</p>
-          </div>
-        }
-        action={
-          <TextLink href={PATHS.visaHomeLoans} arrow>
-            Visa and PR home loans overview
-          </TextLink>
-        }
+        index={idx()}
+        eyebrow="Banks and lenders"
+        title="The lenders we arrange loans with"
+        lede="We are accredited with a panel of banks, mutuals and non-bank lenders through the Australian Finance Group (AFG). Each lender has its own policy on deposits, income types and loan structures, so we compare them for your situation."
       >
-        <VisaIndex />
-        <p className="mw-small" style={{ marginTop: 20, maxWidth: "60ch" }}>
-          Rules for temporary residents change. Each guide shows the date we last checked it against official sources such as the{" "}
-          <a className="mw-link" href="https://foreigninvestment.gov.au/" target="_blank" rel="noopener noreferrer">
-            Foreign Investment Review Board
-          </a>{" "}
-          and{" "}
-          <a className="mw-link" href="https://www.revenue.nsw.gov.au/" target="_blank" rel="noopener noreferrer">
-            Revenue NSW
-          </a>
-          .
-        </p>
+        <LendersGrid lenders={lenders} />
       </Section>
 
       {/* 03 How it works */}
       <Section
         id="how-it-works"
         layout="split"
-        index="03"
+        index={idx()}
         eyebrow="How it works"
         title="From first call to settlement"
         lede="Four stages. You always know which one you are in, and what we need from you next."
@@ -211,12 +179,12 @@ export default function HomePage() {
           items={[
             {
               title: `A ${SITE.consultation.minutes}-minute consultation`,
-              body: `By ${consultationModes()}, at a time that suits you, 7 days a week. We talk through your income, savings, debts, visa status and the kind of property you want. Rough figures are fine at this stage.`,
+              body: `By ${consultationModes()}, at a time that suits you, 7 days a week. We talk through your income, savings, debts and the kind of property you want. Rough figures are fine at this stage.`,
               meta: [`${SITE.consultation.minutes} minutes`, "Phone or video"],
             },
             {
               title: "Documents through the secure portal",
-              body: "We send you a checklist and a private link to upload payslips, bank statements, ID and visa documents. No email attachments, and you can see what is still outstanding.",
+              body: "We send you a checklist and a private link to upload payslips, bank statements and ID. For your security the link asks for a one-time code we email to you. No email attachments, and you can see what is still outstanding.",
               meta: ["Client portal", "Online fact find"],
             },
             {
@@ -241,31 +209,37 @@ export default function HomePage() {
         />
       </Section>
 
-      {/* 04 Broker */}
-      <Section id="broker" tone="sand" aria-label={`Your broker, ${SITE.broker.name}`}>
-        <BrokerCard />
-      </Section>
-
-      {/* 05 Lenders we work with */}
+      {/* Learn: interactive explorer + guides */}
       <Section
-        id="lenders"
-        layout="split"
-        eyebrow="Lenders & Banks"
-        title="We work with AFG-accredited lenders"
-        lede="We arrange home loans with a panel of major banks, online lenders, regional banks and specialist mortgage lenders. We compare their policies on deposits, visas, income types and loan structures to find the right fit for your situation."
+        id="learn"
+        tone="white"
+        index={idx()}
+        eyebrow="Learn"
+        title="See how a home loan really works"
+        lede="Slide the amount, rate and term and watch your repayments, interest and balance change year by year. Then try an extra payment each month and see how much sooner you finish."
+        action={
+          <TextLink href={PATHS.learn} arrow>
+            All guides
+          </TextLink>
+        }
       >
-        <LendersGrid />
+        <LoanExplorer compact />
+        <div style={{ marginTop: 40 }}>
+          <IndexList columns={2} items={LEARN_GUIDES.filter((g) => g.href !== PATHS.loanExplorer)} />
+        </div>
       </Section>
 
-      {/* 06 Testimonials */}
-      <Section id="testimonials" tone="white" eyebrow="Testimonials" title="What our clients say">
-        <Testimonials />
-      </Section>
+      {/* Testimonials (only when at least one is published in Admin > Testimonials) */}
+      {testimonials.length > 0 && (
+        <Section id="testimonials" tone="sand" index={idx()} eyebrow="Testimonials" title="What our clients say">
+          <Testimonials items={testimonials} />
+        </Section>
+      )}
 
-      {/* 07 Calculators */}
+      {/* Calculators */}
       <Section
         id="calculators"
-        index="04"
+        index={idx()}
         eyebrow="Calculators"
         title="Run the numbers before we talk"
         lede="Estimates help you decide what to ask. At your consultation we check them against real lender policy."
@@ -292,8 +266,8 @@ export default function HomePage() {
         />
       </Section>
 
-      {/* 06 How we are paid */}
-      <Section id="paid" tone="white" layout="split-even" index="05" eyebrow="How we are paid" title="How we are paid, in plain terms">
+      {/* How we are paid */}
+      <Section id="paid" tone="white" layout="split-even" index={idx()} eyebrow="How we are paid" title="How we are paid, in plain terms">
         <div className="mw-stack" style={{ ["--mw-stack" as string]: "18px" }}>
           <p className="mw-body">
             When your loan settles, the lender pays us an upfront commission, and usually a smaller ongoing commission (called trail) while the loan is active. The amounts depend
@@ -304,22 +278,18 @@ export default function HomePage() {
             one that pays us more.
           </p>
           <p className="mw-body">
-            Fees to you: <Fact path="fees.clientFeeStatement" />. We compare loans from <Fact path="lenderPanel.count" /> lenders on our panel. Not every lender in Australia is on
-            our panel.
+            {factValue("fees.clientFeeStatement") ? (
+              <>
+                Fees to you: <Fact path="fees.clientFeeStatement" />.{" "}
+              </>
+            ) : null}
+            We compare loans from the lenders on our panel, listed above. Not every lender in Australia is on our panel.
           </p>
-          <div className="mw-btnrow" style={{ marginTop: 28 }}>
-            <TextLink href={PATHS.howWeArePaid} arrow>
-              How we are paid
-            </TextLink>
-            <TextLink href={PATHS.creditGuide} arrow>
-              Credit Guide
-            </TextLink>
-          </div>
         </div>
       </Section>
 
-      {/* 07 FAQ */}
-      <Section id="faq" layout="split" index="06" eyebrow="Questions" title="What people ask us first" lede="Straight answers to the questions that come up in most first consultations.">
+      {/* FAQ */}
+      <Section id="faq" layout="split" index={idx()} eyebrow="Questions" title="What people ask us first" lede="Straight answers to the questions that come up in most first consultations.">
         <Faq items={FAQ} />
       </Section>
 

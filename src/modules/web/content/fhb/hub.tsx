@@ -133,7 +133,7 @@ export function FhbHub() {
               <Faq items={FAQ} />
             </section>
             <div style={sectionStyle}>
-              <CtaBand bare compact title="Check which assistance fits your purchase" body="Bring your property budget, savings and residency details. Sulav can help check the available schemes and the cash needed for settlement." />
+              <CtaBand bare compact title="Check which assistance fits your purchase" body="Bring your property budget, savings and residency details. We can help check the available schemes and the cash needed for settlement." />
             </div>
             <div style={sectionStyle}>
               <Sources items={sources} intro="Official rules and their verification dates. Recheck eligibility and contract dates before committing." />

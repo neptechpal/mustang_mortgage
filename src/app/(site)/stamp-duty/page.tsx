@@ -193,7 +193,7 @@ export default function StampDutyHubPage() {
         </div>
       </Section>
 
-      <CtaBand title="Work out your buying costs with Sulav" body="Duty, grants, LMI and lender fees for your situation, before you sign a contract." />
+      <CtaBand title="Work out your buying costs with us" body="Duty, grants, LMI and lender fees for your situation, before you sign a contract." />
     </>
   );
 }

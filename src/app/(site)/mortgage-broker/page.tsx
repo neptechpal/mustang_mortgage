@@ -74,7 +74,7 @@ export default function MortgageBrokerHub() {
               title: "Lenders on our panel",
               body: (
                 <>
-                  We compare loans from <Fact path="lenderPanel.count" /> lenders on our panel, and lenders lend across Australia, so your suburb doesn&rsquo;t limit your options.
+                  We compare loans from the lenders on our panel, and lenders lend across Australia, so your suburb doesn&rsquo;t limit your options.
                 </>
               ),
             },

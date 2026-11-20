@@ -32,7 +32,12 @@ export function MobileMenu({ groups, phone, phoneHref, book, login }: { groups: 
       </button>
       <div id="mw-sheet" className="mw-sheet" hidden={!open}>
         <nav aria-label="Main">
-          {groups.map((g) => (
+          {groups.map((g) =>
+            g.items.length === 0 ? (
+              <Link key={g.label} href={g.href} className="mw-sheet__direct">
+                {g.label}
+              </Link>
+            ) : (
             <details className="mw-sheet__group" key={g.label}>
               <summary>
                 {g.label}
@@ -52,7 +57,8 @@ export function MobileMenu({ groups, phone, phoneHref, book, login }: { groups: 
                 ))}
               </ul>
             </details>
-          ))}
+            ),
+          )}
         </nav>
         <div className="mw-sheet__actions">
           <Link href={book.href} className="mw-btn mw-btn--primary mw-btn--lg mw-btn--block">

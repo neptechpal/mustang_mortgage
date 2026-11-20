@@ -84,7 +84,7 @@ export default function HardshipPage() {
       <section id="afca">
         <h2>If your lender says no</h2>
         <p>
-          If your lender refuses your request or you disagree with its decision, you can complain to the lender, then to AFCA. See also our <Link href={PATHS.complaints}>complaints page</Link>.
+          If your lender refuses your request or you disagree with its decision, you can complain to the lender, then to AFCA.
         </p>
         <AfcaContact />
       </section>

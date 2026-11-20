@@ -1,11 +1,13 @@
 // Client portal ([mm_doc_portal] + Fact Find shell + assigned forms + messages).
 import { clientPrintUrl } from "../forms/print";
 import { Printer } from "lucide-react";
-import { applicants, type ApplicantCase } from "../applicants";
+import { applicantEmails, applicants, type ApplicantCase } from "../applicants";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { authPortal, docFiles, logEvent } from "../cases";
+import { authPortalToken, docFiles, logEvent } from "../cases";
+import { maskEmail, portalUnlocked, validEmails } from "../portal-otp";
+import PortalGate from "./PortalGate";
 import { factFindSchema, formSchema, portalForms, prefillFromCase } from "../forms/service";
 import { fmtLong, firstWord } from "../util";
 import FormRunner from "./FormRunner";
@@ -61,9 +63,19 @@ export default async function Portal({ searchParams, basePath = "/portal" }: { s
     redirect(`${basePath}?${q.toString()}`);
   }
   if (!caseRaw || !parseInt(caseRaw, 10)) return <ErrorBox msg="Invalid link." />;
-  const c = await authPortal(caseRaw, key, { allowClosed: true });
+  const c = await authPortalToken(caseRaw, key, { allowClosed: true });
   if (!c) return <ErrorBox msg="Invalid or expired link." />;
   if (c.portalClosed) return <ErrorBox msg="This secure portal is now closed. If you need access again, please contact us and we will re-open it for you." />;
+
+  if (!(await portalUnlocked(c))) {
+    const emails = validEmails(applicantEmails(c));
+    if (!emails.length) return <ErrorBox msg="We do not have an email address on file for this link. Please contact us and we will help you in." />;
+    return (
+      <Shell>
+        <PortalGate caseId={c.id} mmKey={key} step={one(searchParams.step)} emails={emails.map(maskEmail)} />
+      </Shell>
+    );
+  }
 
   let step = one(searchParams.step);
   const edit = one(searchParams.edit) === "1";

@@ -247,7 +247,7 @@ export const investmentLoans: ServicePageContent = {
     },
   ],
   cta: {
-    title: "Test an investment plan with Sulav",
+    title: "Test an investment plan with us",
     body: "We work through your equity, your total debt and how lenders would count the rent, before you start looking at properties.",
   },
   related: [

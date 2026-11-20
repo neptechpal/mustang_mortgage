@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
     return [
       { source: "/services", destination: "/home-loans", permanent: true },
       { source: "/about-us", destination: "/about", permanent: true },
+      { source: "/about/sulav-adhikari", destination: "/about", permanent: true },
+      { source: "/how-we-are-paid", destination: "/about", permanent: true },
+      { source: "/legal/credit-guide", destination: "/about", permanent: true },
+      { source: "/legal/complaints", destination: "/contact", permanent: true },
       { source: "/serviceability", destination: "/calculators/borrowing-power", permanent: true },
       { source: "/elementor-2749", destination: "/calculators/npr-aud-converter", permanent: true },
       { source: "/tax-calc", destination: "/calculators", permanent: true },

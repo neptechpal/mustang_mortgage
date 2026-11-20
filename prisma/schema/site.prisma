@@ -17,44 +17,32 @@ model FormSubmission {
   @@index([createdAt])
 }
 
+// Client testimonials shown on the home page. Entered by staff in /admin/testimonials.
 model Testimonial {
-  id        Int      @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   clientName String
-  content   String   // testimonial text
-  role      String   @default("") // e.g., "First Home Buyer"
-  rating    Int      @default(5) // 1-5
-  approved  Boolean  @default(false)
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  content    String
+  detail     String   @default("") // e.g. "First home buyer, Parramatta"
+  rating     Int?     // optional 1-5; null = no stars shown
+  published  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@index([published, createdAt])
+  @@index([published, sortOrder])
 }
 
-model TwoFactorAuth {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  secret    String   // base32-encoded TOTP secret
-  backupCodes String // JSON array of backup codes
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// One-time email codes that unlock a client portal link. Codes are stored as HMAC hashes only.
+model PortalOtp {
+  id         Int       @id @default(autoincrement())
+  caseId     Int
+  codeHash   String
+  sentTo     String    @default("") // masked address, for the audit trail
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  ip         String    @default("")
+  createdAt  DateTime  @default(now())
 
-model OtpToken {
-  id        Int      @id @default(autoincrement())
-  token     String   @unique // 6-digit OTP
-  email     String   // client email
-  linkToken String   @unique // unique token for secure link
-  verified  Boolean  @default(false)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-
-  @@index([email, expiresAt])
-}
-
-model SiteSettings {
-  key       String   @id // e.g., "enquiry.email", "enquiry.recipients"
-  value     Json
-  updatedAt DateTime @updatedAt
+  @@index([caseId, createdAt])
 }

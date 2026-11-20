@@ -8,7 +8,7 @@ import { LinkButton } from "@/modules/web/components/ui/Button";
 import { PATHS } from "@/modules/web/config";
 import { buildMetadata } from "@/modules/web/seo";
 
-export const metadata = buildMetadata({ title: "Your account", description: "Manage your Mustang Mortgage client account.", path: "/account", noindex: true });
+export const metadata = buildMetadata({ title: "Your account", description: "Manage your Mustang Mortgage account.", path: "/account", noindex: true });
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage({ params }: { params: Promise<{ tab?: string[] }> }) {
@@ -21,7 +21,7 @@ export default async function AccountPage({ params }: { params: Promise<{ tab?: 
   return (
     <div className="um-page">
       <AppHead
-        eyebrow="Client account"
+        eyebrow="Your account"
         title={`Hello, ${user.firstName || displayNameOf(user)}`}
         lede="Update your details, password and privacy settings. Documents and forms for your loan are in the secure portal."
         actions={

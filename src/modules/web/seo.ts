@@ -12,7 +12,6 @@ import { SITE, confirmedLanguages, factValue } from "./config";
 
 export const ORIGIN = SITE.canonicalOrigin;
 export const BUSINESS_ID = `${ORIGIN}/#business`;
-export const BROKER_ID = `${ORIGIN}/#sulav`;
 export const WEBSITE_ID = `${ORIGIN}/#website`;
 
 export function indexingEnabled() {
@@ -96,29 +95,6 @@ function licenceIdentifiers(): Json[] {
   return ids;
 }
 
-/** The broker (Person #sulav). */
-export function personJsonLd(): Json {
-  const ids: Json[] = [];
-  const cr = factValue("licence.creditRepresentativeNumber");
-  if (cr && SITE.licence.representativeName === SITE.broker.name) ids.push({ "@type": "PropertyValue", propertyID: "Credit Representative number", value: cr });
-  return {
-    "@type": "Person",
-    "@id": BROKER_ID,
-    name: SITE.broker.name,
-    givenName: SITE.broker.givenName,
-    familyName: SITE.broker.familyName,
-    jobTitle: SITE.broker.role,
-    ...(SITE.broker.phoneE164 ? { telephone: SITE.broker.phoneE164 } : {}),
-    ...(SITE.broker.email ? { email: `mailto:${SITE.broker.email}` } : {}),
-    url: absoluteUrl("/about/sulav-adhikari"),
-    worksFor: { "@id": BUSINESS_ID },
-    knowsLanguage: confirmedLanguages().map((l) => l.code),
-    ...(SITE.broker.photo ? { image: absoluteUrl(SITE.broker.photo.src) } : {}),
-    ...(SITE.broker.linkedin ? { sameAs: [SITE.broker.linkedin] } : {}),
-    ...(ids.length ? { identifier: ids } : {}),
-  };
-}
-
 /** The business node (FinancialService #business). No street address: service-area business. */
 export function orgJsonLd(): Json {
   const ids = licenceIdentifiers();
@@ -131,12 +107,10 @@ export function orgJsonLd(): Json {
     url: ORIGIN,
     logo: absoluteUrl(SITE.logo.badgeLarge),
     image: absoluteUrl(SITE.logo.badgeLarge),
-    description: "Mortgage broker based in New South Wales, helping first home buyers, refinancers, investors, new permanent residents and visa holders.",
+    description: "Mortgage broker based in New South Wales, arranging home loans for first home buyers, refinancers and investors with a panel of banks and lenders.",
     ...(SITE.broker.phoneE164 ? { telephone: SITE.broker.phoneE164 } : {}),
     email: `mailto:${SITE.contact.email}`,
     areaServed: SITE.serviceArea.areaServed.map((a) => ({ "@type": a.type, name: a.name })),
-    founder: { "@id": BROKER_ID },
-    employee: { "@id": BROKER_ID },
     knowsLanguage: confirmedLanguages().map((l) => l.code),
     contactPoint: {
       "@type": "ContactPoint",
@@ -155,9 +129,9 @@ export function websiteJsonLd(): Json {
   return { "@type": "WebSite", "@id": WEBSITE_ID, url: ORIGIN, name: SITE.name, inLanguage: "en-AU", publisher: { "@id": BUSINESS_ID } };
 }
 
-/** Site-wide graph: business + broker + website. Rendered once in the (site) layout. */
+/** Site-wide graph: business + website. Rendered once in the (site) layout. */
 export function siteGraphJsonLd(): Json {
-  return { "@context": "https://schema.org", "@graph": [orgJsonLd(), personJsonLd(), websiteJsonLd()] };
+  return { "@context": "https://schema.org", "@graph": [orgJsonLd(), websiteJsonLd()] };
 }
 
 export type Crumb = { name: string; path: string };
@@ -200,8 +174,7 @@ export function articleJsonLd(a: {
     datePublished: a.datePublished,
     dateModified: a.dateModified,
     inLanguage: "en-AU",
-    author: { "@id": BROKER_ID, "@type": "Person", name: SITE.broker.name, url: absoluteUrl("/about/sulav-adhikari") },
-    reviewedBy: { "@id": BROKER_ID },
+    author: { "@id": BUSINESS_ID },
     publisher: { "@id": BUSINESS_ID },
     ...(a.about ? { about: a.about } : {}),
     ...(a.citations?.length ? { citation: a.citations } : {}),

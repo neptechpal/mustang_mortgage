@@ -1,58 +1,77 @@
-import { prisma } from "@/lib/db";
-import { requireAdmin } from "@/lib/session";
 import Link from "next/link";
-import { Container } from "@/modules/web/components/ui/Container";
+import { Plus, Quote } from "lucide-react";
+import { prisma } from "@/lib/db";
+import { requireArea } from "@/lib/session";
+import { Badge, EmptyState, PageHeader, TBody, TD, TH, THead, TR, Table, TableWrap, buttonStyles } from "@/components/admin/ui";
+import { Flash, sp1 } from "@/modules/members/components/AdminUi";
 
-export const metadata = { title: "Testimonials", noindex: true };
+export const metadata = { title: "Testimonials" };
+export const dynamic = "force-dynamic";
 
-export default async function TestimonialsPage() {
-  await requireAdmin();
-
-  const testimonials = await prisma.testimonial.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+export default async function TestimonialsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireArea("/admin/testimonials");
+  const sp = await searchParams;
+  const items = await prisma.testimonial.findMany({ orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }] });
 
   return (
-    <Container>
-      <div style={{ padding: "40px 0" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <h1>Testimonials</h1>
-          <Link href="/admin/testimonials/new" style={{ padding: "10px 20px", backgroundColor: "var(--gold-600)", color: "white", borderRadius: "6px", textDecoration: "none" }}>
-            Add Testimonial
+    <div>
+      <PageHeader
+        title="Testimonials"
+        description="Quotes from clients, shown on the home page. Only published ones appear, and the section is hidden while none are published."
+        icon={<Quote />}
+        actions={
+          <Link href="/admin/testimonials/new" className={buttonStyles({ variant: "primary" })}>
+            <Plus /> Add testimonial
           </Link>
-        </div>
-
-        {testimonials.length === 0 ? (
-          <p>No testimonials yet.</p>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid var(--grey-300)" }}>
-                <th style={{ padding: "12px", textAlign: "left" }}>Client Name</th>
-                <th style={{ padding: "12px", textAlign: "left" }}>Rating</th>
-                <th style={{ padding: "12px", textAlign: "left" }}>Approved</th>
-                <th style={{ padding: "12px", textAlign: "left" }}>Published</th>
-                <th style={{ padding: "12px", textAlign: "left" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {testimonials.map((testimonial) => (
-                <tr key={testimonial.id} style={{ borderBottom: "1px solid var(--grey-200)" }}>
-                  <td style={{ padding: "12px" }}>{testimonial.clientName}</td>
-                  <td style={{ padding: "12px" }}>{"★".repeat(testimonial.rating)}</td>
-                  <td style={{ padding: "12px" }}>{testimonial.approved ? "✓" : "✗"}</td>
-                  <td style={{ padding: "12px" }}>{testimonial.published ? "✓" : "✗"}</td>
-                  <td style={{ padding: "12px" }}>
-                    <Link href={`/admin/testimonials/${testimonial.id}`} style={{ color: "var(--gold-600)", textDecoration: "none" }}>
+        }
+      />
+      <Flash msg={sp1(sp.msg)} error={sp1(sp.error)} />
+      {items.length === 0 ? (
+        <EmptyState
+          icon={<Quote />}
+          title="No testimonials yet"
+          description="Add your first one. Only publish a testimonial once the client has agreed to share it."
+          action={
+            <Link href="/admin/testimonials/new" className={buttonStyles({ variant: "primary" })}>
+              <Plus /> Add testimonial
+            </Link>
+          }
+        />
+      ) : (
+        <TableWrap>
+          <Table>
+            <THead>
+              <TR>
+                <TH>Client</TH>
+                <TH>Testimonial</TH>
+                <TH>Stars</TH>
+                <TH>Order</TH>
+                <TH>Status</TH>
+                <TH />
+              </TR>
+            </THead>
+            <TBody>
+              {items.map((t) => (
+                <TR key={t.id}>
+                  <TD className="font-medium text-slate-900">
+                    {t.clientName}
+                    {t.detail && <span className="block text-xs font-normal text-slate-500">{t.detail}</span>}
+                  </TD>
+                  <TD className="max-w-md truncate text-slate-600">{t.content}</TD>
+                  <TD>{t.rating ? "★".repeat(t.rating) : "—"}</TD>
+                  <TD>{t.sortOrder}</TD>
+                  <TD>{t.published ? <Badge tone="success">Shown on website</Badge> : <Badge>Hidden</Badge>}</TD>
+                  <TD className="text-right">
+                    <Link href={`/admin/testimonials/${t.id}`} className="text-brand-700 hover:underline">
                       Edit
                     </Link>
-                  </td>
-                </tr>
+                  </TD>
+                </TR>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </Container>
+            </TBody>
+          </Table>
+        </TableWrap>
+      )}
+    </div>
   );
 }

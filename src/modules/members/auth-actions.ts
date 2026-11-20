@@ -2,17 +2,16 @@
 
 import crypto from "crypto";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import type { User } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { createSession, destroySession, signSession, SESSION_COOKIE, isStaff } from "@/lib/session";
+import { createSession, destroySession, isStaff, isTrustedDevice, startPendingLogin } from "@/lib/session";
 import { verifyWpPassword, hashPassword } from "@/lib/wp-password";
 import { getMembersSettings } from "./settings";
 import { clientIp, clearHits, hit, isLimited, safeRedirect } from "./security";
-import { fullName, getProfile, profileUrl } from "./profile";
-import { str, validateEmail, validatePassword, validateUsername, type FieldErrors } from "./validation";
-import { sendUmEmail, submittedRegistration } from "./emails";
-import { createActivationLink, createResetLink, lookupResetToken, setUserPassword, updateProfile } from "./service";
+import { getProfile } from "./profile";
+import { str, validatePassword, type FieldErrors } from "./validation";
+import { sendUmEmail } from "./emails";
+import { createResetLink, lookupResetToken, setUserPassword, updateProfile } from "./service";
 
 export type FormState = {
   error?: string;
@@ -51,18 +50,25 @@ function defaultRedirect(user: Pick<User, "role">) {
 }
 
 async function startSession(user: User, remember: boolean) {
-  if (remember) {
-    await createSession(user);
-    return;
+  await createSession(user, remember);
+}
+
+/** Staff must pass a second factor (or be on a device trusted for 30 days) before a session exists. */
+async function finishPasswordLogin(user: User, remember: boolean, next: string): Promise<never> {
+  if (!isStaff(user.role)) {
+    await startSession(user, remember);
+    redirect(next);
   }
-  // "Keep me signed in" unchecked: browser-session cookie (JWT itself still expires).
-  const token = await signSession({ uid: user.id, role: user.role, name: user.displayName || user.username });
-  (await cookies()).set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-  });
+  if (user.twoFactorEnabled && user.twoFactorSecret) {
+    if (await isTrustedDevice(user)) {
+      await startSession(user, remember);
+      redirect(next);
+    }
+    await startPendingLogin({ uid: user.id, purpose: "verify", rem: remember ? 1 : 0, next });
+    redirect("/login/verify");
+  }
+  await startPendingLogin({ uid: user.id, purpose: "setup", rem: remember ? 1 : 0, next });
+  redirect("/login/setup-2fa");
 }
 
 export async function loginAction(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -111,87 +117,12 @@ export async function loginAction(_prev: FormState, fd: FormData): Promise<FormS
     },
   });
 
-  await startSession(user, remember);
-  redirect(safeRedirect(redirectTo, defaultRedirect(user)));
+  return finishPasswordLogin(user, remember, safeRedirect(redirectTo, defaultRedirect(user)));
 }
 
-export async function registerAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const s = await getMembersSettings();
-  const values = {
-    user_login: str(fd, "user_login").trim(),
-    first_name: str(fd, "first_name").trim(),
-    last_name: str(fd, "last_name").trim(),
-    user_email: str(fd, "user_email").trim(),
-  };
-  if (!s.registrationEnabled) return { error: "Registration is currently disabled.", values };
-  if (str(fd, "um_request")) return { error: "Registration failed.", values };
-
-  const ip = await clientIp();
-  const ipKey = `register:ip:${ip}`;
-  if (isLimited(ipKey, 5, 60 * 60_000)) return { error: "Too many registrations from your network. Please try again later.", values };
-
-  const password = str(fd, "user_password");
-  const confirm = str(fd, "confirm_user_password");
-  const fe: FieldErrors = {};
-  const u = await validateUsername(values.user_login, s);
-  if (u) fe.user_login = u;
-  if (values.first_name.length > 100) fe.first_name = "This field must contain less than 100 characters";
-  if (values.last_name.length > 100) fe.last_name = "This field must contain less than 100 characters";
-  const e = await validateEmail(values.user_email, s);
-  if (e) fe.user_email = e;
-  const p = password
-    ? validatePassword(password, s, { username: values.user_login, email: values.user_email })
-    : "Password is required";
-  if (p) fe.user_password = p;
-  if (!confirm && password) fe.confirm_user_password = "Please confirm your password";
-  else if (password && confirm !== password) fe.confirm_user_password = "Your passwords do not match";
-  if (Object.keys(fe).length) return { fieldErrors: fe, values };
-
-  hit(ipKey);
-  const status = s.registerStatus;
-  const user = await prisma.user.create({
-    data: {
-      username: values.user_login,
-      email: values.user_email.toLowerCase(),
-      firstName: values.first_name,
-      lastName: values.last_name,
-      displayName: fullName(values.first_name, values.last_name, values.user_login),
-      passwordHash: hashPassword(password),
-      role: "MEMBER",
-      status,
-      profile: { registeredVia: "register_form", hideInMembers: "No", profilePrivacy: "Everyone" },
-    },
-  });
-
-  const submitted = submittedRegistration({
-    Username: user.username,
-    "First Name": user.firstName,
-    "Last Name": user.lastName,
-    "E-mail Address": user.email,
-  });
-
-  if (status === "approved") {
-    await sendUmEmail("welcome_email", user, {}, s);
-    await sendUmEmail("notification_new_user", user, { submitted_registration: submitted }, s);
-    if (s.afterRegister === "redirect_url" && s.afterRegisterUrl) {
-      await createSession(user);
-      redirect(safeRedirect(s.afterRegisterUrl, profileUrl(user.username)));
-    }
-    await createSession(user);
-    redirect(profileUrl(user.username));
-  }
-
-  if (status === "checkmail") {
-    const link = await createActivationLink(user, s);
-    // Activation e-mail is mandatory for this status regardless of the toggle.
-    await sendUmEmail("checkmail_email", user, { account_activation_link: link }, { ...s, emails: { ...s.emails, checkmail_email: { ...s.emails.checkmail_email, on: true } } });
-    await sendUmEmail("notification_new_user", user, { submitted_registration: submitted }, s);
-    return { message: s.checkmailMessage };
-  }
-
-  await sendUmEmail("pending_email", user, {}, s);
-  await sendUmEmail("notification_review", user, { submitted_registration: submitted }, s);
-  return { message: s.pendingMessage };
+// Public sign-up is off: staff accounts are created by an admin, and clients use their emailed secure link.
+export async function registerAction(): Promise<FormState> {
+  return { error: "Registration is not available." };
 }
 
 export async function requestResetAction(_prev: FormState, fd: FormData): Promise<FormState> {

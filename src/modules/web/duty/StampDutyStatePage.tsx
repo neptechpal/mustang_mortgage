@@ -392,7 +392,7 @@ export function StampDutyStatePage({ state, review }: { state: AuState; review: 
         </div>
       </Section>
 
-      <CtaBand title={`Buying in ${S}? Talk it through with Sulav`} body="We check the duty, grants and lender policy for your situation before you sign a contract." />
+      <CtaBand title={`Buying in ${S}? Talk it through with us`} body="We check the duty, grants and lender policy for your situation before you sign a contract." />
     </>
   );
 }

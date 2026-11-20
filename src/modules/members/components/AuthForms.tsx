@@ -51,11 +51,6 @@ export function LoginForm({ redirectTo, notice, warning }: { redirectTo?: string
             <div className="um-left um-half">
               <Submit label="Log in" />
             </div>
-            <div className="um-right um-half">
-              <Link href="/register" className="um-button um-alt">
-                Register
-              </Link>
-            </div>
             <div className="um-clear" />
           </div>
           <div className="um-col-alt-b">

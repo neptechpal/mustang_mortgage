@@ -18,7 +18,7 @@ import { BUSINESS_ID, JsonLd, absoluteUrl, buildMetadata, webPageJsonLd, type Cr
  *
  * Each section renders `body` as prose, then `block` (a design-system component that must sit
  * outside .mw-prose, e.g. PointGrid / WorkedExampleTable / Steps), then optional `after` prose.
- * No <ReviewedStrip> until Sulav has signed the page off.
+ * No <ReviewedStrip> until the page has been signed off.
  */
 
 export type ServiceSection = {

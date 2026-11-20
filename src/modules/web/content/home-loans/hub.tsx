@@ -13,7 +13,7 @@ import { Container } from "../../components/ui/Container";
 import { Fact } from "../../components/ui/Fact";
 import { IndexList } from "../../components/ui/IndexList";
 import { Section } from "../../components/ui/Section";
-import { PATHS } from "../../config";
+import { PATHS, factValue } from "../../config";
 import { JsonLd, webPageJsonLd } from "../../seo";
 import { HL_SOURCES as S } from "./sources";
 
@@ -81,14 +81,9 @@ export function HomeLoansHub() {
         title="Home loans for buying, refinancing, building and investing"
         lede="We arrange home loans for people in Sydney, across NSW and, by phone and video, anywhere in Australia. Start with the situation closest to yours. Each page explains what lenders look at, what it costs and what to prepare."
         actions={
-          <>
-            <LinkButton href={PATHS.borrowingPower} variant="secondary" arrow>
-              Check what I can borrow
-            </LinkButton>
-            <TextLink href={PATHS.howWeArePaid} arrow>
-              How we are paid
-            </TextLink>
-          </>
+          <LinkButton href={PATHS.borrowingPower} variant="secondary" arrow>
+            Check what I can borrow
+          </LinkButton>
         }
         aside={<ConsultationCard />}
       />
@@ -179,16 +174,8 @@ export function HomeLoansHub() {
           </p>
           <p className="mw-body">
             Because lenders pay different amounts, the law requires us to act in your best interests and to put your interests ahead of ours where they conflict. Before you
-            apply, we tell you in writing what we expect to be paid. Fees to you: <Fact path="fees.clientFeeStatement" />.
+            apply, we tell you in writing what we expect to be paid.{factValue("fees.clientFeeStatement") && <> Fees to you: <Fact path="fees.clientFeeStatement" />.</>}
           </p>
-          <div className="mw-btnrow" style={{ marginTop: 28 }}>
-            <TextLink href={PATHS.howWeArePaid} arrow>
-              How we are paid
-            </TextLink>
-            <TextLink href={PATHS.creditGuide} arrow>
-              Credit Guide
-            </TextLink>
-          </div>
         </div>
       </Section>
 
@@ -224,7 +211,7 @@ export function HomeLoansHub() {
         </Container>
       </section>
 
-      <CtaBand title="Talk your situation through with Sulav" />
+      <CtaBand title="Talk your situation through with us" />
     </>
   );
 }

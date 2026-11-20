@@ -298,7 +298,7 @@ export const firstHomeBuyers: ServicePageContent = {
     },
   ],
   cta: {
-    title: "Plan your first purchase with Sulav",
+    title: "Plan your first purchase with us",
     body: "Bring rough figures for your income, savings and debts. You leave with a borrowing range, a documents list and the next step.",
   },
   related: [

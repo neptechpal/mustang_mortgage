@@ -13,7 +13,7 @@ import "@/modules/web/styles/calc.css";
 export const dynamic = "force-dynamic";
 export const metadata = buildMetadata({
   title: "Book a mortgage consultation",
-  description: `Book a ${SITE.consultation.minutes}-minute mortgage consultation with Sulav Adhikari, 7 days a week, by ${consultationModes()}.`,
+  description: `Book a ${SITE.consultation.minutes}-minute mortgage consultation, 7 days a week, by ${consultationModes()}.`,
   path: "/book-appointment",
 });
 

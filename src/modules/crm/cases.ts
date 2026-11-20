@@ -4,6 +4,7 @@ import type { Case, CaseDocument, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { logActivity } from "./activity";
 import { getAutoOptions, getPortalPath } from "./options";
+import { portalUnlocked } from "./portal-otp";
 import { STAGES, STATUSES } from "./constants";
 import { mysqlNow, newToken, safeEqual, siteUrl } from "./util";
 
@@ -82,14 +83,21 @@ export async function portalUrl(c: Pick<Case, "id" | "portalToken">, extra: Reco
   return `${siteUrl()}${path}?${q.toString()}`;
 }
 
-/** Token check for the public portal (hash_equals). Returns the case or null. */
-export async function authPortal(caseIdRaw: unknown, keyRaw: unknown, opts: { allowClosed?: boolean } = {}) {
+/** Token check only (hash_equals). Returns the case or null. The portal page uses this to decide whether to ask for the emailed code. */
+export async function authPortalToken(caseIdRaw: unknown, keyRaw: unknown, opts: { allowClosed?: boolean } = {}) {
   const caseId = parseInt(String(caseIdRaw ?? ""), 10);
   const key = String(keyRaw ?? "");
   if (!caseId || !key) return null;
   const c = await prisma.case.findUnique({ where: { id: caseId }, include: { documents: { orderBy: [{ sort: "asc" }, { id: "asc" }] } } });
   if (!c || !c.portalToken || !safeEqual(c.portalToken, key)) return null;
   if (c.portalClosed && !opts.allowClosed) return null;
+  return c;
+}
+
+/** Token check plus the emailed one-time code (portal-otp.ts). Used by every portal API route and the print page. */
+export async function authPortal(caseIdRaw: unknown, keyRaw: unknown, opts: { allowClosed?: boolean } = {}) {
+  const c = await authPortalToken(caseIdRaw, keyRaw, opts);
+  if (!c || !(await portalUnlocked(c))) return null;
   return c;
 }
 

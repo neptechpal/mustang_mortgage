@@ -65,6 +65,15 @@ export function HeaderNav({ groups }: { groups: NavGroup[] }) {
       <ul className="mw-nav__list" ref={rootRef}>
         {groups.map((g, i) => {
           const expanded = open === i;
+          if (g.items.length === 0) {
+            return (
+              <li key={g.label} className="mw-nav__item">
+                <Link href={g.href} className="mw-nav__trigger" data-active={isIn(pathname, g) || undefined}>
+                  {g.label}
+                </Link>
+              </li>
+            );
+          }
           return (
             <li key={g.label} className="mw-nav__item" onPointerEnter={hoverOpen(i)} onPointerLeave={hoverClose}>
               <button

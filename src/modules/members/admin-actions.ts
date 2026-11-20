@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { Prisma, Role } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { AREA_KEYS } from "@/lib/access";
 import { requireAdmin } from "@/lib/session";
 import { hashPassword } from "@/lib/wp-password";
 import { deleteStoredFile } from "@/lib/storage";
@@ -13,6 +14,7 @@ import { fullName, getProfile } from "./profile";
 import { isEmail, safeUsername, str, validatePassword } from "./validation";
 import { changeStatus, createResetLink, setUserPassword } from "./service";
 import { sendUmEmail } from "./emails";
+import { resetTwoFactor } from "./twofactor";
 
 const ROLES: Role[] = ["ADMIN", "STAFF", "MEMBER"];
 const STATUSES = ["approved", "pending", "checkmail", "rejected", "inactive"];
@@ -233,4 +235,30 @@ export async function adminSaveSettings(fd: FormData) {
   await saveMembersSettings(next);
   revalidatePath("/admin/users/settings");
   redirect("/admin/users/settings?msg=Settings+saved.");
+}
+
+/** Sets what a staff member can open in the admin. Takes effect within about 5 minutes (or at their next login). */
+export async function adminSetAccess(fd: FormData) {
+  await requireAdmin();
+  const id = parseInt(str(fd, "id"), 10);
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) redirect("/admin/users?error=User+not+found");
+  if (user.role !== "STAFF") redirect(back(id, { error: "Access levels apply to staff accounts only." }));
+  const level = str(fd, "level");
+  const keys: string[] = AREA_KEYS;
+  const areas = fd.getAll("areas").map(String).filter((a) => keys.includes(a));
+  const permissions: Prisma.InputJsonValue = level === "junior" ? { level: "junior" } : level === "custom" ? { level: "custom", areas } : { level: "standard" };
+  await prisma.user.update({ where: { id }, data: { permissions } });
+  revalidatePath("/admin/users");
+  redirect(back(id, { msg: "Access updated. It applies within about 5 minutes, or at their next login." }));
+}
+
+/** For a lost phone: the user sets up two-step sign-in again at their next login. */
+export async function adminResetTwoFactor(fd: FormData) {
+  await requireAdmin();
+  const id = parseInt(str(fd, "id"), 10);
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) redirect("/admin/users?error=User+not+found");
+  await resetTwoFactor(id);
+  redirect(back(id, { msg: "Two-step sign-in reset. They will set it up again next time they log in." }));
 }

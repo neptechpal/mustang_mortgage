@@ -78,7 +78,7 @@ export default function ImportantInformationPage() {
         <h2>Lenders and eligibility</h2>
         <p>
           All loans are subject to the lender&rsquo;s eligibility criteria, terms and conditions, fees and charges. We can arrange loans only with lenders we are accredited
-          with, and not every lender in Australia is on our panel. See our <Link href={PATHS.creditGuide}>Credit Guide</Link>.
+          with, and not every lender in Australia is on our panel.
         </p>
       </section>
 

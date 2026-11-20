@@ -249,7 +249,7 @@ export const selfEmployed: ServicePageContent = {
   ],
   cta: {
     title: "Get your income read the way a lender will",
-    body: "Send your last two tax returns and notices of assessment before the consultation. Sulav works out which lender methods suit your figures.",
+    body: "Send your last two tax returns and notices of assessment before the consultation. We work out which lender methods suit your figures.",
   },
   related: [
     { href: PATHS.borrowingPower, title: "Borrowing power calculator", description: "Try the different income figures from the worked example." },

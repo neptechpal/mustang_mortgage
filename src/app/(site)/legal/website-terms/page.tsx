@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LegalLayout } from "@/modules/web/components/content/LegalLayout";
-import { Fact, Placeholder } from "@/modules/web/components/ui/Fact";
-import { LEGAL_PAGES_DRAFT, PATHS, SITE } from "@/modules/web/config";
+import { Fact } from "@/modules/web/components/ui/Fact";
+import { LEGAL_PAGES_DRAFT, PATHS, SITE, factValue } from "@/modules/web/config";
 import { buildMetadata } from "@/modules/web/seo";
 
 export const metadata = buildMetadata({
@@ -18,7 +18,6 @@ const TOC = [
   { id: "links", label: "Links to other websites" },
   { id: "accounts", label: "Client accounts and the portal" },
   { id: "ip", label: "Intellectual property" },
-  { id: "liability", label: "Liability" },
   { id: "law", label: "Governing law" },
 ];
 
@@ -28,7 +27,15 @@ export default function WebsiteTermsPage() {
       <section id="about">
         <h2>About these terms</h2>
         <p>
-          This website is operated by <Fact path="legal.entityName" /> (ABN <Fact path="legal.abn" />), trading as {SITE.name}. We may update these terms from time to time; the
+          This website is operated by{" "}
+          {factValue("legal.entityName") && factValue("legal.abn") ? (
+            <>
+              <Fact path="legal.entityName" /> (ABN <Fact path="legal.abn" />), trading as {SITE.name}
+            </>
+          ) : (
+            SITE.name
+          )}
+          . We may update these terms from time to time; the
           version on this page applies.
         </p>
       </section>
@@ -58,7 +65,7 @@ export default function WebsiteTermsPage() {
       <section id="accounts">
         <h2>Client accounts and the portal</h2>
         <p>
-          If we give you access to our client portal or an account, keep your link and login details private and tell us straight away if you think someone else has used
+          If we give you access to our client portal, keep your secure link and any access codes private and tell us straight away if you think someone else has used
           them.
         </p>
       </section>
@@ -68,13 +75,6 @@ export default function WebsiteTermsPage() {
         <p>
           The content, design and logo on this website belong to {SITE.name} or its licensors. You may view and print pages for your own use, but not copy or republish them
           without our permission.
-        </p>
-      </section>
-
-      <section id="liability">
-        <h2>Liability</h2>
-        <p>
-          <Placeholder label="Limitation of liability wording, per licensee template (must not exclude rights under the Australian Consumer Law)" />.
         </p>
       </section>
 

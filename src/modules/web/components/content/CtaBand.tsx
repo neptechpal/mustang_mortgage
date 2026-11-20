@@ -7,12 +7,12 @@ import { Seal } from "../ui/Seal";
 import { cx } from "../ui/cx";
 
 /**
- * Closing call to action (before the footer). Defaults: book a consultation + call Sulav.
+ * Closing call to action (before the footer). Defaults: book a consultation (+ phone only when a public number is configured).
  * Rendered as its own section; set `bare` to drop the section wrapper (e.g. inside an article)
  * and `compact` for narrow columns (hides the seal).
  */
 export function CtaBand({
-  title = "Book a 60-minute consultation with Sulav",
+  title = "Book a 60-minute consultation",
   body = `Morning, midday and evening times, 7 days a week. We reply to enquiries ${SITE.responsePromise}.`,
   primary = HEADER_ACTIONS.book,
   showPhone = true,

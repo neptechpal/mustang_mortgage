@@ -4,7 +4,7 @@ import { SuburbGuide, suburbDescription, suburbTitle } from "@/modules/web/subur
 import { PUBLISHED_SUBURBS, SUBURB_KIND, buildSuburbView, findPublishedSuburb, stateSlug, suburbKey, suburbPath } from "@/modules/web/suburbs/model";
 
 // Suburb home-buying guides (research §C4.1). Only suburbs passing the ≥10/14 data gate are generated; everything
-// else 404s. Pages are noindex (and out of the sitemap) until Sulav approves them in /admin/seo.
+// else 404s. Pages are noindex (and out of the sitemap) until they are approved in /admin/seo.
 export const dynamicParams = false;
 export const revalidate = 86400; // /admin/seo revalidates a page on approve / note change
 

@@ -39,6 +39,8 @@ export const ADMIN_NAV: NavGroup[] = [
     items: [
       { href: "/admin/submissions", label: "Form Submissions", icon: "submissions" },
       { href: "/admin/appointments", label: "Appointments", icon: "appointments" },
+      { href: "/admin/testimonials", label: "Testimonials", icon: "testimonials" },
+      { href: "/admin/lenders", label: "Lenders", icon: "lenders" },
       { href: "/admin/seo", label: "SEO page review", icon: "chart" },
       { href: "/admin/users", label: "Users", icon: "users", adminOnly: true },
     ],

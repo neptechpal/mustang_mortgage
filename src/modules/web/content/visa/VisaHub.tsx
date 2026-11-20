@@ -10,7 +10,6 @@ import { Prose } from "../../components/content/Prose";
 import { Sources } from "../../components/content/Sources";
 import { WorkedExampleTable } from "../../components/content/WorkedExampleTable";
 import { LinkButton, TextLink } from "../../components/ui/Button";
-import { Fact } from "../../components/ui/Fact";
 import { IndexList } from "../../components/ui/IndexList";
 import { Section } from "../../components/ui/Section";
 import { PATHS } from "../../config";
@@ -297,7 +296,7 @@ export function VisaHub({ review }: { review: PageReview }) {
         <div className="mw-stack" style={{ ["--mw-stack" as string]: "18px" }}>
           <p className="mw-body">
             We arrange home loans. For visa holders that means working out which lenders on our panel accept your visa, what they will need, how much deposit you need once FIRB and
-            surcharges are counted, and when it makes sense to wait. We compare loans from <Fact path="lenderPanel.count" /> lenders on our panel; not every lender in Australia is on
+            surcharges are counted, and when it makes sense to wait. We compare loans from the lenders on our panel; not every lender in Australia is on
             it, and not every lender accepts every visa.
           </p>
           <p className="mw-body">
@@ -311,7 +310,7 @@ export function VisaHub({ review }: { review: PageReview }) {
         <Faq items={FAQ} />
       </Section>
 
-      <CtaBand title="Talk through your visa with Sulav" body="Bring your visa grant notice and a rough idea of your savings. In 60 minutes we work out which lenders fit and what the purchase will really cost." />
+      <CtaBand title="Talk through your visa with us" body="Bring your visa grant notice and a rough idea of your savings. In 60 minutes we work out which lenders fit and what the purchase will really cost." />
 
       <Section id="sources-section" size="tight" width="narrow">
         <Sources items={sources} intro="The rules on this page come from these official sources. Each visa guide lists its own." />

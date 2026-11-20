@@ -240,7 +240,7 @@ export const fixedVsVariable: ServicePageContent = {
     },
   ],
   cta: {
-    title: "Talk through your loan structure with Sulav",
+    title: "Talk through your loan structure with us",
     body: "We look at your plans for the next few years and show you how a fixed, variable or split structure would handle them.",
   },
   related: [

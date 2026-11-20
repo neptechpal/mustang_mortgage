@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import { requireStaff } from "@/lib/session";
 import Sidebar from "@/components/admin/shell/Sidebar";
 import Topbar from "@/components/admin/shell/Topbar";
+import { canAccessPath } from "@/lib/access";
 import { ADMIN_NAV } from "./nav";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ export const metadata = { title: { default: "Dashboard", template: "%s · MM CRM
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const s = await requireStaff();
-  const nav = ADMIN_NAV.map((g) => ({ ...g, items: g.items.filter((i) => !i.adminOnly || s.role === "ADMIN") })).filter((g) => g.items.length);
+  const nav = ADMIN_NAV.map((g) => ({ ...g, items: g.items.filter((i) => (!i.adminOnly || s.role === "ADMIN") && canAccessPath(s.role, s.areas, i.href)) })).filter((g) => g.items.length);
   return (
     <div className={`${inter.variable} admin-ui min-h-screen bg-canvas print:bg-white`}>
       <Sidebar nav={nav} />

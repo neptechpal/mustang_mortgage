@@ -1,13 +1,18 @@
-import { TestimonialForm } from "@/modules/web/admin/TestimonialForm";
-import { Container } from "@/modules/web/components/ui/Container";
+import { requireArea } from "@/lib/session";
+import { PageHeader } from "@/components/admin/ui";
+import { sp1 } from "@/modules/members/components/AdminUi";
+import { TestimonialForm } from "../TestimonialForm";
 
-export const metadata = { title: "Add Testimonial", noindex: true };
+export const metadata = { title: "Add testimonial" };
+export const dynamic = "force-dynamic";
 
-export default function NewTestimonialPage() {
+export default async function NewTestimonialPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireArea("/admin/testimonials");
+  const sp = await searchParams;
   return (
-    <Container>
-      <h1 style={{ padding: "40px 0 20px" }}>Add New Testimonial</h1>
-      <TestimonialForm />
-    </Container>
+    <div>
+      <PageHeader breadcrumbs={[{ label: "Testimonials", href: "/admin/testimonials" }, { label: "Add" }]} title="Add testimonial" />
+      <TestimonialForm error={sp1(sp.error)} />
+    </div>
   );
 }

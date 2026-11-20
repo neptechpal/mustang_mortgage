@@ -269,7 +269,7 @@ export const constructionLoans: ServicePageContent = {
     },
   ],
   cta: {
-    title: "Check a build budget with Sulav",
+    title: "Check a build budget with us",
     body: "Bring your land contract, building quote or plans. We check how a lender is likely to value it and what you need to contribute.",
   },
   related: [

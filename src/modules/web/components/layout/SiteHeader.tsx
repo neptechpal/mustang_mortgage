@@ -7,7 +7,7 @@ import { Container } from "../ui/Container";
 import { HeaderNav } from "./HeaderNav";
 import { MobileMenu } from "./MobileMenu";
 
-/** Sticky site header: badge + wordmark, desktop dropdown nav, phone, client login, booking CTA, mobile sheet. */
+/** Sticky site header: badge + wordmark, desktop dropdown nav, optional phone, booking CTA, mobile sheet. */
 export function SiteHeader() {
   return (
     <header className="mw-header">

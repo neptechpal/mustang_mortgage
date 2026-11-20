@@ -6,7 +6,7 @@ import { ensureReviewRows, getReview, reviewKey, type ReviewKind, type ReviewSta
 
 /**
  * Review (broker sign-off) plumbing for the visa, first-home-buyer and community pages.
- * CONTRACT: src/modules/web/review.ts. A page shows "Reviewed by Sulav Adhikari on …" only when its
+ * CONTRACT: src/modules/web/review.ts. A page shows "Reviewed by our team on …" only when its
  * SeoReview row is reviewed. Outside production (SEO_INDEXING !== "on") an unreviewed page shows a
  * small "Pending broker review" note so staff can see what still needs sign-off.
  */
@@ -43,7 +43,7 @@ export function ReviewLine({ review, updatedAt, sourcesHref = "#sources" }: { re
           <Seal center="monogram" text="Mustang Mortgage · Reviewed · " />
         </span>
         <span>
-          Reviewed by <Link href={PATHS.broker}>{SITE.broker.name}</Link> on <time dateTime={on}>{formatDate(on)}</time>
+          Reviewed by <Link href={PATHS.about}>{SITE.broker.name}</Link> on <time dateTime={on}>{formatDate(on)}</time>
         </span>
         {updatedAt && updatedAt > on && (
           <>

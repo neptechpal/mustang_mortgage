@@ -157,7 +157,7 @@ export const carLoans: ServicePageContent = {
     },
   ],
   cta: {
-    title: "Ask Sulav about car finance",
+    title: "Ask us about car finance",
     body: "Tell us the car, the price and when you want to buy. If a home purchase is coming up too, we plan the order with you.",
   },
   related: [

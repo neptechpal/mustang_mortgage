@@ -2,11 +2,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Check, ExternalLink, KeyRound, Mail, PauseCircle, RotateCcw, Save, Trash2, X } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { AREAS, AREA_KEYS, LEVELS, areasFor, type Permissions } from "@/lib/access";
+import { backupCodesRemaining } from "@/lib/totp";
 import { requireAdmin } from "@/lib/session";
 import { Avatar, Card, PageHeader, buttonStyles, checkboxStyles, cn } from "@/components/admin/ui";
 import {
   adminDeleteUser,
+  adminResetTwoFactor,
   adminSendReset,
+  adminSetAccess,
   adminSetPassword,
   adminSetStatus,
   adminUpdateUser,
@@ -36,6 +40,9 @@ export default async function EditUserPage({
   if (!user) notFound();
   const p = getProfile(user);
   const self = user.id === me.uid;
+  const perms = (user.permissions && typeof user.permissions === "object" ? user.permissions : {}) as Permissions;
+  const level = perms.level === "junior" || perms.level === "custom" ? perms.level : "standard";
+  const granted = areasFor(user.role, user.permissions);
   const name = user.displayName || `${user.firstName} ${user.lastName}`.trim() || user.username;
 
   const statusBtn = (status: string, label: string, cls: string, icon: React.ReactNode) => (
@@ -154,6 +161,53 @@ export default async function EditUserPage({
             </Card>
           </form>
 
+          {user.role === "STAFF" && (
+            <form action={adminSetAccess}>
+              <input type="hidden" name="id" value={user.id} />
+              <Card
+                title="Staff access"
+                description="Choose what this person can open. Users and System settings are always administrator-only."
+                footer={
+                  <div className="flex justify-end">
+                    <button className={btnPrimary}>
+                      <Save /> Save access
+                    </button>
+                  </div>
+                }
+              >
+                <div className="space-y-3">
+                  {(["standard", "junior"] as const).map((k) => (
+                    <label key={k} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/40">
+                      <input type="radio" name="level" value={k} defaultChecked={level === k} className="mt-1" />
+                      <span>
+                        <span className="block text-sm font-medium text-slate-900">{LEVELS[k].label}</span>
+                        <span className="block text-[13px] text-slate-500">{LEVELS[k].hint}</span>
+                      </span>
+                    </label>
+                  ))}
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-3 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/40">
+                    <input type="radio" name="level" value="custom" defaultChecked={level === "custom"} className="mt-1" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium text-slate-900">Custom</span>
+                      <span className="block text-[13px] text-slate-500">Tick exactly the areas this person can use.</span>
+                      <span className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {AREA_KEYS.map((a) => (
+                          <span key={a} className="flex items-start gap-2 text-sm text-slate-700">
+                            <input type="checkbox" name="areas" value={a} defaultChecked={granted.includes(a)} className={cn(checkboxStyles, "mt-0.5")} />
+                            <span>
+                              {AREAS[a].label}
+                              <span className="block text-xs text-slate-400">{AREAS[a].hint}</span>
+                            </span>
+                          </span>
+                        ))}
+                      </span>
+                    </span>
+                  </label>
+                </div>
+              </Card>
+            </form>
+          )}
+
           <Card title="Password" description="Let the user choose a password, or set one for them.">
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3">
               <div className="flex min-w-0 items-start gap-3">
@@ -206,6 +260,30 @@ export default async function EditUserPage({
               </div>
             )}
           </Card>
+
+          {user.role !== "MEMBER" && (
+            <Card title="Two-step sign-in" description="Staff must use an authenticator app. Reset it if they lose their phone.">
+              <p className="text-sm text-slate-700">
+                {user.twoFactorEnabled ? (
+                  <>
+                    <span className="font-medium text-emerald-700">On.</span> {backupCodesRemaining(user.twoFactorBackupCodes)} backup codes left.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-medium text-amber-700">Not set up yet.</span> They will be asked to set it up at their next login.
+                  </>
+                )}
+              </p>
+              {user.twoFactorEnabled && (
+                <form action={adminResetTwoFactor} className="mt-4">
+                  <input type="hidden" name="id" value={user.id} />
+                  <ConfirmSubmit message={`Reset two-step sign-in for "${user.username}"? They will need to set it up again.`} className={cn(btnGhost, "w-full")}>
+                    <RotateCcw /> Reset two-step sign-in
+                  </ConfirmSubmit>
+                </form>
+              )}
+            </Card>
+          )}
 
           {!self && (
             <section className="rounded-xl border border-red-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">

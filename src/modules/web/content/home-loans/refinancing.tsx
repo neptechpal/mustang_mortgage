@@ -258,7 +258,7 @@ export const refinancing: ServicePageContent = {
   ],
   cta: {
     title: "Find out whether switching pays",
-    body: "Send us your latest loan statement before the consultation. Sulav works out the switching costs and how long a new loan would take to cover them.",
+    body: "Send us your latest loan statement before the consultation. We work out the switching costs and how long a new loan would take to cover them.",
   },
   related: [
     { href: PATHS.refinanceCalculator, title: "Refinance savings calculator", description: "Compare your current loan with a new one, switching costs included." },

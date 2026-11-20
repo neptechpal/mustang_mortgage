@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LegalLayout } from "@/modules/web/components/content/LegalLayout";
-import { Fact, Placeholder } from "@/modules/web/components/ui/Fact";
-import { LEGAL_PAGES_DRAFT, PATHS, SITE } from "@/modules/web/config";
+import { Fact } from "@/modules/web/components/ui/Fact";
+import { LEGAL_PAGES_DRAFT, PATHS, SITE, factValue } from "@/modules/web/config";
 import { buildMetadata } from "@/modules/web/seo";
 
 export const metadata = buildMetadata({
@@ -17,13 +17,11 @@ const TOC = [
   { id: "how", label: "How we collect it" },
   { id: "use", label: "How we use it" },
   { id: "disclose", label: "Who we share it with" },
-  { id: "overseas", label: "Overseas disclosure" },
   { id: "credit", label: "Credit information" },
   { id: "security", label: "Security and retention" },
   { id: "access", label: "Access and correction" },
   { id: "marketing", label: "Marketing" },
   { id: "website", label: "Website, cookies and analytics" },
-  { id: "automated", label: "Automated decisions" },
   { id: "complaints", label: "Privacy complaints" },
 ];
 
@@ -39,8 +37,19 @@ export default function PrivacyPolicyPage() {
       <section id="scope">
         <h2>Who this covers</h2>
         <p>
-          This policy applies to {SITE.name} (<Fact path="legal.entityName" />, ABN <Fact path="legal.abn" />) and to {SITE.broker.name} as a credit representative of{" "}
-          <Fact path="licence.licenseeName" />. Our licensee&rsquo;s own privacy policy also applies: <Placeholder label="Link to licensee privacy policy" />.
+          This policy applies to {SITE.name}
+          {factValue("legal.entityName") && factValue("legal.abn") && (
+            <>
+              {" "}
+              (<Fact path="legal.entityName" />, ABN <Fact path="legal.abn" />)
+            </>
+          )}
+          {factValue("licence.licenseeName") && (
+            <>
+              , a credit representative of <Fact path="licence.licenseeName" />. Our licensee&rsquo;s own privacy policy also applies
+            </>
+          )}
+          .
         </p>
       </section>
 
@@ -82,25 +91,25 @@ export default function PrivacyPolicyPage() {
         <p>We share your information only as needed to provide our service or where the law requires it, for example with:</p>
         <ul>
           <li>lenders you apply to, and lenders mortgage insurers</li>
-          <li>our licensee and aggregator, <Fact path="licence.licenseeName" /></li>
+          <li>
+            our licensee and aggregator
+            {factValue("licence.licenseeName") && (
+              <>
+                , <Fact path="licence.licenseeName" />
+              </>
+            )}
+          </li>
           <li>valuers, conveyancers or solicitors involved in your purchase or refinance</li>
           <li>service providers who host our systems, email and document storage</li>
           <li>regulators, courts or AFCA where required</li>
         </ul>
       </section>
 
-      <section id="overseas">
-        <h2>Overseas disclosure</h2>
-        <p>
-          <Placeholder label="Confirm whether any service providers (for example email, CRM or cloud storage) store or access data overseas, and list the countries" />.
-        </p>
-      </section>
-
       <section id="credit">
         <h2>Credit information</h2>
         <p>
           Lenders obtain credit reports from credit reporting bodies when they assess your application. We may receive and hold that credit information as part of arranging
-          your loan. <Placeholder label="Credit reporting bodies used and how to contact them, per licensee template" />.
+          your loan.
         </p>
       </section>
 
@@ -108,7 +117,7 @@ export default function PrivacyPolicyPage() {
         <h2>Security and retention</h2>
         <p>
           We ask you to send documents through our secure client portal rather than by email. Access to client records is limited to people who need it to work on your file.
-          We keep records for as long as the law requires, then destroy or de-identify them. <Placeholder label="Retention period per licensee requirements" />.
+          We keep records for as long as the law requires, then destroy or de-identify them.
         </p>
       </section>
 
@@ -131,14 +140,7 @@ export default function PrivacyPolicyPage() {
       <section id="website">
         <h2>Website, cookies and analytics</h2>
         <p>
-          Our website uses cookies that are needed for logging in and for the booking and enquiry forms. <Placeholder label="Analytics or advertising tools used, if any" />.
-        </p>
-      </section>
-
-      <section id="automated">
-        <h2>Automated decisions</h2>
-        <p>
-          <Placeholder label="Describe any automated processing that significantly affects clients (required from 10 December 2026), or confirm there is none" />.
+          Our website uses cookies that are needed for logging in and for the booking and enquiry forms.
         </p>
       </section>
 
@@ -150,7 +152,7 @@ export default function PrivacyPolicyPage() {
           <a href="https://www.oaic.gov.au/" target="_blank" rel="noopener noreferrer">
             www.oaic.gov.au
           </a>{" "}
-          or on 1300 363 992, or to AFCA (see our <Link href={PATHS.complaints}>complaints page</Link>).
+          or on 1300 363 992, or to AFCA.
         </p>
       </section>
     </LegalLayout>

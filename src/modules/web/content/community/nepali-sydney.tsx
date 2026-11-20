@@ -99,7 +99,7 @@ export function NepaliSydney({ review }: { review: PageReview }) {
         }
         summary={<p>A family gift may help with your deposit, but the lender needs to understand the arrangement and where the money came from. Before funds move, check the evidence required, the transfer arrangements and your current visa. Acceptance depends on the lender and the whole application.</p>}
         toc={[
-          { id: "broker", label: "Working with Sulav" },
+          { id: "broker", label: "Working with us" },
           { id: "family-funds", label: "Family funds from Nepal" },
           { id: "overseas", label: "Overseas income and assets" },
           { id: "visa", label: "Visa stages" },
@@ -116,7 +116,7 @@ export function NepaliSydney({ review }: { review: PageReview }) {
               <Faq items={FAQ} />
             </section>
             <div style={sectionStyle}>
-              <CtaBand bare compact title="Discuss your deposit and documents with Sulav" body="Bring a rough savings total, your current visa details and a description of any family contribution. We can work through what needs checking before you apply." />
+              <CtaBand bare compact title="Discuss your deposit and documents with us" body="Bring a rough savings total, your current visa details and a description of any family contribution. We can work through what needs checking before you apply." />
             </div>
             <div style={sectionStyle}>
               <Sources items={sources} intro="Official guidance and Census records, with checked dates. Document lists are preparation guidance; each lender confirms its requirements." />
@@ -129,12 +129,12 @@ export function NepaliSydney({ review }: { review: PageReview }) {
       >
         <section id="broker" style={sectionStyle}>
           <Prose>
-            <h2>Working with Sulav</h2>
+            <h2>Working with us</h2>
             <p>{SITE.broker.name} is a {SITE.broker.role.toLowerCase()} based in {SITE.serviceArea.base}. We work with first home buyers, skilled visa holders and permanent residents. Consultations run for {SITE.consultation.minutes} minutes by {consultationModes()}, so you can discuss a purchase without travelling to an office.</p>
-            <p>Tell us which funds are already available, which depend on family and whether any money must be repaid. We can then check lender requirements against your situation. Read <TextLink href={PATHS.broker}>about Sulav</TextLink> and <TextLink href={PATHS.howWeArePaid}>how we are paid</TextLink> before booking.</p>
+            <p>Tell us which funds are already available, which depend on family and whether any money must be repaid. We can then check lender requirements against your situation.</p>
             {nepaliConfirmed && <p>Nepali-speaking support is available for your consultation.</p>}
             {/* Human-translated Nepali summary slot: add only after translation and language support are confirmed. */}
-            {/* Add Sulav's personal story or community-event details only when supplied and approved. */}
+            {/* Add community-event details only when supplied and approved. */}
           </Prose>
         </section>
 

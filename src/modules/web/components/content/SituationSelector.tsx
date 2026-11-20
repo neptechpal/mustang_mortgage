@@ -7,7 +7,6 @@ export type Situation = { label: string; href: string; description: string };
 /** Default situations (each routes to the page that answers it). */
 export const SITUATIONS: Situation[] = [
   { label: "Buying your first home", href: PATHS.firstHomeBuyers, description: "Deposit and LMI, NSW first home buyer concessions, and the government 5% Deposit Scheme." },
-  { label: "Buying on a visa or as a new PR", href: PATHS.visaHomeLoans, description: "What changes for 189, 190, 491, 191 and 482 holders, and for new permanent residents." },
   { label: "Refinancing your loan", href: PATHS.refinancing, description: "Compare your current rate, fees and structure with what other lenders offer now." },
   { label: "Buying an investment property", href: PATHS.investmentLoans, description: "How lenders treat rental income, and structuring a loan for an investment." },
   { label: "Building a home", href: PATHS.constructionLoans, description: "Construction loans are paid in stages as the build progresses." },

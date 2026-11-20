@@ -4,7 +4,7 @@ import type { SitemapEntry } from "../sitemap-entries";
 import { DATA_PULLED_AT, suburbReviewRows } from "./model";
 
 /**
- * Sitemap source for the suburb guides + their hubs. Suburb pages appear only once Sulav has approved them in
+ * Sitemap source for the suburb guides + their hubs. Suburb pages appear only once they have been approved in
  * /admin/seo (SeoReview.reviewed = true) and they are still generated (pass the data gate).
  * lastModified = the later of the data pull and the review update (not the build time).
  */

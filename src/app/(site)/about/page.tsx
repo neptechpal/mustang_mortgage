@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { BrokerCard } from "@/modules/web/components/content/BrokerCard";
 import { CtaBand } from "@/modules/web/components/content/CtaBand";
 import { LicenceStatement } from "@/modules/web/components/content/LicenceStatement";
 import { PageIntro } from "@/modules/web/components/content/PageIntro";
@@ -7,12 +6,12 @@ import { PointGrid } from "@/modules/web/components/content/PointGrid";
 import { LinkButton, TextLink } from "@/modules/web/components/ui/Button";
 import { IndexList } from "@/modules/web/components/ui/IndexList";
 import { Section } from "@/modules/web/components/ui/Section";
-import { LEGAL_LINKS, PATHS, SITE } from "@/modules/web/config";
+import { LEGAL_LINKS, PATHS, licenceComplete } from "@/modules/web/config";
 import { JsonLd, buildMetadata, webPageJsonLd } from "@/modules/web/seo";
 
 const TITLE = "About Mustang Mortgage";
 const DESCRIPTION =
-  "Mustang Mortgage is a NSW mortgage broking business run by Sulav Adhikari, helping first home buyers, refinancers, investors, skilled visa holders and new permanent residents.";
+  "Mustang Mortgage is a NSW mortgage broking business helping first home buyers, refinancers, investors, skilled visa holders and new permanent residents.";
 
 export const metadata = buildMetadata({ title: TITLE, description: DESCRIPTION, path: PATHS.about });
 
@@ -23,15 +22,15 @@ export default function AboutPage() {
       <PageIntro
         crumbs={[{ name: "About", path: PATHS.about }]}
         eyebrow="About us"
-        title="A small brokerage, run by the broker you meet"
-        lede={`Mustang Mortgage is a mortgage broking business based in New South Wales and run by ${SITE.broker.name}. We help people buy their first home, refinance, invest and build, and we take particular care with applications from skilled visa holders and new permanent residents.`}
+        title="A NSW mortgage broker, from first call to settlement"
+        lede={`Mustang Mortgage is a mortgage broking business based in New South Wales. We help people buy their first home, refinance, invest and build, and we take particular care with applications from skilled visa holders and new permanent residents.`}
         actions={
           <>
             <LinkButton href={PATHS.book} arrow>
               Book a consultation
             </LinkButton>
-            <TextLink href={PATHS.broker} arrow>
-              Meet Sulav
+            <TextLink href="/#lenders" arrow>
+              Our lenders
             </TextLink>
           </>
         }
@@ -83,15 +82,10 @@ export default function AboutPage() {
       >
         <PointGrid
           items={[
-            { title: "You deal with the broker", body: `${SITE.broker.name} runs your consultation and manages your application. You have the broker's direct number.` },
+            { title: "One team from start to settlement", body: "The same team runs your consultation and manages your application with the lender, so you never have to repeat your story." },
             {
               title: "Open about how we are paid",
-              body: (
-                <p>
-                  Lenders pay us commission. We tell you the amounts before you apply.{" "}
-                  <TextLink href={PATHS.howWeArePaid}>How we are paid</TextLink>
-                </p>
-              ),
+              body: "Lenders pay us commission. We tell you the amounts before you apply.",
             },
             { title: "Documents stay out of email", body: "You upload documents through a secure client portal, and you can see what is still needed." },
             { title: "Dated, sourced information", body: "Our guides show when they were last checked and link to the official sources: FIRB, Home Affairs, Revenue NSW and the ATO." },
@@ -99,14 +93,10 @@ export default function AboutPage() {
         />
       </Section>
 
-      <Section id="broker" tone="sand" aria-label={`Your broker, ${SITE.broker.name}`}>
-        <BrokerCard />
-      </Section>
-
-      <Section id="licence" tone="white" layout="split-even" eyebrow="Licence and disclosure" title="Licensed to arrange credit">
+      <Section id="licence" tone="white" layout="split-even" eyebrow={licenceComplete() ? "Licence and disclosure" : "Important information"} title={licenceComplete() ? "Licensed to arrange credit" : "Our policies and disclosures"}>
         <div className="mw-stack" style={{ ["--mw-stack" as string]: "18px" }}>
           <LicenceStatement className="mw-body" />
-          <p className="mw-body">Our Credit Guide explains our licence, how we are paid, the lenders we use most often and how to make a complaint.</p>
+          <p className="mw-body">Our Credit Guide explains who we are, how we are paid and how to make a complaint.</p>
           <ul className="mw-chips" style={{ marginTop: 24 }}>
             {LEGAL_LINKS.map((l) => (
               <li key={l.href}>

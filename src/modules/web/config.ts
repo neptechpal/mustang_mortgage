@@ -17,8 +17,7 @@
 export const PATHS = {
   home: "/",
   about: "/about",
-  broker: "/about/sulav-adhikari",
-  howWeArePaid: "/how-we-are-paid",
+  broker: "/about",
   contact: "/contact",
   book: "/book-appointment",
   login: "/login",
@@ -47,6 +46,12 @@ export const PATHS = {
   bridgingVisa: "/visa-home-loans/bridging-visa",
   nepaliCommunity: "/nepali-mortgage-broker-sydney",
 
+  learn: "/learn",
+  learnOffset: "/learn/offset-accounts",
+  learnRepayments: "/learn/repayment-options",
+  learnFacts: "/learn/mortgage-facts",
+  loanExplorer: "/learn/loan-explorer",
+
   calculators: "/calculators",
   borrowingPower: "/calculators/borrowing-power",
   repayments: "/calculators/repayments",
@@ -58,9 +63,7 @@ export const PATHS = {
   mortgageBroker: "/mortgage-broker",
   mortgageBrokerNsw: "/mortgage-broker/nsw",
 
-  creditGuide: "/legal/credit-guide",
   privacy: "/legal/privacy-policy",
-  complaints: "/legal/complaints",
   hardship: "/legal/financial-hardship",
   terms: "/legal/website-terms",
   importantInfo: "/legal/important-information",
@@ -109,11 +112,12 @@ export const SITE = {
     licenseeCreditGuideUrl: null as string | null, // PDF supplied by the licensee
   },
 
+  /** Public pages speak as the company, not a named individual. Phone/email stay null so they are never rendered. */
   broker: {
-    name: "Sulav Adhikari",
-    givenName: "Sulav",
-    familyName: "Adhikari",
-    initials: "SA",
+    name: "Mustang Mortgage",
+    givenName: "our team",
+    familyName: "",
+    initials: "MM",
     role: "Mortgage broker",
     phone: null as string | null, // Hidden on public pages
     phoneHref: null as string | null,
@@ -181,20 +185,6 @@ export const SITE = {
     names: null as string[] | null, // text list, only lenders we are accredited with
   },
 
-  /** AFG-accredited lenders and banks we work with */
-  lenders: [
-    { name: "ANZ", category: "Major Bank" },
-    { name: "Commonwealth Bank", category: "Major Bank" },
-    { name: "NAB", category: "Major Bank" },
-    { name: "Westpac", category: "Major Bank" },
-    { name: "ING", category: "Online Bank" },
-    { name: "Macquarie Bank", category: "Specialist Bank" },
-    { name: "Bendigo Bank", category: "Regional Bank" },
-    { name: "Broadvision", category: "Mortgage Lender" },
-    { name: "CITI", category: "International Bank" },
-    { name: "Homeloans Limited", category: "Mortgage Lender" },
-  ] as Array<{ name: string; category: string }>,
-
   fees: {
     /** Whether the business ever charges the client a fee. Must match the licensee Credit Guide. */
     clientFeeStatement: null as string | null,
@@ -225,7 +215,7 @@ export const FACT_LABELS = {
   "licence.licenseeName": "Licensee name",
   "licence.licenseeAcl": "Australian Credit Licence number",
   "licence.afcaMemberNumber": "AFCA member number",
-  "broker.qualifications": "Sulav's qualifications",
+  "broker.qualifications": "Broker qualifications",
   "broker.memberships": "Industry association membership",
   "broker.yearsBroking": "Years broking",
   "lenderPanel.count": "Number of lenders on panel",
@@ -233,6 +223,10 @@ export const FACT_LABELS = {
 } as const;
 
 export type FactPath = keyof typeof FACT_LABELS;
+
+/** True only when every credit-licence fact is filled in; the licence line is hidden otherwise. */
+export const licenceComplete = () =>
+  (["licence.representativeName", "licence.creditRepresentativeNumber", "licence.licenseeName", "licence.licenseeAcl"] as FactPath[]).every((p) => !!factValue(p));
 
 export function factValue(path: FactPath): string | null {
   const [group, key] = path.split(".") as [keyof typeof SITE, string];
@@ -246,6 +240,7 @@ export function factValue(path: FactPath): string | null {
 /* ------------------------------------------------------------------ */
 
 export type NavLink = { label: string; href: string; description?: string };
+/** A group with no items renders as a plain top-level link (e.g. Contact). */
 export type NavGroup = { label: string; href: string; overview: string; items: NavLink[]; aside?: { title: string; body: string; link: NavLink } };
 
 export const NAV: NavGroup[] = [
@@ -264,19 +259,6 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
-    label: "Visa & PR loans",
-    href: PATHS.visaHomeLoans,
-    overview: "Buying on a visa or as a new PR",
-    items: [
-      { label: "Permanent residents", href: PATHS.permanentResidents, description: "New PR holders and first home concessions" },
-      { label: "Subclass 189", href: PATHS.visa189, description: "Skilled Independent" },
-      { label: "Subclass 190", href: PATHS.visa190, description: "Skilled Nominated" },
-      { label: "Subclass 491", href: PATHS.visa491, description: "Skilled Work Regional (Provisional)" },
-      { label: "Subclass 191", href: PATHS.visa191, description: "Permanent Residence (Skilled Regional)" },
-      { label: "Subclass 482", href: PATHS.visa482, description: "Skills in Demand" },
-    ],
-  },
-  {
     label: "Calculators",
     href: PATHS.calculators,
     overview: "All calculators",
@@ -289,21 +271,33 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    label: "Learn",
+    href: PATHS.learn,
+    overview: "All guides and tools",
+    items: [
+      { label: "Fixed or variable", href: PATHS.fixedVsVariable, description: "How each rate type works, and splitting" },
+      { label: "Offset accounts explained", href: PATHS.learnOffset, description: "How savings can reduce the interest you pay" },
+      { label: "Ways to repay", href: PATHS.learnRepayments, description: "Monthly, fortnightly, extra and interest-only" },
+      { label: "Mortgage facts", href: PATHS.learnFacts, description: "Things most people only find out later" },
+      { label: "Loan explorer", href: PATHS.loanExplorer, description: "See your loan year by year" },
+    ],
+  },
+  {
     label: "About",
     href: PATHS.about,
     overview: "About Mustang Mortgage",
     items: [
-      { label: "Sulav Adhikari", href: PATHS.broker, description: "Your broker" },
-      { label: "How we are paid", href: PATHS.howWeArePaid, description: "Commissions, fees and our duty to you" },
+      { label: "Our lenders", href: "/#lenders", description: "The banks and lenders we arrange loans with" },
+      { label: "Client testimonials", href: "/#testimonials", description: "What our clients say about us" },
       { label: "Where we work", href: PATHS.mortgageBroker, description: "Sydney, NSW and Australia-wide by video" },
-      { label: "Contact", href: PATHS.contact, description: "Phone, email and enquiry form" },
     ],
   },
+  { label: "Contact", href: PATHS.contact, overview: "", items: [] },
 ];
 
 export const HEADER_ACTIONS = {
   book: { label: "Book a consultation", href: PATHS.book },
-  login: { label: "Client login", href: PATHS.login },
+  login: { label: "Login", href: PATHS.login },
 };
 
 export const FOOTER_GROUPS: { title: string; links: NavLink[] }[] = [
@@ -319,14 +313,13 @@ export const FOOTER_GROUPS: { title: string; links: NavLink[] }[] = [
     ],
   },
   {
-    title: "Visa & PR loans",
+    title: "Learn",
     links: [
-      { label: "Overview", href: PATHS.visaHomeLoans },
-      { label: "Permanent residents", href: PATHS.permanentResidents },
-      { label: "Subclass 189 and 190", href: PATHS.visa189 },
-      { label: "Subclass 491 and 191", href: PATHS.visa491 },
-      { label: "Subclass 482", href: PATHS.visa482 },
-      { label: "Nepali community", href: PATHS.nepaliCommunity },
+      { label: "Fixed or variable", href: PATHS.fixedVsVariable },
+      { label: "Offset accounts explained", href: PATHS.learnOffset },
+      { label: "Ways to repay", href: PATHS.learnRepayments },
+      { label: "Mortgage facts", href: PATHS.learnFacts },
+      { label: "Loan explorer", href: PATHS.loanExplorer },
     ],
   },
   {
@@ -338,15 +331,13 @@ export const FOOTER_GROUPS: { title: string; links: NavLink[] }[] = [
       { label: "Stamp duty", href: PATHS.stampDuty },
       { label: "NPR and AUD converter", href: PATHS.nprConverter },
       { label: "Book a consultation", href: PATHS.book },
-      { label: "Client login", href: PATHS.login },
     ],
   },
   {
     title: "Mustang Mortgage",
     links: [
       { label: "About us", href: PATHS.about },
-      { label: "Sulav Adhikari", href: PATHS.broker },
-      { label: "How we are paid", href: PATHS.howWeArePaid },
+      { label: "Our lenders", href: "/#lenders" },
       { label: "Where we work", href: PATHS.mortgageBroker },
       { label: "Contact", href: PATHS.contact },
     ],
@@ -354,9 +345,7 @@ export const FOOTER_GROUPS: { title: string; links: NavLink[] }[] = [
 ];
 
 export const LEGAL_LINKS: NavLink[] = [
-  { label: "Credit Guide", href: PATHS.creditGuide },
   { label: "Privacy policy", href: PATHS.privacy },
-  { label: "Complaints", href: PATHS.complaints },
   { label: "Financial hardship", href: PATHS.hardship },
   { label: "Website terms", href: PATHS.terms },
   { label: "Important information", href: PATHS.importantInfo },
@@ -369,11 +358,9 @@ export const LEGAL_LINKS: NavLink[] = [
 /** Items that must be resolved before SEO_INDEXING=on. Facts still `null` are added automatically. */
 const STATIC_BLOCKERS = [
   "Licensee compliance sign-off of the whole website (most aggregators require a website declaration).",
-  "Licensee Credit Guide template (HTML text and PDF) to replace the draft at /legal/credit-guide.",
   "Licensee-approved privacy policy, complaints, hardship and website terms text to replace the drafts under /legal.",
-  "Confirm whether Sulav consults in Nepali (SITE.languages) before any Nepali-language claim is shown.",
+  "Confirm whether the team consults in Nepali (SITE.languages) before any Nepali-language claim is shown.",
   "Confirm consultation formats (phone, video, in person) in SITE.consultation.modes.",
-  "Real portrait of Sulav for SITE.broker.photo (until then a monogram seal is shown).",
   "Google Business Profile and genuine reviews before any review section is shown (SITE.reviews).",
   "Lender panel list, and permission for any lender names or logos (SITE.lenderPanel).",
 ];

@@ -9,7 +9,6 @@ import { Sources, type SourceItem } from "../components/content/Sources";
 import { WorkedExampleTable, type WorkedRow } from "../components/content/WorkedExampleTable";
 import { LinkButton, TextLink } from "../components/ui/Button";
 import { Callout } from "../components/ui/Callout";
-import { Placeholder } from "../components/ui/Fact";
 import { PATHS, SITE, confirmedLanguages } from "../config";
 import { consultationModes, formatDate } from "../format";
 import { JsonLd, BUSINESS_ID, webPageJsonLd } from "../seo";
@@ -47,7 +46,7 @@ export function suburbDescription(v: SuburbView) {
   const price = b ? `median ${b.price.kind} ${aud(b.price.value)}` : null;
   const duty = b ? (b.duty.firstHome.transferDuty === 0 ? "no duty for eligible first home buyers" : `first home buyer duty ${aud(b.duty.firstHome.transferDuty)}`) : null;
   const facts = [price, duty, s.census.renterPct != null ? `${pct(s.census.renterPct)} renting` : null].filter(Boolean).join(", ");
-  return `Buying in ${s.name} ${s.postcode}: ${facts}. Deposits, rent vs buying and nearby suburbs, with sources. NSW broker Sulav Adhikari, by phone or video.`;
+  return `Buying in ${s.name} ${s.postcode}: ${facts}. Deposits, rent vs buying and nearby suburbs, with sources. NSW mortgage broker, by phone or video.`;
 }
 
 const countWords = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
@@ -153,7 +152,7 @@ export function SuburbGuide({ v, review, isProduction }: { v: SuburbView; review
               "Common questions here: will a lender accept a gift from parents in Nepal, how is overseas income or savings counted, and what does a deposit in lakh come to in dollars.",
               "For many buyers part of the deposit comes from Nepal, so we check how each lender wants that money documented before it is transferred.",
             ])}
-            {nepaliConfirmed ? " Sulav can run the consultation in Nepali." : ""}
+            {nepaliConfirmed ? " We can run the consultation in Nepali." : ""}
           </p>
           <p>
             <TextLink href={PATHS.nepaliCommunity} arrow>
@@ -381,7 +380,7 @@ export function SuburbGuide({ v, review, isProduction }: { v: SuburbView; review
     { id: "cost", label: "Buying costs" },
     { id: "rent", label: "Renting vs buying" },
     { id: "help", label: "Who we help" },
-    ...(showNote ? [{ id: "note", label: "Sulav's local note" }] : []),
+    ...(showNote ? [{ id: "note", label: "Our local note" }] : []),
     ...(v.nearby.length ? [{ id: "nearby", label: "Nearby suburbs" }] : []),
     { id: "faq", label: "Questions" },
     { id: "sources", label: "Sources" },
@@ -433,10 +432,10 @@ export function SuburbGuide({ v, review, isProduction }: { v: SuburbView; review
                 bare
                 compact
                 headingLevel={2}
-                title={pick(sl, "ctaT", [`Buying in ${name}?`, "Talk it through with Sulav", `Your ${name} numbers, checked`])}
+                title={pick(sl, "ctaT", [`Buying in ${name}?`, "Talk it through with us", `Your ${name} numbers, checked`])}
                 body={
                   fb
-                    ? `Sulav checks your deposit, income and visa against lender policy for a ${priceWord(fb.price.kind)} around ${aud(fb.price.value)}, in a ${SITE.consultation.minutes}-minute call by ${modes}.`
+                    ? `We check your deposit, income and visa against lender policy for a ${priceWord(fb.price.kind)} around ${aud(fb.price.value)}, in a ${SITE.consultation.minutes}-minute call by ${modes}.`
                     : `A ${SITE.consultation.minutes}-minute call by ${modes}, ${SITE.hours.days}.`
                 }
               />
@@ -541,7 +540,7 @@ export function SuburbGuide({ v, review, isProduction }: { v: SuburbView; review
 
           {showNote && (
             <section id="note">
-              <h2>Sulav&rsquo;s local note on {name}</h2>
+              <h2>Our local note on {name}</h2>
               {note ? (
                 <>
                   {note.split(/\n\s*\n/).map((para, i) => (
@@ -554,7 +553,7 @@ export function SuburbGuide({ v, review, isProduction }: { v: SuburbView; review
                 </>
               ) : (
                 <Callout tone="draft" title="Broker note required before publishing">
-                  <Placeholder label={`80 to 200 words from Sulav (now ${countWords(note)})`} />
+                  {`Add 80 to 200 words for the local note (now ${countWords(note)}).`}
                 </Callout>
               )}
             </section>

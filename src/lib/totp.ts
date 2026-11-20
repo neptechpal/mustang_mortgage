@@ -1,163 +1,118 @@
-import crypto from "crypto";
+// TOTP (RFC 6238, HMAC-SHA1, 6 digits, 30 s) for authenticator apps, plus backup codes.
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
+import { keyedHash } from "./crypto-box";
 
-const TOTP_WINDOW = 30; // 30 seconds
-const TOTP_DIGITS = 6;
-const REMEMBER_DAYS = 30;
+const STEP_SECONDS = 30;
+const DIGITS = 6;
+const B32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
-/**
- * Generate a TOTP secret in base32 format
- */
-export function generateTotpSecret(): string {
-  const randomBytes = crypto.randomBytes(32);
-  return base32Encode(randomBytes);
-}
-
-/**
- * Generate backup codes for account recovery
- */
-export function generateBackupCodes(count: number = 10): string[] {
-  const codes: string[] = [];
-  for (let i = 0; i < count; i++) {
-    const code = crypto
-      .randomBytes(4)
-      .toString("hex")
-      .toUpperCase()
-      .match(/.{1,4}/g)
-      ?.join("-") || "";
-    codes.push(code);
-  }
-  return codes;
-}
-
-/**
- * Verify a TOTP token
- */
-export function verifyTotp(secret: string, token: string): boolean {
-  if (!secret || !token || token.length !== TOTP_DIGITS) {
-    return false;
-  }
-
-  const decoded = base32Decode(secret);
-  const timeCounter = Math.floor(Date.now() / 1000 / TOTP_WINDOW);
-
-  // Check current and previous/next windows for tolerance
-  for (let i = -1; i <= 1; i++) {
-    const counter = timeCounter + i;
-    const hmac = crypto.createHmac("sha1", decoded);
-    hmac.update(Buffer.alloc(8));
-    Buffer.from(counter.toString()).copy(hmac.digest().subarray(0, 8));
-
-    const digest = crypto.createHmac("sha1", decoded);
-    const buffer = Buffer.alloc(8);
-    buffer.writeBigInt64BE(BigInt(counter));
-    digest.update(buffer);
-
-    const hash = digest.digest();
-    const offset = hash[hash.length - 1] & 0xf;
-    const truncated = (
-      ((hash[offset] & 0x7f) << 24) |
-      ((hash[offset + 1] & 0xff) << 16) |
-      ((hash[offset + 2] & 0xff) << 8) |
-      (hash[offset + 3] & 0xff)
-    );
-
-    const totp = String(truncated % Math.pow(10, TOTP_DIGITS)).padStart(
-      TOTP_DIGITS,
-      "0"
-    );
-
-    if (totp === token) {
-      return true;
+export function base32Encode(buf: Buffer): string {
+  let bits = 0;
+  let value = 0;
+  let out = "";
+  for (const byte of buf) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      out += B32[(value >>> (bits - 5)) & 31];
+      bits -= 5;
     }
   }
-
-  return false;
+  if (bits > 0) out += B32[(value << (5 - bits)) & 31];
+  return out;
 }
+
+export function base32Decode(s: string): Buffer {
+  let bits = 0;
+  let value = 0;
+  const out: number[] = [];
+  for (const ch of s.replace(/=+$/g, "").replace(/\s+/g, "").toUpperCase()) {
+    const idx = B32.indexOf(ch);
+    if (idx < 0) throw new Error("Invalid base32 secret");
+    value = (value << 5) | idx;
+    bits += 5;
+    if (bits >= 8) {
+      out.push((value >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+  return Buffer.from(out);
+}
+
+export const generateTotpSecret = () => base32Encode(randomBytes(20));
+
+export function hotp(secret: Buffer, counter: number): string {
+  const msg = Buffer.alloc(8);
+  msg.writeBigUInt64BE(BigInt(counter));
+  const h = createHmac("sha1", secret).update(msg).digest();
+  const o = h[h.length - 1] & 0x0f;
+  const bin = ((h[o] & 0x7f) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3];
+  return String(bin % 10 ** DIGITS).padStart(DIGITS, "0");
+}
+
+export const currentStep = (now = Date.now()) => Math.floor(now / 1000 / STEP_SECONDS);
 
 /**
- * Generate QR code URL for TOTP setup
+ * Checks `token` against the current step +/- 1 (clock drift). Returns the matching step or null.
+ * Pass `lastStep` to reject a step that was already used (replay protection).
  */
-export function generateTotpQrUrl(
-  secret: string,
-  email: string,
-  appName: string = "Mustang Mortgage"
-): string {
-  const encoded = encodeURIComponent(`otpauth://totp/${appName}:${email}?secret=${secret}&issuer=${appName}`);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encoded}`;
+export function verifyTotp(base32Secret: string, token: string, lastStep?: number | null, now = Date.now()): number | null {
+  const clean = token.replace(/\s+/g, "");
+  if (!/^\d{6}$/.test(clean)) return null;
+  const key = base32Decode(base32Secret);
+  const cur = currentStep(now);
+  for (const step of [cur, cur - 1, cur + 1]) {
+    if (lastStep != null && step <= lastStep) continue;
+    const expected = Buffer.from(hotp(key, step));
+    const given = Buffer.from(clean);
+    if (expected.length === given.length && timingSafeEqual(expected, given)) return step;
+  }
+  return null;
 }
 
-/**
- * Check if a backup code is valid and remove it
- */
-export function verifyAndUseBackupCode(
-  backupCodes: string[],
-  code: string
-): { valid: boolean; remainingCodes: string[] } {
-  const index = backupCodes.findIndex(
-    (c) => c.replace(/[^A-Z0-9]/g, "") === code.replace(/[^A-Z0-9]/g, "")
-  );
-
-  if (index === -1) {
-    return { valid: false, remainingCodes: backupCodes };
-  }
-
-  const remainingCodes = backupCodes.filter((_, i) => i !== index);
-  return { valid: true, remainingCodes };
+export function otpauthUrl(secret: string, account: string, issuer = "Mustang Mortgage"): string {
+  const label = encodeURIComponent(`${issuer}:${account}`);
+  return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=${DIGITS}&period=${STEP_SECONDS}`;
 }
 
-/**
- * Check if 30-day remember window is still valid
- */
-export function isRememberWindowValid(lastPrompt: Date | null): boolean {
-  if (!lastPrompt) {
-    return false;
-  }
+/* ---------------- backup codes ---------------- */
 
-  const thirtyDaysAgo = new Date(Date.now() - REMEMBER_DAYS * 24 * 60 * 60 * 1000);
-  return lastPrompt > thirtyDaysAgo;
+const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
+
+export function generateBackupCodes(count = 10): string[] {
+  return Array.from({ length: count }, () => {
+    const raw = Array.from({ length: 10 }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join("");
+    return `${raw.slice(0, 5)}-${raw.slice(5)}`;
+  });
 }
 
-/**
- * Base32 encoding (RFC 4648)
- */
-function base32Encode(buffer: Buffer): string {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-  let bits = "";
-  for (let i = 0; i < buffer.length; i++) {
-    bits += buffer[i].toString(2).padStart(8, "0");
-  }
+const normaliseCode = (c: string) => c.toUpperCase().replace(/[^A-Z0-9]/g, "");
+const hashCode = (c: string) => keyedHash(normaliseCode(c), "backup-code");
 
-  let result = "";
-  for (let i = 0; i < bits.length; i += 5) {
-    const chunk = bits.substring(i, i + 5).padEnd(5, "0");
-    result += alphabet[parseInt(chunk, 2)];
-  }
+export const hashBackupCodes = (codes: string[]) => JSON.stringify(codes.map(hashCode));
 
-  // Add padding
-  while (result.length % 8 !== 0) {
-    result += "=";
+/** If `input` is an unused backup code, returns the remaining hashed list (the code is consumed); otherwise null. */
+export function consumeBackupCode(storedJson: string | null | undefined, input: string): string | null {
+  if (!storedJson || normaliseCode(input).length !== 10) return null;
+  let list: string[];
+  try {
+    list = JSON.parse(storedJson) as string[];
+  } catch {
+    return null;
   }
-
-  return result;
+  const want = Buffer.from(hashCode(input));
+  const idx = list.findIndex((h) => {
+    const b = Buffer.from(h);
+    return b.length === want.length && timingSafeEqual(b, want);
+  });
+  if (idx < 0) return null;
+  return JSON.stringify(list.filter((_, i) => i !== idx));
 }
 
-/**
- * Base32 decoding
- */
-function base32Decode(str: string): Buffer {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-  let bits = "";
-
-  for (const char of str.replace(/=/g, "")) {
-    const index = alphabet.indexOf(char);
-    if (index === -1) throw new Error("Invalid base32 character");
-    bits += index.toString(2).padStart(5, "0");
+export const backupCodesRemaining = (storedJson: string | null | undefined): number => {
+  try {
+    return storedJson ? (JSON.parse(storedJson) as string[]).length : 0;
+  } catch {
+    return 0;
   }
-
-  const buffer = Buffer.alloc(Math.floor(bits.length / 8));
-  for (let i = 0; i < buffer.length; i++) {
-    buffer[i] = parseInt(bits.substring(i * 8, (i + 1) * 8), 2);
-  }
-
-  return buffer;
-}
+};

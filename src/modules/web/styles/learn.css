@@ -1,0 +1,175 @@
+/* Learn pages and the interactive loan explorer. Same tokens as web.css. */
+@layer components {
+  .web .mw-explorer {
+    display: grid;
+    gap: clamp(20px, 3vw, 32px);
+    padding: clamp(20px, 3vw, 32px);
+    background: var(--mw-surface);
+    border: 1px solid var(--mw-line);
+    border-radius: var(--mw-radius);
+  }
+  .web .mw-explorer__controls {
+    display: grid;
+    gap: 20px 32px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    align-items: start;
+  }
+  .web .mw-explorer__field {
+    display: grid;
+    gap: 8px;
+  }
+  .web .mw-explorer__label {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9375rem;
+    color: var(--mw-text-2);
+  }
+  .web .mw-explorer__label strong {
+    color: var(--mw-text);
+    font-variant-numeric: tabular-nums;
+  }
+  .web .mw-explorer__hint {
+    font-size: 0.8125rem;
+    color: var(--mw-text-3);
+  }
+  .web .mw-explorer input[type="range"] {
+    width: 100%;
+    accent-color: var(--mw-gold-600);
+    height: 28px;
+    cursor: pointer;
+  }
+  .web .mw-explorer__seg {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+  }
+  .web .mw-explorer__seg legend {
+    float: left;
+    margin-right: 12px;
+    font-size: 0.9375rem;
+    color: var(--mw-text-2);
+    padding: 0;
+  }
+  .web .mw-explorer__seg label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.9375rem;
+  }
+  .web .mw-explorer__seg input {
+    accent-color: var(--mw-gold-600);
+  }
+  .web .mw-explorer__stats {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    padding: 20px 0;
+    border-block: 1px solid var(--mw-line);
+  }
+  .web .mw-explorer__stats > div {
+    display: grid;
+    gap: 4px;
+  }
+  .web .mw-explorer__stats span {
+    font-size: 0.875rem;
+    color: var(--mw-text-3);
+  }
+  .web .mw-explorer__stats strong {
+    font-family: var(--mw-serif);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    color: var(--mw-text);
+  }
+  .web .mw-explorer__stats em {
+    font-style: normal;
+    font-size: 0.8125rem;
+    color: var(--mw-text-3);
+  }
+  .web .mw-explorer__chart {
+    margin: 0;
+  }
+  .web .mw-explorer__chart svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .web .mw-explorer__chart figcaption {
+    margin-top: 8px;
+    font-size: 0.8125rem;
+    color: var(--mw-text-3);
+  }
+  .web .mw-explorer__key {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin: 0 4px 0 10px;
+  }
+  .web .mw-explorer__key:first-child {
+    margin-left: 0;
+  }
+  .web .mw-explorer__key--int {
+    background: var(--mw-ink-2);
+  }
+  .web .mw-explorer__key--prin {
+    background: var(--mw-gold-500);
+  }
+  .web .mw-explorer__scrub {
+    display: grid;
+    gap: 12px;
+  }
+  .web .mw-explorer__year {
+    margin: 0;
+    padding: 16px 18px;
+    background: var(--mw-gold-tint);
+    border-radius: var(--mw-radius-sm);
+    line-height: 1.6;
+    color: var(--mw-text);
+  }
+  .web .mw-explorer__year strong {
+    font-variant-numeric: tabular-nums;
+  }
+  .web .mw-explorer--compact {
+    padding: clamp(16px, 2.4vw, 24px);
+  }
+
+  .web .mw-learn-facts {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: fact;
+  }
+  .web .mw-learn-facts li {
+    counter-increment: fact;
+    position: relative;
+    padding: 24px 0 24px 64px;
+    border-top: 1px solid var(--mw-line);
+  }
+  .web .mw-learn-facts li::before {
+    content: counter(fact, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 22px;
+    font-family: var(--mw-serif);
+    font-size: 1.75rem;
+    color: var(--mw-gold-500);
+    font-variant-numeric: tabular-nums;
+  }
+  .web .mw-learn-facts h3 {
+    margin: 0 0 6px;
+    font-size: 1.25rem;
+  }
+  .web .mw-learn-facts p {
+    margin: 0;
+    color: var(--mw-text-2);
+  }
+}

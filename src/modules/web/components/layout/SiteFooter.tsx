@@ -17,7 +17,7 @@ export function SiteFooter() {
               <img src={SITE.logo.badge} alt="" width={52} height={52} />
               <div>
                 <div className="mw-footer__name">{SITE.name}</div>
-                <div style={{ fontSize: "0.875rem", marginTop: 4 }}>Mortgage broker · {SITE.broker.name}</div>
+                <div style={{ fontSize: "0.875rem", marginTop: 4 }}>Mortgage broker · Sydney and NSW</div>
               </div>
             </div>
             {SITE.broker.phone && SITE.broker.phoneHref && (
@@ -65,8 +65,7 @@ export function SiteFooter() {
             <div>
               <dt>Complaints</dt>
               <dd>
-                Contact us first. If we can&rsquo;t resolve it, you can go to the Australian Financial Complaints Authority (AFCA), a free, independent service.{" "}
-                <Link href="/legal/complaints">How to complain</Link>
+                Contact us first. If we can&rsquo;t resolve it, you can go to the Australian Financial Complaints Authority (AFCA), a free, independent service.
               </dd>
             </div>
           </dl>

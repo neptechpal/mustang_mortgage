@@ -5,7 +5,7 @@
  * minority, unit or house market, under or over a duty threshold, regional or not) and the numbers carry the
  * substance. Where two constructions say the same thing equally well, `pick` chooses one by the suburb's position in
  * postcode order, so neighbouring suburbs and suburbs that share a postcode (identical DCJ figures) read differently.
- * No landmark or lifestyle filler (research §C5.10). Voice: plain, specific, "we" for the business, Sulav by name.
+ * No landmark or lifestyle filler (research §C5.10). Voice: plain, specific, "we" for the business.
  */
 import type { SuburbRecord } from "@/modules/seo-data/types";
 import { formatAud } from "../format";
@@ -233,9 +233,9 @@ export function introSentences(v: SuburbView, modes: string): string[] {
 
   out.push(
     pick(sl, "introC", [
-      `We don't have an office in ${name}. Sulav Adhikari works with buyers here by ${modes}, from the first conversation to settlement.`,
+      `We don't have an office in ${name}. We work with buyers here by ${modes}, from the first conversation to settlement.`,
       `Our office isn't local: we meet ${name} clients by ${modes}, at morning, midday or evening times, seven days a week.`,
-      `There is no ${name} shopfront to visit. Sulav meets clients from ${name} by ${modes} and manages the loan through to settlement.`,
+      `There is no ${name} shopfront to visit. We meet clients from ${name} by ${modes} and manages the loan through to settlement.`,
     ]),
   );
   return out;

@@ -237,7 +237,7 @@ export function FhbArticle({ content: c, review }: { content: FhbStateContent; r
               </section>
             )}
             <div style={sectionStyle}>
-              <CtaBand bare compact headingLevel={2} title="Check your first home numbers with Sulav" body="We work out which concession and grant apply to you, what you can borrow and how much cash you need at settlement." />
+              <CtaBand bare compact headingLevel={2} title="Check your first home numbers with us" body="We work out which concession and grant apply to you, what you can borrow and how much cash you need at settlement." />
             </div>
             <section style={sectionStyle} aria-labelledby="other-title">
               <h2 id="other-title" className="mw-h4" style={{ marginBottom: 12 }}>

@@ -2,10 +2,10 @@ import { getCurrentUser, isStaff } from "@/lib/session";
 import { LoginForm } from "@/modules/members/components/AuthForms";
 import { LoggedInBox } from "@/modules/members/components/LoggedInBox";
 import { safeRedirect } from "@/modules/members/security";
-import { AuthShell, NewClientNote } from "@/modules/web/account/AuthShell";
+import { AuthShell } from "@/modules/web/account/AuthShell";
 import { buildMetadata } from "@/modules/web/seo";
 
-export const metadata = buildMetadata({ title: "Client login", description: "Log in to your Mustang Mortgage client account to upload documents and complete your fact find.", path: "/login", noindex: true });
+export const metadata = buildMetadata({ title: "Staff login", description: "Staff login for Mustang Mortgage.", path: "/login", noindex: true });
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -27,9 +27,13 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <LoggedInBox user={user} staff={isStaff(user.role)} />
         </AuthShell>
       ) : (
-        <AuthShell title="Log in to your client account" lede="Use the username or email and password you registered with.">
+        <AuthShell
+          eyebrow="Staff login"
+          title="Log in"
+          lede="For Mustang Mortgage staff. Clients do not need an account: open the secure link we emailed you and enter the one-time code we send."
+          aside="none"
+        >
           <LoginForm redirectTo={redirectTo} notice={notice} warning={warning} />
-          <NewClientNote />
         </AuthShell>
       )}
     </div>

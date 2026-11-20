@@ -52,7 +52,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <Field label="Email From Address" htmlFor="from_email">
                 <Input id="from_email" type="email" name="from_email" defaultValue={o.from_email} />
               </Field>
-              <Field label="Broker notifications to" htmlFor="notify_email" hint="Fact Find submitted, form submitted and client message alerts." className="sm:col-span-2">
+              <Field label="Enquiry and broker notifications to" htmlFor="notify_email" hint="Where new website enquiries, Fact Find and form submissions and client messages are emailed. Separate several addresses with commas." className="sm:col-span-2">
                 <Input id="notify_email" name="notify_email" defaultValue={o.notify_email} placeholder="blank = From Address" />
               </Field>
             </div>
