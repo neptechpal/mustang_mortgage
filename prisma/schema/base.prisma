@@ -17,20 +17,30 @@ enum Role {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  wpId         Int?      @unique
-  username     String    @unique
-  email        String    @unique
-  passwordHash String
-  displayName  String    @default("")
-  firstName    String    @default("")
-  lastName     String    @default("")
-  role         Role      @default(MEMBER)
-  status       String    @default("approved") // approved | pending | rejected | inactive
-  profile      Json      @default("{}")       // extra Ultimate Member profile fields
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  resetTokens  PasswordReset[]
+  id                    Int       @id @default(autoincrement())
+  wpId                  Int?      @unique
+  username              String    @unique
+  email                 String    @unique
+  passwordHash          String
+  displayName           String    @default("")
+  firstName             String    @default("")
+  lastName              String    @default("")
+  role                  Role      @default(MEMBER)
+  status                String    @default("approved") // approved | pending | rejected | inactive
+  profile               Json      @default("{}")       // extra Ultimate Member profile fields
+
+  // 2FA fields
+  twoFactorEnabled      Boolean   @default(false)
+  twoFactorSecret       String?   // base32-encoded TOTP secret
+  twoFactorBackupCodes  String?   // JSON array of backup codes
+  lastTwoFactorPrompt   DateTime? // tracks 30-day remember window
+
+  // Staff permissions
+  permissions           Json      @default("{}") // staff access levels: {testimonials: true, emailSettings: false, users: true, etc.}
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  resetTokens           PasswordReset[]
 }
 
 model PasswordReset {
