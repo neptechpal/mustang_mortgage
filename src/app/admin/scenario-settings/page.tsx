@@ -1,9 +1,11 @@
-import { Bot, CalendarClock, ClipboardCheck, KeyRound, Save, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Bot, CalendarClock, ClipboardCheck, KeyRound, Lock, PlugZap, Save, ShieldCheck, SlidersHorizontal, Trash2 } from "lucide-react";
+import ConfirmSubmit from "@/components/admin/ConfirmSubmit";
 import { requireAdmin } from "@/lib/session";
-import { Alert, Badge, Button, Field, Input, PageHeader, Select, Textarea, checkboxStyles } from "@/components/admin/ui";
+import { Alert, Badge, Button, Field, Input, PageHeader, Select, Textarea, buttonStyles, checkboxStyles } from "@/components/admin/ui";
 import { SaveBar, SettingsGroup, Toggle, ToggleRow } from "@/modules/crm/components/admin-kit";
 import { AI_MODELS, STAGES, getChecklists, getScenarioSettings } from "@/modules/scenario/settings";
-import { saveChecklistsAction, saveScenarioSettingsAction } from "@/modules/scenario/settings-admin/actions";
+import { saveApiKeyAction, saveChecklistsAction, saveScenarioSettingsAction } from "@/modules/scenario/settings-admin/actions";
+import { anthropicKeyStatus } from "@/modules/scenario/secret";
 import ChecklistEditor from "@/modules/scenario/settings-admin/ChecklistEditor";
 import { fmtDate, fromDateInput } from "@/modules/scenario/policy/meta";
 
@@ -13,8 +15,8 @@ export const metadata = { title: "Scenario Assistant settings" };
 export default async function ScenarioSettingsPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const s = await requireAdmin();
   const sp = await searchParams;
-  const [cfg, lists] = await Promise.all([getScenarioSettings(), getChecklists()]);
-  const hasKey = Boolean(process.env.ANTHROPIC_API_KEY);
+  const [cfg, lists, key] = await Promise.all([getScenarioSettings(), getChecklists(), anthropicKeyStatus()]);
+  const hasKey = key.source === "env" || (key.source === "settings" && key.readable);
   const unsafe = cfg.aiEnabled && !cfg.privacyConfirmed;
 
   return (
@@ -32,6 +34,7 @@ export default async function ScenarioSettingsPage({ searchParams }: { searchPar
       />
       {sp.err && <Alert tone="danger" title="Not saved" className="mb-5">{sp.err}</Alert>}
       {sp.msg && <Alert tone="success" className="mb-5">{sp.msg}</Alert>}
+      {sp.warn && <Alert tone="warning" className="mb-5">{sp.warn}</Alert>}
       {unsafe && (
         <Alert tone="warning" title="AI is enabled but privacy has not been confirmed" className="mb-6">
           Live client enquiries must not be processed with AI until the business has confirmed the privacy notice, consent, permitted uses, retention and the AI provider assessment. Use synthetic or test data only.
@@ -63,10 +66,10 @@ export default async function ScenarioSettingsPage({ searchParams }: { searchPar
             </div>
             <div className="mt-4 flex items-center gap-2.5 rounded-lg bg-slate-50 px-3 py-2.5 text-sm ring-1 ring-inset ring-slate-200/70">
               <KeyRound className="size-4 shrink-0 text-slate-400" />
-              <span className="text-slate-600">API key (<code className="font-mono text-xs">ANTHROPIC_API_KEY</code>)</span>
+              <span className="text-slate-600">Anthropic API key</span>
               <span className="ml-auto">{hasKey ? <Badge tone="success" dot>Set</Badge> : <Badge tone="danger" dot>Not set</Badge>}</span>
             </div>
-            {!hasKey && <p className="mt-2 text-xs text-slate-500">Without a key, AI calls report “unavailable” and assessments continue rule-based only.</p>}
+            {!hasKey && <p className="mt-2 text-xs text-slate-500">Without a key, AI calls report “unavailable” and assessments continue rule-based only. Set it in “API key” below.</p>}
           </SettingsGroup>
 
           <SettingsGroup icon={<ShieldCheck />} title="Privacy confirmation" description="Required before any live client enquiry is processed with AI.">
@@ -100,6 +103,56 @@ export default async function ScenarioSettingsPage({ searchParams }: { searchPar
           <Button variant="primary"><Save />Save settings</Button>
         </SaveBar>
       </form>
+
+      <section id="apikey" className="mt-10 scroll-mt-24">
+        <SettingsGroup icon={<Lock />} title="API key" description="Anthropic API key used for AI explanations and case Q&A. Stored encrypted (AES-256-GCM) in the database; it is never shown again after saving.">
+          <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2.5 text-sm ring-1 ring-inset ring-slate-200/70">
+            {key.source === "settings" ? (
+              key.readable ? (
+                <>
+                  <Badge tone="success" dot>Saved in settings</Badge>
+                  <span className="font-mono text-xs text-slate-600">sk-ant-…{key.last4}</span>
+                  <span className="text-xs text-slate-500">set by {key.setBy || "admin"} on {fmtDate(new Date(key.setAt))}</span>
+                </>
+              ) : (
+                <>
+                  <Badge tone="danger" dot>Unreadable</Badge>
+                  <span className="text-xs text-slate-600">The stored key can&apos;t be decrypted (the server secret changed). Enter the key again.</span>
+                </>
+              )
+            ) : key.source === "env" ? (
+              <>
+                <Badge tone="info" dot>From server environment</Badge>
+                <span className="font-mono text-xs text-slate-600">…{key.last4}</span>
+                <span className="text-xs text-slate-500">A key saved here takes precedence.</span>
+              </>
+            ) : (
+              <Badge tone="danger" dot>No key configured</Badge>
+            )}
+          </div>
+          <form action={saveApiKeyAction} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <input type="hidden" name="op" value="save" />
+            <Field label={key.source === "settings" ? "Replace key" : "API key"} htmlFor="apiKey" className="flex-1" hint="Starts with sk-ant-. Saving runs a free connection test.">
+              <Input id="apiKey" name="apiKey" type="password" autoComplete="off" spellCheck={false} required pattern="sk-ant-.{20,}" placeholder="sk-ant-…" className="font-mono" />
+            </Field>
+            <Button variant="primary"><Save />Save key</Button>
+          </form>
+          {(key.source === "settings" || key.source === "env") && (
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+              <form action={saveApiKeyAction}>
+                <input type="hidden" name="op" value="test" />
+                <Button variant="secondary" size="sm"><PlugZap />Test connection</Button>
+              </form>
+              {key.source === "settings" && (
+                <form action={saveApiKeyAction}>
+                  <input type="hidden" name="op" value="remove" />
+                  <ConfirmSubmit message="Remove the saved API key? AI calls will stop until a key is set." className={buttonStyles({ variant: "danger", size: "sm" })}><Trash2 />Remove key</ConfirmSubmit>
+                </form>
+              )}
+            </div>
+          )}
+        </SettingsGroup>
+      </section>
 
       <form action={saveChecklistsAction} id="checklists" className="mt-10 scroll-mt-24">
         <SettingsGroup

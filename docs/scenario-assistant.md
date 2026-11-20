@@ -31,7 +31,7 @@ Built 2026-11-20 from the "Mustang Mortgage AI Scenario Assistant — Developer 
 
 ## Switching AI on (production)
 1. Business confirms: privacy notice / collection statement covers AI-assisted analysis, consent approach, permitted uses, retention; AI provider assessment (Anthropic API: retention, no training on API data by default, subprocessors, overseas processing). Record it in Scenario settings (*Privacy confirmed* + note).
-2. Set `ANTHROPIC_API_KEY` in the server `.env`, restart `mustang-mortgage.service`.
+2. Scenario settings → **API key**: paste the Anthropic key and Save. It is stored encrypted (AES-256-GCM, key derived via HKDF from `SETTINGS_ENCRYPTION_KEY` if set, otherwise `SESSION_SECRET`), never shown again (only the last 4 characters), and a free connection test runs on save. *Test connection* / *Remove key* are on the same card. A key saved here overrides `ANTHROPIC_API_KEY` in `.env` (still supported as a fallback). If the server secret is ever rotated, the stored key becomes unreadable and the page asks for it again.
 3. Turn on *AI explanations* in Scenario settings. Model default `claude-opus-5-5` (server-side refusal fallback enabled); `claude-sonnet-5-5` is the lower-cost option.
 4. Turning AI off never disables the enquiry form or the lead workflow.
 

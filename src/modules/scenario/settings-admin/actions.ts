@@ -7,6 +7,8 @@ import { requireAdmin } from "@/lib/session";
 import { AI_MODELS, STAGES, saveChecklists, saveScenarioSettings, type Checklists } from "../settings";
 import { bool, errMessage, fail, oneOf, text } from "../policy/form";
 import { fromDateInput, toDateInput, withQuery } from "../policy/meta";
+import { removeAnthropicKey, saveAnthropicKey } from "../secret";
+import { testAnthropicKey } from "../ai";
 
 const PATH = "/admin/scenario-settings";
 
@@ -92,4 +94,28 @@ export async function saveChecklistsAction(fd: FormData) {
   }
   revalidatePath(PATH);
   redirect(withQuery(PATH, { msg }) + "#checklists");
+}
+
+/** Save / replace / remove the Anthropic API key (stored encrypted; never echoed back). */
+export async function saveApiKeyAction(fd: FormData) {
+  const s = await requireAdmin();
+  const op = String(fd.get("op") ?? "save");
+  let q: Record<string, string>;
+  try {
+    if (op === "remove") {
+      await removeAnthropicKey();
+      q = { msg: "API key removed. AI calls are unavailable until a key is set." };
+    } else if (op === "test") {
+      const r = await testAnthropicKey();
+      q = r.ok ? { msg: r.message } : { warn: `Connection test failed: ${r.message}` };
+    } else {
+      await saveAnthropicKey(String(fd.get("apiKey") ?? ""), s.name);
+      const r = await testAnthropicKey();
+      q = r.ok ? { msg: `API key saved (encrypted). ${r.message}` } : { warn: `API key saved (encrypted), but the connection test failed: ${r.message}` };
+    }
+  } catch (e) {
+    q = { err: errMessage(e) };
+  }
+  revalidatePath(PATH);
+  redirect(withQuery(PATH, q) + "#apikey");
 }

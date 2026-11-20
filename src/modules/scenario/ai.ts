@@ -8,6 +8,7 @@ import type { Facts } from "./facts";
 import type { ScenarioCalc } from "./calc";
 import type { EngineResult } from "./engine";
 import { getScenarioSettings } from "./settings";
+import { getAnthropicKey } from "./secret";
 import { AnswerOut, ASK_SYSTEM, AssessmentOut, calcSummary, candidateView, minimalFacts, redact, SYSTEM, validateAnswer, validateAssessment, type EvidenceItem } from "./ai-core";
 
 /* ------------------------------------------------------------------ model call */
@@ -17,8 +18,9 @@ export class AiUnavailable extends Error {}
 async function callModel<T>(schema: z.ZodType<T>, system: string, user: string, maxTokens: number): Promise<{ data: T; model: string }> {
   const s = await getScenarioSettings();
   if (!s.aiEnabled) throw new AiUnavailable("AI is switched off in Scenario settings");
-  if (!process.env.ANTHROPIC_API_KEY) throw new AiUnavailable("ANTHROPIC_API_KEY is not configured on the server");
-  const client = new Anthropic({ timeout: 120_000, maxRetries: 1 });
+  const apiKey = await getAnthropicKey();
+  if (!apiKey) throw new AiUnavailable("No Anthropic API key is configured (Scenario settings → API key)");
+  const client = new Anthropic({ apiKey, timeout: 120_000, maxRetries: 1 });
   try {
     const res = await client.beta.messages.parse({
       model: s.model,
@@ -77,4 +79,21 @@ export async function answerQuestion(input: { question: string; facts: Facts; ca
   });
   const { data, model } = await callModel(AnswerOut, ASK_SYSTEM, user, 6000);
   return { ...validateAnswer(data, input.evidence, JSON.stringify({ facts, calc: calcSummary(input.calc) })), model };
+}
+
+/** Cheap credential check for the settings page (no tokens used): retrieve the configured model. */
+export async function testAnthropicKey(): Promise<{ ok: boolean; message: string }> {
+  const apiKey = await getAnthropicKey();
+  if (!apiKey) return { ok: false, message: "No API key configured." };
+  const s = await getScenarioSettings();
+  try {
+    const m = await new Anthropic({ apiKey, timeout: 20_000, maxRetries: 0 }).models.retrieve(s.model);
+    return { ok: true, message: `Key works — ${m.display_name} is available.` };
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) return { ok: false, message: "The provider rejected this API key." };
+    if (e instanceof Anthropic.PermissionDeniedError) return { ok: false, message: "This key has no access to the selected model." };
+    if (e instanceof Anthropic.NotFoundError) return { ok: false, message: `Model ${s.model} not found for this key.` };
+    if (e instanceof Anthropic.APIError) return { ok: false, message: `Provider error ${e.status ?? ""}`.trim() };
+    return { ok: false, message: "Could not reach the AI provider." };
+  }
 }
