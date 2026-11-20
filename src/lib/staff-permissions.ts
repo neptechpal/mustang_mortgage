@@ -40,9 +40,9 @@ export const STAFF_PERMISSIONS = {
 
 export type StaffPermission = keyof typeof STAFF_PERMISSIONS;
 
-export interface StaffPermissions {
+export type StaffPermissions = {
   [key in StaffPermission]?: boolean;
-}
+};
 
 /**
  * Predefined permission sets for common roles
